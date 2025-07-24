@@ -16,8 +16,8 @@ export const mockData = {
   },
 
   assistantConfig: {
-    model: "gpt-4",
-    provider: "OpenAI",
+    model: "Asistente Personalizado",
+    provider: "Tu Asistente IA",
     responseTime: "< 2 segundos",
     availability: "24/7",
     features: [
