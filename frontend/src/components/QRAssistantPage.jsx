@@ -3,44 +3,131 @@ import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Separator } from './ui/separator';
-import { mockData } from '../utils/mock';
 import QRCodeDisplay from './QRCodeDisplay';
 import ConnectionStatus from './ConnectionStatus';
 import AssistantInfo from './AssistantInfo';
+import axios from 'axios';
+
+const API_BASE = process.env.REACT_APP_BACKEND_URL;
 
 const QRAssistantPage = () => {
   const [connectionStatus, setConnectionStatus] = useState('disconnected');
   const [qrCode, setQrCode] = useState(null);
   const [connectedUser, setConnectedUser] = useState(null);
   const [messageCount, setMessageCount] = useState(0);
+  const [stats, setStats] = useState({
+    total_messages: 0,
+    messages_today: 0, 
+    unique_users: 0
+  });
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    // Simulate QR code generation
-    if (connectionStatus === 'disconnected') {
-      setQrCode(mockData.qrCode);
+  // Fetch QR code
+  const fetchQRCode = async () => {
+    try {
+      const response = await axios.get(`${API_BASE}/api/whatsapp/qr`);
+      if (response.data.qr) {
+        setQrCode(response.data.qr);
+      } else {
+        setQrCode(null);
+      }
+    } catch (error) {
+      console.error('Error fetching QR code:', error);
+      setQrCode(null);
     }
-  }, [connectionStatus]);
+  };
 
+  // Check WhatsApp connection status
+  const checkConnectionStatus = async () => {
+    try {
+      const response = await axios.get(`${API_BASE}/api/whatsapp/status`);
+      const data = response.data;
+      
+      if (data.connected) {
+        setConnectionStatus('connected');
+        setConnectedUser(data.user);
+        setQrCode(null);
+      } else if (data.hasQR) {
+        setConnectionStatus('disconnected');
+        setConnectedUser(null);
+        await fetchQRCode();
+      } else {
+        setConnectionStatus('disconnected');
+        setConnectedUser(null);
+        setQrCode(null);
+      }
+    } catch (error) {
+      console.error('Error checking connection status:', error);
+      setConnectionStatus('error');
+    }
+  };
+
+  // Fetch statistics
+  const fetchStats = async () => {
+    try {
+      const response = await axios.get(`${API_BASE}/api/whatsapp/stats`);
+      setStats(response.data);
+      setMessageCount(response.data.messages_today);
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    }
+  };
+
+  // Initial load and polling
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      await checkConnectionStatus();
+      await fetchStats();
+      setLoading(false);
+    };
+
+    loadData();
+
+    // Poll every 3 seconds for status updates
+    const interval = setInterval(async () => {
+      await checkConnectionStatus();
+      if (connectionStatus === 'connected') {
+        await fetchStats();
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Refresh connection
+  const handleRefresh = async () => {
+    setLoading(true);
+    await checkConnectionStatus();
+    await fetchStats();
+    setLoading(false);
+  };
+
+  // Test connection (development)
   const handleTestConnection = () => {
     setConnectionStatus('connecting');
     
     setTimeout(() => {
       setConnectionStatus('connected');
-      setConnectedUser(mockData.connectedUser);
+      setConnectedUser({
+        name: "Mi Negocio WhatsApp",
+        phone: "123456789",
+        connectedAt: new Date().toISOString()
+      });
       setQrCode(null);
     }, 2000);
   };
 
-  const handleDisconnect = () => {
-    setConnectionStatus('disconnected');
-    setConnectedUser(null);
-    setMessageCount(0);
-    setQrCode(mockData.qrCode);
-  };
-
-  const simulateMessage = () => {
-    setMessageCount(prev => prev + 1);
-  };
+  if (loading && connectionStatus === 'disconnected') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p className="text-white">Cargando plataforma...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
@@ -100,11 +187,39 @@ const QRAssistantPage = () => {
                     <p className="text-gray-300">Tu asistente está activo y respondiendo mensajes</p>
                     
                     <div className="flex gap-3 justify-center mt-6">
-                      <Button onClick={simulateMessage} variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
-                        Simular Mensaje
+                      <Button 
+                        onClick={handleRefresh} 
+                        variant="outline" 
+                        className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+                        disabled={loading}
+                      >
+                        {loading ? 'Actualizando...' : 'Actualizar'}
                       </Button>
-                      <Button onClick={handleDisconnect} variant="outline" className="bg-red-500/20 border-red-500/30 text-red-300 hover:bg-red-500/30">
-                        Desconectar
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {connectionStatus === 'error' && (
+                <>
+                  <Separator className="my-6 bg-white/10" />
+                  <div className="text-center space-y-4">
+                    <div className="w-20 h-20 bg-gradient-to-r from-red-500 to-red-600 rounded-full flex items-center justify-center mx-auto">
+                      <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </div>
+                    <h3 className="text-2xl font-bold text-white">Error de Conexión</h3>
+                    <p className="text-gray-300">No se pudo conectar al servicio WhatsApp</p>
+                    
+                    <div className="flex gap-3 justify-center mt-6">
+                      <Button 
+                        onClick={handleRefresh} 
+                        variant="outline" 
+                        className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+                        disabled={loading}
+                      >
+                        Reintentar
                       </Button>
                     </div>
                   </div>
@@ -112,18 +227,16 @@ const QRAssistantPage = () => {
               )}
             </Card>
 
-            {/* Test Button (only show if disconnected) */}
-            {connectionStatus === 'disconnected' && (
-              <div className="text-center">
-                <Button 
-                  onClick={handleTestConnection}
-                  className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-8 py-3 text-lg font-semibold rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105"
-                >
-                  Probar Conexión (Demo)
-                </Button>
-                <p className="text-sm text-gray-400 mt-2">Para pruebas de la interfaz</p>
-              </div>
-            )}
+            {/* Refresh button */}
+            <div className="text-center">
+              <Button 
+                onClick={handleRefresh}
+                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-8 py-3 text-lg font-semibold rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105"
+                disabled={loading}
+              >
+                {loading ? 'Actualizando...' : 'Actualizar Estado'}
+              </Button>
+            </div>
           </div>
 
           {/* Right Column - Assistant Info */}
@@ -135,11 +248,19 @@ const QRAssistantPage = () => {
               <h3 className="text-xl font-bold text-white mb-4">Estadísticas</h3>
               <div className="grid grid-cols-2 gap-4">
                 <div className="text-center p-4 bg-white/5 rounded-lg">
-                  <div className="text-2xl font-bold text-purple-400">{messageCount}</div>
-                  <div className="text-sm text-gray-400">Mensajes Procesados</div>
+                  <div className="text-2xl font-bold text-purple-400">{stats.messages_today}</div>
+                  <div className="text-sm text-gray-400">Mensajes Hoy</div>
                 </div>
                 <div className="text-center p-4 bg-white/5 rounded-lg">
-                  <div className="text-2xl font-bold text-blue-400">
+                  <div className="text-2xl font-bold text-blue-400">{stats.total_messages}</div>
+                  <div className="text-sm text-gray-400">Total Mensajes</div>
+                </div>
+                <div className="text-center p-4 bg-white/5 rounded-lg">
+                  <div className="text-2xl font-bold text-green-400">{stats.unique_users}</div>
+                  <div className="text-sm text-gray-400">Usuarios Únicos</div>
+                </div>
+                <div className="text-center p-4 bg-white/5 rounded-lg">
+                  <div className="text-2xl font-bold text-yellow-400">
                     {connectionStatus === 'connected' ? '100%' : '0%'}
                   </div>
                   <div className="text-sm text-gray-400">Disponibilidad</div>

@@ -23,6 +23,7 @@ const QRCodeDisplay = ({ qrCode, status }) => {
           </svg>
         </div>
         <p className="text-gray-400">Generando código QR...</p>
+        <p className="text-sm text-gray-500 mt-2">Esto puede tomar unos segundos</p>
       </div>
     );
   }
@@ -36,24 +37,14 @@ const QRCodeDisplay = ({ qrCode, status }) => {
       {/* QR Code Container */}
       <div className="relative inline-block">
         <div className="p-6 bg-white rounded-2xl shadow-2xl">
-          <div className="w-64 h-64 bg-gray-100 rounded-lg flex items-center justify-center relative overflow-hidden">
-            {/* Mock QR Code Pattern */}
-            <div className="absolute inset-0 bg-gradient-to-br from-black via-gray-800 to-black opacity-90"></div>
-            <div className="relative z-10 grid grid-cols-8 gap-1 w-full h-full p-2">
-              {Array.from({ length: 64 }, (_, i) => (
-                <div
-                  key={i}
-                  className={`w-full h-full ${
-                    Math.random() > 0.5 ? 'bg-black' : 'bg-white'
-                  } rounded-sm`}
-                />
-              ))}
-            </div>
-            
-            {/* Corner markers */}
-            <div className="absolute top-2 left-2 w-8 h-8 border-4 border-black bg-white"></div>
-            <div className="absolute top-2 right-2 w-8 h-8 border-4 border-black bg-white"></div>
-            <div className="absolute bottom-2 left-2 w-8 h-8 border-4 border-black bg-white"></div>
+          <div className="w-64 h-64 flex items-center justify-center relative overflow-hidden">
+            {/* Real QR Code */}
+            <img 
+              src={qrCode} 
+              alt="WhatsApp QR Code" 
+              className="w-full h-full object-contain"
+              style={{ imageRendering: 'pixelated' }}
+            />
           </div>
         </div>
         
