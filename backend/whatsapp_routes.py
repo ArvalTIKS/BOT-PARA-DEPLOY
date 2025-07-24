@@ -136,6 +136,11 @@ async def get_conversation_history(db, phone_number: str, limit: int = 20):
             "phone_number": phone_number
         }).sort("timestamp", -1).limit(limit).to_list(length=limit)
         
+        # Convert ObjectId to string for JSON serialization
+        for message in messages:
+            if '_id' in message:
+                message['_id'] = str(message['_id'])
+        
         # Reverse to get chronological order
         return list(reversed(messages))
     except Exception as e:
