@@ -85,11 +85,13 @@ function initializeWhatsApp() {
         connectedUser = null;
         qrCodeData = null;
         
-        // Restart after 5 seconds
-        setTimeout(() => {
-            console.log('Attempting to reconnect...');
-            initializeWhatsApp();
-        }, 5000);
+        // Only restart if it wasn't a logout
+        if (reason !== 'LOGOUT') {
+            setTimeout(() => {
+                console.log('Attempting to reconnect...');
+                initializeWhatsApp();
+            }, 5000);
+        }
     });
 
     // Message received event
