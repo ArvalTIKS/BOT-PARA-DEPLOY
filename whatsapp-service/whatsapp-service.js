@@ -38,26 +38,18 @@ function initializeWhatsApp() {
                 '--no-sandbox',
                 '--disable-setuid-sandbox',
                 '--disable-dev-shm-usage',
-                '--disable-accelerated-2d-canvas',
+                '--disable-gpu',
                 '--no-first-run',
                 '--no-zygote',
-                '--disable-gpu',
-                '--disable-web-security',
-                '--disable-features=VizDisplayCompositor',
-                '--disable-extensions',
-                '--disable-plugins',
                 '--disable-background-timer-throttling',
                 '--disable-backgrounding-occluded-windows',
                 '--disable-renderer-backgrounding',
-                '--disable-ipc-flooding-protection',
-                '--disable-hang-monitor',
-                '--disable-client-side-phishing-detection',
-                '--disable-component-update',
-                '--disable-default-apps',
-                '--disable-domain-reliability',
-                '--disable-background-networking'
+                '--disable-web-security',
+                '--disable-features=VizDisplayCompositor',
+                '--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
             ],
-            executablePath: '/usr/bin/chromium'
+            executablePath: '/usr/bin/chromium',
+            timeout: 60000
         }
     });
 
