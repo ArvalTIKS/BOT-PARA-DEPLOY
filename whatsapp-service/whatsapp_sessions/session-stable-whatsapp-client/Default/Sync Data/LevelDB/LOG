@@ -1,2 +1,3 @@
-2025/07/24-21:17:42.224 1e7a Creating DB /app/whatsapp-service/whatsapp_sessions/session-stable-whatsapp-client/Default/Sync Data/LevelDB since it was missing.
-2025/07/24-21:17:42.232 1e7a Reusing MANIFEST /app/whatsapp-service/whatsapp_sessions/session-stable-whatsapp-client/Default/Sync Data/LevelDB/MANIFEST-000001
+2025/07/24-21:21:22.122 220e Reusing MANIFEST /app/whatsapp-service/whatsapp_sessions/session-stable-whatsapp-client/Default/Sync Data/LevelDB/MANIFEST-000001
+2025/07/24-21:21:22.123 220e Recovering log #3
+2025/07/24-21:21:22.123 220e Reusing old log /app/whatsapp-service/whatsapp_sessions/session-stable-whatsapp-client/Default/Sync Data/LevelDB/000003.log 
