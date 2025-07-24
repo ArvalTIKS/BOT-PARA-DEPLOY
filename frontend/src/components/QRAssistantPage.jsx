@@ -3,63 +3,116 @@ import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Separator } from './ui/separator';
-import { Input } from './ui/input';
-import { Textarea } from './ui/textarea';
+import QRCodeDisplay from './QRCodeDisplay';
+import ConnectionStatus from './ConnectionStatus';
 import AssistantInfo from './AssistantInfo';
 import axios from 'axios';
 
 const API_BASE = process.env.REACT_APP_BACKEND_URL;
 
 const QRAssistantPage = () => {
-  const [phoneNumber, setPhoneNumber] = useState('+56975855730');
-  const [testMessage, setTestMessage] = useState('');
-  const [response, setResponse] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState('disconnected');
+  const [qrCode, setQrCode] = useState(null);
+  const [connectedUser, setConnectedUser] = useState(null);
+  const [messageCount, setMessageCount] = useState(0);
   const [stats, setStats] = useState({
     total_messages: 0,
     messages_today: 0, 
     unique_users: 0
   });
+  const [loading, setLoading] = useState(false);
+
+  // Fetch QR code
+  const fetchQRCode = async () => {
+    try {
+      const response = await axios.get(`${API_BASE}/api/whatsapp/qr`);
+      if (response.data.qr) {
+        setQrCode(response.data.qr);
+      } else {
+        setQrCode(null);
+      }
+    } catch (error) {
+      console.error('Error fetching QR code:', error);
+      setQrCode(null);
+    }
+  };
+
+  // Check WhatsApp connection status
+  const checkConnectionStatus = async () => {
+    try {
+      const response = await axios.get(`${API_BASE}/api/whatsapp/status`);
+      const data = response.data;
+      
+      if (data.connected) {
+        setConnectionStatus('connected');
+        setConnectedUser(data.user);
+        setQrCode(null);
+      } else if (data.hasQR) {
+        setConnectionStatus('disconnected');
+        setConnectedUser(null);
+        await fetchQRCode();
+      } else {
+        setConnectionStatus('disconnected');
+        setConnectedUser(null);
+        setQrCode(null);
+      }
+    } catch (error) {
+      console.error('Error checking connection status:', error);
+      setConnectionStatus('error');
+    }
+  };
 
   // Fetch statistics
   const fetchStats = async () => {
     try {
       const response = await axios.get(`${API_BASE}/api/whatsapp/stats`);
       setStats(response.data);
+      setMessageCount(response.data.messages_today);
     } catch (error) {
       console.error('Error fetching stats:', error);
     }
   };
 
+  // Initial load and polling
   useEffect(() => {
-    fetchStats();
-    const interval = setInterval(fetchStats, 10000);
+    const loadData = async () => {
+      setLoading(true);
+      await checkConnectionStatus();
+      await fetchStats();
+      setLoading(false);
+    };
+
+    loadData();
+
+    // Poll every 3 seconds for status updates
+    const interval = setInterval(async () => {
+      await checkConnectionStatus();
+      if (connectionStatus === 'connected') {
+        await fetchStats();
+      }
+    }, 3000);
+
     return () => clearInterval(interval);
   }, []);
 
-  const processMessage = async () => {
-    if (!testMessage.trim()) return;
-    
+  // Refresh connection
+  const handleRefresh = async () => {
     setLoading(true);
-    try {
-      const response = await axios.post(`${API_BASE}/api/whatsapp/process-message`, {
-        phone_number: phoneNumber.replace('+', ''),
-        message: testMessage,
-        message_id: Date.now().toString(),
-        timestamp: Math.floor(Date.now() / 1000)
-      });
-      
-      setResponse(response.data.reply);
-      await fetchStats();
-    } catch (error) {
-      setResponse('Error: No se pudo conectar con el asistente');
-    }
+    await checkConnectionStatus();
+    await fetchStats();
     setLoading(false);
   };
 
-  const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text);
-  };
+  if (loading && connectionStatus === 'disconnected') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p className="text-white">Cargando plataforma...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
@@ -70,7 +123,7 @@ const QRAssistantPage = () => {
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
       </div>
 
-      <div className="relative z-10 container mx-auto px-4 py-8 max-w-6xl">
+      <div className="relative z-10 container mx-auto px-4 py-8 max-w-4xl">
         {/* Header */}
         <div className="text-center mb-12">
           <div className="inline-flex items-center gap-3 mb-4">
@@ -80,150 +133,87 @@ const QRAssistantPage = () => {
               </svg>
             </div>
             <h1 className="text-4xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-              Asistente Jurídico WhatsApp
+              Asistente WhatsApp
             </h1>
           </div>
           <p className="text-xl text-gray-300 max-w-2xl mx-auto leading-relaxed">
-            <strong>Estudio Jurídico Villegas Otárola</strong> - Tu asistente legal inteligente
+            Escanea el código QR para activar tu asistente del <strong>Estudio Jurídico Villegas Otárola</strong>
           </p>
         </div>
 
-        {/* Instructions Card */}
-        <Card className="p-8 bg-white/5 backdrop-blur-xl border-white/10 shadow-2xl mb-8">
-          <h2 className="text-2xl font-bold text-white mb-6 text-center">📱 Instrucciones de Uso</h2>
-          
-          <div className="grid md:grid-cols-2 gap-8">
-            <div className="space-y-4">
-              <h3 className="text-xl font-semibold text-blue-300">Para activar tu asistente:</h3>
-              <div className="space-y-3 text-gray-300">
-                <div className="flex items-start gap-3">
-                  <Badge variant="outline" className="bg-purple-500/20 text-purple-300 border-purple-500/30">1</Badge>
-                  <span>Guarda este número en tus contactos: <strong className="text-white">+56 9 7585 5730</strong></span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <Badge variant="outline" className="bg-purple-500/20 text-purple-300 border-purple-500/30">2</Badge>
-                  <span>Abre WhatsApp y busca el contacto guardado</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <Badge variant="outline" className="bg-purple-500/20 text-purple-300 border-purple-500/30">3</Badge>
-                  <span>Envía cualquier mensaje para activar el asistente</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <Badge variant="outline" className="bg-green-500/20 text-green-300 border-green-500/30">✓</Badge>
-                  <span><strong>¡Listo! El asistente responderá automáticamente</strong></span>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <h3 className="text-xl font-semibold text-green-300">Funcionamiento automático:</h3>
-              <div className="bg-green-500/20 border border-green-500/30 rounded-lg p-4">
-                <p className="text-green-200 text-sm mb-2">
-                  <strong>Una vez activado:</strong>
-                </p>
-                <ul className="text-green-200 text-sm space-y-1 list-disc ml-4">
-                  <li>Cualquier persona que te escriba al WhatsApp recibirá respuesta automática</li>
-                  <li>El asistente del Estudio Jurídico responderá 24/7</li>
-                  <li>No necesitas hacer nada más</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-6 text-center">
-            <Button
-              onClick={() => copyToClipboard('+56975855730')}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-3 text-lg font-semibold rounded-xl"
-            >
-              📋 Copiar Número: +56 9 7585 5730
-            </Button>
-          </div>
-        </Card>
-
+        {/* Main Content */}
         <div className="grid gap-8 lg:grid-cols-2">
-          {/* Left Column - Test Assistant */}
+          {/* Left Column - QR Code & Status */}
           <div className="space-y-6">
             <Card className="p-8 bg-white/5 backdrop-blur-xl border-white/10 shadow-2xl">
-              <h2 className="text-2xl font-bold text-white mb-6">🧪 Probar Asistente</h2>
+              <ConnectionStatus 
+                status={connectionStatus}
+                connectedUser={connectedUser}
+                messageCount={messageCount}
+              />
               
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Simular mensaje desde:
-                  </label>
-                  <Input
-                    type="text"
-                    value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
-                    placeholder="+56975855730"
-                    className="bg-white/10 border-white/20 text-white placeholder-gray-400"
-                  />
-                </div>
+              {connectionStatus !== 'connected' && (
+                <>
+                  <Separator className="my-6 bg-white/10" />
+                  <QRCodeDisplay qrCode={qrCode} status={connectionStatus} />
+                </>
+              )}
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Mensaje de prueba:
-                  </label>
-                  <Textarea
-                    value={testMessage}
-                    onChange={(e) => setTestMessage(e.target.value)}
-                    placeholder="Hola, necesito una consulta legal..."
-                    className="bg-white/10 border-white/20 text-white placeholder-gray-400 min-h-[100px]"
-                  />
-                </div>
-
-                <Button
-                  onClick={processMessage}
-                  disabled={loading || !testMessage.trim()}
-                  className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white py-3 text-lg font-semibold rounded-xl"
-                >
-                  {loading ? 'Generando Respuesta...' : '🤖 Generar Respuesta del Asistente'}
-                </Button>
-
-                {response && (
-                  <div className="mt-4 p-4 bg-green-500/20 border border-green-500/30 rounded-lg">
-                    <div className="flex justify-between items-start mb-2">
-                      <h4 className="font-semibold text-green-300">Respuesta del Asistente:</h4>
-                      <Button
-                        onClick={() => copyToClipboard(response)}
-                        size="sm"
-                        className="bg-green-600/20 hover:bg-green-600/30 text-green-300"
-                      >
-                        📋 Copiar
-                      </Button>
+              {connectionStatus === 'connected' && (
+                <>
+                  <Separator className="my-6 bg-white/10" />
+                  <div className="text-center space-y-4">
+                    <div className="w-20 h-20 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center mx-auto">
+                      <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
                     </div>
-                    <p className="text-white whitespace-pre-wrap">{response}</p>
-                    <div className="mt-3 p-2 bg-white/5 rounded text-xs text-gray-400">
-                      Esta es la respuesta que recibirían tus clientes automáticamente
+                    <h3 className="text-2xl font-bold text-white">¡Conectado!</h3>
+                    <p className="text-gray-300">Tu asistente del <strong>Estudio Jurídico Villegas Otárola</strong> está activo</p>
+                    
+                    <div className="bg-green-500/20 border border-green-500/30 rounded-lg p-4 mt-4">
+                      <p className="text-green-300 font-semibold">🏛️ Asistente Jurídico Activo</p>
+                      <p className="text-green-200 text-sm">Responderá automáticamente a TODOS los mensajes de WhatsApp</p>
                     </div>
                   </div>
-                )}
-              </div>
+                </>
+              )}
 
-              <div className="mt-6 grid grid-cols-2 gap-3">
-                <Button
-                  onClick={() => setTestMessage('Hola, necesito una consulta legal urgente')}
-                  className="bg-white/10 hover:bg-white/20 text-white text-sm"
-                >
-                  📋 Consulta Legal
-                </Button>
-                <Button
-                  onClick={() => setTestMessage('¿Cuál es su ubicación y horarios?')}
-                  className="bg-white/10 hover:bg-white/20 text-white text-sm"
-                >
-                  📍 Ubicación
-                </Button>
-              </div>
+              {connectionStatus === 'error' && (
+                <>
+                  <Separator className="my-6 bg-white/10" />
+                  <div className="text-center space-y-4">
+                    <div className="w-20 h-20 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full flex items-center justify-center mx-auto">
+                      <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-2xl font-bold text-white">Iniciando Servicio WhatsApp</h3>
+                    <p className="text-gray-300">El servicio se está inicializando. Espera unos segundos.</p>
+                    
+                    <div className="flex gap-3 justify-center mt-6">
+                      <Button 
+                        onClick={handleRefresh} 
+                        variant="outline" 
+                        className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+                        disabled={loading}
+                      >
+                        {loading ? 'Verificando...' : 'Verificar Estado'}
+                      </Button>
+                    </div>
+                  </div>
+                </>
+              )}
             </Card>
           </div>
 
-          {/* Right Column - Info & Stats */}
+          {/* Right Column - Assistant Info */}
           <div className="space-y-6">
             <AssistantInfo />
             
             {/* Statistics */}
             <Card className="p-6 bg-white/5 backdrop-blur-xl border-white/10">
-              <h3 className="text-xl font-bold text-white mb-4">📊 Estadísticas del Asistente</h3>
+              <h3 className="text-xl font-bold text-white mb-4">📊 Automatización Total</h3>
               <div className="grid grid-cols-2 gap-4">
                 <div className="text-center p-4 bg-white/5 rounded-lg">
                   <div className="text-2xl font-bold text-purple-400">{stats.messages_today}</div>
@@ -235,47 +225,60 @@ const QRAssistantPage = () => {
                 </div>
                 <div className="text-center p-4 bg-white/5 rounded-lg">
                   <div className="text-2xl font-bold text-green-400">{stats.unique_users}</div>
-                  <div className="text-sm text-gray-400">Clientes Únicos</div>
+                  <div className="text-sm text-gray-400">Clientes Atendidos</div>
                 </div>
                 <div className="text-center p-4 bg-white/5 rounded-lg">
-                  <div className="text-2xl font-bold text-yellow-400">100%</div>
-                  <div className="text-sm text-gray-400">Disponibilidad</div>
+                  <div className="text-2xl font-bold text-yellow-400">
+                    {connectionStatus === 'connected' ? '100%' : '0%'}
+                  </div>
+                  <div className="text-sm text-gray-400">Automatización</div>
                 </div>
               </div>
             </Card>
 
-            {/* Status */}
+            {/* Instructions */}
             <Card className="p-6 bg-white/5 backdrop-blur-xl border-white/10">
-              <h3 className="text-xl font-bold text-white mb-4">⚡ Estado del Sistema</h3>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-300">Asistente Legal</span>
-                  <Badge className="bg-green-500/20 text-green-300 border-green-500/30">✅ Activo</Badge>
+              <h3 className="text-xl font-bold text-white mb-4">📱 Instrucciones (iPhone)</h3>
+              <div className="space-y-3 text-sm text-gray-300">
+                <div className="flex items-start gap-3">
+                  <Badge variant="outline" className="bg-purple-500/20 text-purple-300 border-purple-500/30">1</Badge>
+                  <span>Abre WhatsApp en tu iPhone</span>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-300">OpenAI GPT-4</span>
-                  <Badge className="bg-green-500/20 text-green-300 border-green-500/30">✅ Funcionando</Badge>
+                <div className="flex items-start gap-3">
+                  <Badge variant="outline" className="bg-purple-500/20 text-purple-300 border-purple-500/30">2</Badge>
+                  <span>Ve a Configuración → Dispositivos Vinculados</span>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-300">Base de Datos</span>
-                  <Badge className="bg-green-500/20 text-green-300 border-green-500/30">✅ Conectada</Badge>
+                <div className="flex items-start gap-3">
+                  <Badge variant="outline" className="bg-purple-500/20 text-purple-300 border-purple-500/30">3</Badge>
+                  <span>Toca "Vincular un dispositivo"</span>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-300">Respuestas Automáticas</span>
-                  <Badge className="bg-green-500/20 text-green-300 border-green-500/30">✅ Habilitadas</Badge>
+                <div className="flex items-start gap-3">
+                  <Badge variant="outline" className="bg-purple-500/20 text-purple-300 border-purple-500/30">4</Badge>
+                  <span>Escanea el código QR que aparece arriba</span>
                 </div>
+                <div className="flex items-start gap-3">
+                  <Badge variant="outline" className="bg-green-500/20 text-green-300 border-green-500/30">✅</Badge>
+                  <span><strong>¡LISTO! Cuando te escriban, tu asistente responderá automáticamente</strong></span>
+                </div>
+              </div>
+              
+              <div className="mt-4 p-4 bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 rounded-lg">
+                <p className="text-blue-300 text-sm font-semibold mb-1">🤖 Estudio Jurídico Villegas Otárola</p>
+                <p className="text-blue-200 text-xs">
+                  Una vez conectado, tu asistente legal responderá automáticamente a todas las consultas 
+                  sin necesidad de tu intervención. Perfecto para atender clientes 24/7.
+                </p>
               </div>
             </Card>
 
-            {/* Contact Info */}
-            <Card className="p-6 bg-white/5 backdrop-blur-xl border-white/10">
-              <h3 className="text-xl font-bold text-white mb-4">🏛️ Estudio Jurídico</h3>
-              <div className="space-y-2 text-gray-300 text-sm">
-                <p><strong>Nombre:</strong> Villegas Otárola Abogados</p>
-                <p><strong>Ubicación:</strong> Presidente Julio Roca 1030, Punta Arenas</p>
-                <p><strong>Especialidades:</strong> Derecho Civil, Penal y de Familia</p>
-                <p><strong>Cobertura:</strong> Magallanes, Metropolitana y online</p>
-              </div>
+            {/* Important Note */}
+            <Card className="p-6 bg-gradient-to-r from-orange-500/10 to-red-500/10 border border-orange-500/30">
+              <h3 className="text-lg font-bold text-orange-300 mb-3">⚠️ Importante</h3>
+              <p className="text-orange-200 text-sm">
+                <strong>Para recibir muchos mensajes diarios:</strong> Una vez conectado, 
+                tu asistente procesará TODOS los mensajes automáticamente. 
+                No necesitas hacer nada más.
+              </p>
             </Card>
           </div>
         </div>
