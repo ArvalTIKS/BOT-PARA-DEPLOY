@@ -237,3 +237,11 @@
 2025/07/24-21:16:54.433 1c60 Level-0 table #77: started
 2025/07/24-21:16:54.459 1c60 Level-0 table #77: 1097950 bytes OK
 2025/07/24-21:16:54.462 1c60 Delete type=0 #71
+2025/07/24-21:17:04.647 1c5f Compacting 1@1 + 2@2 files
+2025/07/24-21:17:04.743 1c5f Generated table #78@1: 41354 keys, 2202913 bytes
+2025/07/24-21:17:04.770 1c5f Generated table #79@1: 11791 keys, 2144277 bytes
+2025/07/24-21:17:04.770 1c5f Compacted 1@1 + 2@2 files => 4347190 bytes
+2025/07/24-21:17:04.772 1c5f compacted to: files[ 0 0 3 0 0 0 0 ]
+2025/07/24-21:17:04.773 1c5f Delete type=2 #77
+2025/07/24-21:17:04.773 1c5f Delete type=2 #73
+2025/07/24-21:17:04.773 1c5f Delete type=2 #74
