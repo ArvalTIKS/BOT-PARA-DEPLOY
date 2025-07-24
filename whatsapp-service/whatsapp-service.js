@@ -40,13 +40,21 @@ function initializeWhatsApp() {
 
     // QR Code event
     client.on('qr', async (qr) => {
-        console.log('QR RECEIVED');
+        console.log('QR RECEIVED', new Date().toISOString());
         qrCodeData = qr;
         
         try {
             // Generate QR code as data URL for frontend
             const qrDataUrl = await qrcode.toDataURL(qr);
-            console.log('QR Code generated successfully');
+            console.log('QR Code generated successfully, expires in 20 seconds');
+            
+            // Clear QR after 20 seconds to force refresh
+            setTimeout(() => {
+                if (qrCodeData === qr && !isConnected) {
+                    console.log('QR Code expired, clearing...');
+                    qrCodeData = null;
+                }
+            }, 20000);
         } catch (err) {
             console.error('Error generating QR code:', err);
         }
