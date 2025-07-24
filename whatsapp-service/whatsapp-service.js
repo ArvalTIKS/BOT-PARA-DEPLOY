@@ -97,6 +97,7 @@ function initializeWhatsApp() {
     // Authentication success
     client.on('authenticated', () => {
         console.log('🔐 WhatsApp client authenticated successfully');
+        console.log('⏳ Waiting for ready event...');
     });
 
     // Disconnected event - handle reconnection carefully  
