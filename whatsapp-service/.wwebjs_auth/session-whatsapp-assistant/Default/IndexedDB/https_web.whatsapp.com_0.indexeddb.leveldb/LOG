@@ -135,3 +135,20 @@
 2025/07/24-20:40:48.903 ee1 compacted to: files[ 0 0 1 0 0 0 0 ]
 2025/07/24-20:40:48.903 ee1 Delete type=2 #37
 2025/07/24-20:40:48.903 ee1 Manual compaction at level-1 from '\x00\x10\x00\x00\x05' @ 1938 : 0 .. '\x00\x11\x00\x00\x00' @ 0 : 0; will stop at (end)
+2025/07/24-20:42:10.902 ee2 Level-0 table #40: started
+2025/07/24-20:42:10.997 ee2 Level-0 table #40: 1140293 bytes OK
+2025/07/24-20:42:11.000 ee2 Delete type=2 #35
+2025/07/24-20:42:11.000 ee2 Delete type=0 #36
+2025/07/24-20:42:11.793 ee2 Compacting 1@1 + 1@2 files
+2025/07/24-20:42:11.894 ee2 Generated table #41@1: 13292 keys, 652621 bytes
+2025/07/24-20:42:11.894 ee2 Compacted 1@1 + 1@2 files => 652621 bytes
+2025/07/24-20:42:11.896 ee2 compacted to: files[ 0 0 1 0 0 0 0 ]
+2025/07/24-20:42:18.103 eeb Level-0 table #43: started
+2025/07/24-20:42:18.201 eeb Level-0 table #43: 1159798 bytes OK
+2025/07/24-20:42:18.204 eeb Delete type=2 #38
+2025/07/24-20:42:18.204 eeb Delete type=2 #40
+2025/07/24-20:42:18.204 eeb Delete type=0 #39
+2025/07/24-20:42:18.207 ee2 Compacting 1@1 + 1@2 files
+2025/07/24-20:42:18.388 ee2 Generated table #44@1: 27161 keys, 1208418 bytes
+2025/07/24-20:42:18.388 ee2 Compacted 1@1 + 1@2 files => 1208418 bytes
+2025/07/24-20:42:18.390 ee2 compacted to: files[ 0 0 1 0 0 0 0 ]
