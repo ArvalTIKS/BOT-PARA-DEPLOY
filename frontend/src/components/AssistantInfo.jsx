@@ -20,7 +20,7 @@ const AssistantInfo = () => {
         </svg>
       ),
       title: 'Conocimiento Amplio',
-      description: 'Powered by OpenAI GPT-4 para respuestas inteligentes'
+      description: 'Powered by tu asistente personalizado para respuestas inteligentes'
     },
     {
       icon: (
