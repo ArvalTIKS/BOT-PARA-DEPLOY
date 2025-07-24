@@ -59,60 +59,113 @@ async def process_whatsapp_message(
         )
 
 async def generate_ai_response(message: str, phone_number: str, db) -> str:
-    """Generate response using OpenAI"""
+    """Generate response using OpenAI Assistant API"""
     try:
-        # Get conversation history for context
-        conversation_history = await get_conversation_history(db, phone_number)
+        # Get or create thread for this conversation
+        thread_id = await get_or_create_thread(db, phone_number)
         
-        # Create messages for OpenAI
-        messages = [
-            {
-                "role": "system",
-                "content": """Eres un asistente virtual profesional y amable que responde mensajes de WhatsApp. 
-
-Características:
-- Siempre responde en español
-- Sé cortés, profesional y útil
-- Mantén las respuestas concisas pero informativas
-- Adapta tu tono al contexto de la conversación
-- Si no sabes algo específico del negocio, pregunta amablemente o sugiere contactar directamente
-- Puedes ayudar con consultas generales, información, horarios, etc.
-
-Responde de manera natural como si fueras un asistente real del negocio."""
-            }
-        ]
-        
-        # Add conversation history
-        for msg in conversation_history[-10:]:  # Last 10 messages for context
-            role = "assistant" if msg.get('is_from_ai') else "user"
-            messages.append({
-                "role": role,
-                "content": msg['message']
-            })
-        
-        # Add current message
-        messages.append({
-            "role": "user",
-            "content": message
-        })
-        
-        # Generate response with OpenAI
+        # Initialize OpenAI client
         client = openai.OpenAI(api_key=os.environ.get('OPENAI_API_KEY'))
-        response = client.chat.completions.create(
-            model="gpt-4",
-            messages=messages,
-            max_tokens=300,
-            temperature=0.7
+        assistant_id = os.environ.get('OPENAI_ASSISTANT_ID')
+        
+        if not assistant_id:
+            print("Error: OPENAI_ASSISTANT_ID not configured")
+            return "Lo siento, hay un problema de configuración. Por favor intenta más tarde."
+        
+        # Add message to thread
+        client.beta.threads.messages.create(
+            thread_id=thread_id,
+            role="user",
+            content=message
         )
         
-        ai_response = response.choices[0].message.content.strip()
-        print(f"AI Response: {ai_response}")
+        # Run the assistant
+        run = client.beta.threads.runs.create(
+            thread_id=thread_id,
+            assistant_id=assistant_id
+        )
         
-        return ai_response
+        # Wait for completion
+        max_attempts = 30  # 30 seconds max
+        attempts = 0
+        
+        while run.status in ['queued', 'in_progress'] and attempts < max_attempts:
+            await asyncio.sleep(1)
+            run = client.beta.threads.runs.retrieve(
+                thread_id=thread_id,
+                run_id=run.id
+            )
+            attempts += 1
+        
+        if run.status == 'completed':
+            # Get the assistant's response
+            messages = client.beta.threads.messages.list(
+                thread_id=thread_id,
+                order="desc",
+                limit=1
+            )
+            
+            if messages.data and messages.data[0].role == 'assistant':
+                ai_response = messages.data[0].content[0].text.value
+                print(f"Assistant Response: {ai_response}")
+                return ai_response
+            else:
+                print("No assistant response found in thread")
+                return "Lo siento, no pude procesar tu mensaje correctamente. ¿Puedes intentar de nuevo?"
+        
+        elif run.status == 'failed':
+            print(f"Assistant run failed: {run.last_error}")
+            return "Lo siento, hubo un error procesando tu mensaje. Por favor intenta nuevamente."
+        
+        else:
+            print(f"Assistant run timed out or unexpected status: {run.status}")
+            return "Lo siento, la respuesta está tomando más tiempo del esperado. ¿Puedes intentar de nuevo?"
         
     except Exception as e:
-        print(f"Error generating AI response: {str(e)}")
+        print(f"Error with OpenAI Assistant: {str(e)}")
         return "¡Hola! Gracias por tu mensaje. En este momento estoy procesando tu consulta. ¿En qué puedo ayudarte?"
+
+async def get_or_create_thread(db, phone_number: str) -> str:
+    """Get existing thread ID or create new one for phone number"""
+    try:
+        threads_collection = db.whatsapp_threads
+        
+        # Look for existing thread
+        thread_doc = await threads_collection.find_one({"phone_number": phone_number})
+        
+        if thread_doc and thread_doc.get('thread_id'):
+            return thread_doc['thread_id']
+        
+        # Create new thread
+        client = openai.OpenAI(api_key=os.environ.get('OPENAI_API_KEY'))
+        thread = client.beta.threads.create()
+        
+        # Store thread ID
+        await threads_collection.update_one(
+            {"phone_number": phone_number},
+            {
+                "$set": {
+                    "thread_id": thread.id,
+                    "created_at": datetime.utcnow(),
+                    "last_used": datetime.utcnow()
+                }
+            },
+            upsert=True
+        )
+        
+        print(f"Created new thread {thread.id} for {phone_number}")
+        return thread.id
+        
+    except Exception as e:
+        print(f"Error managing thread: {str(e)}")
+        # Fallback: create temporary thread
+        try:
+            client = openai.OpenAI(api_key=os.environ.get('OPENAI_API_KEY'))
+            thread = client.beta.threads.create()
+            return thread.id
+        except Exception as fallback_error:
+            print(f"Fallback thread creation failed: {str(fallback_error)}")
+            raise Exception("Could not create conversation thread")
 
 async def store_message(db, phone_number: str, message: str, timestamp: int, is_from_ai: bool = False):
     """Store message in database"""
