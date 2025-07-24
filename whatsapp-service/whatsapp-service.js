@@ -46,7 +46,7 @@ function initializeWhatsApp() {
         try {
             // Generate QR code as data URL for frontend
             const qrDataUrl = await qrcode.toDataURL(qr);
-            console.log('QR Code generated successfully, expires in 20 seconds');
+            console.log('QR Code generated successfully, expires in 60 seconds');
             
             // Clear QR after 60 seconds to force refresh
             setTimeout(() => {
