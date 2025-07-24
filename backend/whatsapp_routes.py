@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from typing import Optional
 import httpx
 import os
+import asyncio
 from datetime import datetime
 import openai
 from database import get_database
