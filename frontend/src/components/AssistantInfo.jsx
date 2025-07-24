@@ -53,7 +53,7 @@ const AssistantInfo = () => {
         <div>
           <h3 className="text-xl font-bold text-white">Tu Asistente IA</h3>
           <Badge variant="outline" className="bg-green-500/20 text-green-300 border-green-500/30 text-xs">
-            OpenAI GPT-4
+            Asistente Personalizado
           </Badge>
         </div>
       </div>
