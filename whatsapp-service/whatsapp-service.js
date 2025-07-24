@@ -92,6 +92,7 @@ function initializeWhatsApp() {
         };
         
         console.log('📱 Connected user:', connectedUser);
+        console.log('✅ Bot is now ready to receive and respond to messages');
     });
 
     // Authentication success
