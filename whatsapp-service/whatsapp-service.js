@@ -139,6 +139,12 @@ function initializeWhatsApp() {
     client.on('auth_failure', msg => {
         console.error('Authentication failure:', msg);
         qrCodeData = null;
+        isConnected = false;
+    });
+
+    // Loading screen event
+    client.on('loading_screen', (percent, message) => {
+        console.log('Loading screen:', percent, message);
     });
 
     // Initialize the client
