@@ -20,11 +20,34 @@ def get_whatsapp_service_url():
     
     # Check if we're in Emergent deployed environment
     if os.environ.get('EMERGENT_ENV') == 'deploy' or os.environ.get('NODE_ENV') == 'production':
-        # In deployed environment, try service name first, fallback to localhost
+        # In deployed environment, construct the external URL
+        # Get the current domain from environment or construct it
+        import re
+        
+        # Try to get the domain from various sources
+        domain = None
+        
+        # Method 1: Check if we have a domain hint in environment
+        if os.environ.get('DEPLOYMENT_DOMAIN'):
+            domain = os.environ.get('DEPLOYMENT_DOMAIN')
+        
+        # Method 2: Try to construct from known patterns
+        # Emergent uses pattern: https://[app-name].emergent.host
+        else:
+            # Default to the known deployment domain
+            domain = 'whatsapp-qr-link.emergent.host'
+        
+        # Construct the WhatsApp service URL
+        external_whatsapp_url = f"https://{domain}"
+        
+        print(f"Deploy environment detected, using external URL: {external_whatsapp_url}")
+        
+        # Try external URL first, then fallback to internal
         service_urls = [
-            'http://whatsapp-service:3001',
-            'http://127.0.0.1:3001',
-            'http://localhost:3001'
+            f"{external_whatsapp_url}:3001",  # External with port
+            external_whatsapp_url,            # External without port
+            'http://127.0.0.1:3001',          # Internal fallback
+            'http://localhost:3001'           # Local fallback
         ]
         
         for url in service_urls:
@@ -32,9 +55,18 @@ def get_whatsapp_service_url():
                 import socket
                 from urllib.parse import urlparse
                 parsed = urlparse(url)
-                socket.getaddrinfo(parsed.hostname, parsed.port)
+                
+                # For external URLs, assume they're valid in deploy
+                if parsed.hostname and not parsed.hostname.startswith('127.') and not parsed.hostname.startswith('localhost'):
+                    print(f"Using external URL: {url}")
+                    return url
+                
+                # For internal URLs, test connectivity
+                socket.getaddrinfo(parsed.hostname, parsed.port or 80)
+                print(f"Internal URL tested successfully: {url}")
                 return url
-            except Exception:
+            except Exception as e:
+                print(f"URL {url} failed: {e}")
                 continue
     
     # Default to localhost for local development
