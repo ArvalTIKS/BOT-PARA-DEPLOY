@@ -69,12 +69,16 @@ async function initializeWhatsApp() {
             printQRInTerminal: false,
             logger: require('pino')({ level: 'silent' }),
             browser: ['WhatsApp Assistant', 'Chrome', '4.0.0'],
-            connectTimeoutMs: 90000, // Increased timeout
+            connectTimeoutMs: ENV_CONFIG.connectTimeoutMs,
             defaultQueryTimeoutMs: 0,
-            keepAliveIntervalMs: 30000, // Increased keep-alive
+            keepAliveIntervalMs: ENV_CONFIG.keepAliveIntervalMs,
             emitOwnEvents: true,
             markOnlineOnConnect: false,
             syncFullHistory: false,
+            // Deploy-specific optimizations
+            retryRequestDelayMs: 1000,
+            maxMsgRetryCount: 3,
+            requestTimeoutMs: 30000,
             getMessage: async (key) => {
                 return { conversation: '' };
             }
