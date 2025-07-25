@@ -109,6 +109,33 @@ async function initializeWhatsApp() {
                                  message.message.extendedTextMessage?.text || '';
                 
                 if (messageText) {
+                    const normalizedMessage = messageText.toLowerCase().trim();
+                    
+                    // Check for bot control commands
+                    if (normalizedMessage === 'activar bot') {
+                        try {
+                            await sock.sendMessage(message.key.remoteJid, { 
+                                text: '✅ Bot activado. Responderé automáticamente a todos los mensajes del Estudio Jurídico Villegas Otárola.' 
+                            });
+                            console.log('Bot activated for:', message.key.remoteJid);
+                            return;
+                        } catch (error) {
+                            console.error('Error activating bot:', error);
+                        }
+                    }
+                    
+                    if (normalizedMessage === 'suspender bot') {
+                        try {
+                            await sock.sendMessage(message.key.remoteJid, { 
+                                text: '⏸️ Bot suspendido. Ahora puedes usar tu celular normalmente.' 
+                            });
+                            console.log('Bot suspended for:', message.key.remoteJid);
+                            return;
+                        } catch (error) {
+                            console.error('Error suspending bot:', error);
+                        }
+                    }
+                    
                     console.log('Received message:', messageText);
                     console.log('From:', message.key.remoteJid);
                     
