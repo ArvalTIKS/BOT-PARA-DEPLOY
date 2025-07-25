@@ -196,7 +196,16 @@ async def get_or_create_thread(db, phone_number: str) -> str:
         thread_doc = await threads_collection.find_one({"phone_number": phone_number})
         
         if thread_doc and thread_doc.get('thread_id'):
-            return thread_doc['thread_id']
+            # Verify thread still exists in OpenAI
+            try:
+                client = openai.OpenAI(api_key=os.environ.get('OPENAI_API_KEY'))
+                thread = client.beta.threads.retrieve(thread_doc['thread_id'])
+                print(f"Using existing thread {thread.id} for {phone_number}")
+                return thread.id
+            except Exception as e:
+                print(f"Thread {thread_doc['thread_id']} no longer exists in OpenAI: {e}")
+                # Delete corrupted thread from database
+                await threads_collection.delete_one({"phone_number": phone_number})
         
         # Create new thread
         client = openai.OpenAI(api_key=os.environ.get('OPENAI_API_KEY'))
