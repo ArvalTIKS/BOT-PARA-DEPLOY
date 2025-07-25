@@ -303,9 +303,29 @@ app.post('/restart', async (req, res) => {
 });
 
 // Start server
-app.listen(PORT, () => {
+const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`WhatsApp service (Baileys) running on port ${PORT}`);
-    initializeWhatsApp();
+    // Wait a moment before initializing to ensure server is ready
+    setTimeout(() => {
+        initializeWhatsApp();
+    }, 2000);
+});
+
+// Handle server errors
+server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+        console.log(`Port ${PORT} is already in use. Trying to find available port...`);
+        // Try a different port
+        const alternativePort = PORT + 1;
+        server.listen(alternativePort, '0.0.0.0', () => {
+            console.log(`WhatsApp service (Baileys) running on alternative port ${alternativePort}`);
+            setTimeout(() => {
+                initializeWhatsApp();
+            }, 2000);
+        });
+    } else {
+        console.error('Server error:', err);
+    }
 });
 
 // Graceful shutdown
