@@ -90,7 +90,7 @@ async function initializeWhatsApp() {
 
         isInitializing = false;
 
-        // QR Code event
+        // Enhanced error handling with automatic cleanup
         sock.ev.on('connection.update', async (update) => {
             const { connection, lastDisconnect, qr } = update;
             
@@ -117,13 +117,16 @@ async function initializeWhatsApp() {
                 // Check for specific 401 error (ANY 401 error needs cleanup)
                 const is401Error = lastDisconnect?.error?.output?.statusCode === 401;
                 
-                if (is401Error) {
-                    console.log('🚨 Detected 401 error - cleaning session and reinitializing');
+                // Check for connection failure that needs cleanup
+                const isConnectionFailure = lastDisconnect?.error?.output?.payload?.message?.includes('Connection Failure');
+                
+                if (is401Error || isConnectionFailure) {
+                    console.log('🚨 Detected session corruption - cleaning and reinitializing');
                     console.log('Error details:', lastDisconnect?.error?.output?.payload);
                     
                     // Clean up auth data for fresh start
                     if (fs.existsSync(authDir)) {
-                        console.log('🧹 Removing corrupted auth data');
+                        console.log('🧹 Removing corrupted auth data automatically');
                         fs.rmSync(authDir, { recursive: true, force: true });
                     }
                     
@@ -132,7 +135,7 @@ async function initializeWhatsApp() {
                     
                     // Reinitialize after short delay
                     setTimeout(() => {
-                        console.log('🔄 Reinitializing WhatsApp after 401 error');
+                        console.log('🔄 Auto-reinitializing WhatsApp with clean session');
                         initializeWhatsApp();
                     }, 5000);
                     
