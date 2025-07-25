@@ -50,14 +50,20 @@ const QRAssistantPage = () => {
   // Fetch QR code
   const fetchQRCode = async () => {
     try {
+      console.log('Fetching QR from:', `${API_BASE}/api/whatsapp/qr`);
       const response = await axios.get(`${API_BASE}/api/whatsapp/qr`);
+      console.log('QR response:', response.data);
+      
       if (response.data.qr) {
         setQrCode(response.data.qr);
+        console.log('QR code set successfully');
       } else {
         setQrCode(null);
+        console.log('No QR in response');
       }
     } catch (error) {
       console.error('Error fetching QR code:', error);
+      console.error('Request URL:', `${API_BASE}/api/whatsapp/qr`);
       setQrCode(null);
     }
   };
