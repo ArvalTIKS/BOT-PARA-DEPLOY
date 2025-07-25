@@ -266,8 +266,15 @@ async def get_conversation_history(db, phone_number: str, limit: int = 20):
 async def get_qr_code():
     """Get current QR code for WhatsApp authentication"""
     try:
+        # In deploy, WhatsApp service endpoints are proxied through the same domain
+        if os.environ.get('EMERGENT_ENV') == 'deploy':
+            # Use the same domain but different path
+            whatsapp_url = f"{WHATSAPP_SERVICE_URL}/whatsapp-service"
+        else:
+            whatsapp_url = WHATSAPP_SERVICE_URL
+            
         async with httpx.AsyncClient() as client:
-            response = await client.get(f"{WHATSAPP_SERVICE_URL}/qr", timeout=10.0)
+            response = await client.get(f"{whatsapp_url}/qr", timeout=10.0)
             return response.json()
     except Exception as e:
         print(f"Error getting QR code: {str(e)}")
@@ -277,8 +284,15 @@ async def get_qr_code():
 async def get_whatsapp_status():
     """Get WhatsApp connection status"""
     try:
+        # In deploy, WhatsApp service endpoints are proxied through the same domain
+        if os.environ.get('EMERGENT_ENV') == 'deploy':
+            # Use the same domain but different path
+            whatsapp_url = f"{WHATSAPP_SERVICE_URL}/whatsapp-service"
+        else:
+            whatsapp_url = WHATSAPP_SERVICE_URL
+            
         async with httpx.AsyncClient() as client:
-            response = await client.get(f"{WHATSAPP_SERVICE_URL}/status", timeout=10.0)
+            response = await client.get(f"{whatsapp_url}/status", timeout=10.0)
             return response.json()
     except Exception as e:
         print(f"Error getting WhatsApp status: {str(e)}")
