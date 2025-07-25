@@ -119,8 +119,12 @@ async function initializeWhatsApp() {
                     console.log(`Reconnection attempt ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS}`);
                     
                     // Deploy-optimized reconnection strategy
-                    const baseDelay = ENV_CONFIG.reconnectDelayMs;
-                    const delay = Math.min(baseDelay * reconnectAttempts, ENV_CONFIG.maxReconnectDelay);
+                    const reconnectConfig = isDeployEnv ? deployConfig.reconnection : {
+                        baseDelayMs: 5000,
+                        maxDelayMs: 30000
+                    };
+                    
+                    const delay = Math.min(reconnectConfig.baseDelayMs * reconnectAttempts, reconnectConfig.maxDelayMs);
                     
                     setTimeout(() => {
                         initializeWhatsApp();
@@ -129,12 +133,12 @@ async function initializeWhatsApp() {
                     console.log('Max reconnection attempts reached, implementing deploy-specific recovery');
                     
                     // Deploy-specific recovery: Don't immediately clear auth data
-                    if (ENV_CONFIG.sessionPersistence) {
+                    if (isDeployEnv && deployConfig.session.persistData) {
                         console.log('Attempting session recovery in deploy environment');
                         setTimeout(() => {
                             reconnectAttempts = 0;
                             initializeWhatsApp();
-                        }, ENV_CONFIG.maxReconnectDelay);
+                        }, deployConfig.reconnection.sessionRecoveryDelayMs);
                     } else {
                         // Clear auth data if not in deploy
                         if (fs.existsSync(authDir)) {
