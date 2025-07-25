@@ -8,7 +8,32 @@ import ConnectionStatus from './ConnectionStatus';
 import AssistantInfo from './AssistantInfo';
 import axios from 'axios';
 
-const API_BASE = process.env.REACT_APP_BACKEND_URL || window.location.origin;
+// Auto-detect environment and use appropriate backend URL
+const getBackendUrl = () => {
+  // If explicitly set, use it
+  if (process.env.REACT_APP_BACKEND_URL) {
+    return process.env.REACT_APP_BACKEND_URL;
+  }
+  
+  // Auto-detect based on current URL
+  const currentHost = window.location.hostname;
+  const currentProtocol = window.location.protocol;
+  
+  // If on emergent.host domain (deployed), use same domain
+  if (currentHost.includes('emergent.host')) {
+    return `${currentProtocol}//${currentHost}`;
+  }
+  
+  // Default to localhost for development
+  return 'http://localhost:8001';
+};
+
+const API_BASE = getBackendUrl();
+
+// Debug logging
+console.log('Current URL:', window.location.href);
+console.log('API_BASE:', API_BASE);
+console.log('Environment:', process.env.NODE_ENV);
 
 const QRAssistantPage = () => {
   const [connectionStatus, setConnectionStatus] = useState('disconnected');
