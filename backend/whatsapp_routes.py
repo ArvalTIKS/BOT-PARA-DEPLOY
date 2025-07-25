@@ -18,41 +18,52 @@ def get_whatsapp_service_url():
     if os.environ.get('WHATSAPP_SERVICE_URL'):
         return os.environ.get('WHATSAPP_SERVICE_URL')
     
-    # EXACT SOLUTION: Different networking for preview vs deploy
+    # EMERGENT SUPPORT SOLUTION: Enhanced debugging for deploy
     if os.environ.get('EMERGENT_ENV') == 'deploy':
-        # In deploy, services are in separate containers
-        # Try multiple possible service names based on Emergent patterns
+        print("🔍 DEPLOY DEBUGGING - Testing multiple service URLs")
+        
+        # Test multiple options as suggested by Emergent Support
         service_urls = [
-            'http://whatsapp-service:3001',                    # Standard service name
-            'http://app-whatsapp-service:3001',               # With app prefix
-            'http://agent-env-e9f5a271-719e-4478-b51d-ca9958d18228-whatsapp-service:3001',  # Full hostname pattern
-            'http://whatsapp-service.default.svc.cluster.local:3001',  # Kubernetes FQDN
-            'http://127.0.0.1:3001',                         # Internal IP
-            'http://localhost:3001'                          # Fallback
+            'http://localhost:3001',                          # Same container
+            'http://127.0.0.1:3001',                         # Local IP
+            'http://whatsapp-service:3001',                  # Service name
+            'http://0.0.0.0:3001',                          # All interfaces
         ]
         
         for url in service_urls:
             try:
-                print(f"Testing connection to: {url}")
+                print(f"🧪 Testing connection to: {url}")
                 import socket
                 from urllib.parse import urlparse
                 parsed = urlparse(url)
                 
-                # Test if hostname resolves
+                # Test hostname resolution
                 try:
-                    socket.getaddrinfo(parsed.hostname, parsed.port or 80)
-                    print(f"✅ Successfully resolved: {url}")
-                    return url
-                except:
-                    print(f"❌ Failed to resolve: {url}")
+                    ip = socket.gethostbyname(parsed.hostname)
+                    print(f"✅ {parsed.hostname} resolves to: {ip}")
+                    
+                    # Test port connectivity
+                    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    sock.settimeout(5)
+                    result = sock.connect_ex((ip, parsed.port or 80))
+                    sock.close()
+                    
+                    if result == 0:
+                        print(f"✅ Port {parsed.port} is open on {ip}")
+                        print(f"🎯 SELECTED SERVICE URL: {url}")
+                        return url
+                    else:
+                        print(f"❌ Port {parsed.port} is closed on {ip}")
+                        
+                except Exception as e:
+                    print(f"❌ Failed to resolve {parsed.hostname}: {e}")
                     continue
                     
             except Exception as e:
                 print(f"❌ Error testing {url}: {e}")
                 continue
                 
-        # If all fail, return default
-        print("⚠️ All service URLs failed, using localhost fallback")
+        print("⚠️ All service URLs failed - using localhost fallback")
         return 'http://localhost:3001'
     else:
         # In preview, everything is in same container
