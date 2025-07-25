@@ -319,6 +319,197 @@ class BackendTester:
         except Exception as e:
             self.log_test("Conversation History Endpoint", False, f"Error: {str(e)}")
 
+    async def test_baileys_service_health(self):
+        """Test Baileys WhatsApp service health and status"""
+        try:
+            async with self.session.get(f"{self.whatsapp_service_url}/health", timeout=10) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    status = data.get('status', 'unknown')
+                    connected = data.get('connected', False)
+                    timestamp = data.get('timestamp', 'unknown')
+                    
+                    self.log_test(
+                        "Baileys Service Health Check", 
+                        True, 
+                        f"Status: {status}, Connected: {connected}, Timestamp: {timestamp}"
+                    )
+                else:
+                    self.log_test(
+                        "Baileys Service Health Check", 
+                        False, 
+                        f"HTTP {response.status}",
+                        await response.text()
+                    )
+        except Exception as e:
+            self.log_test("Baileys Service Health Check", False, f"Error: {str(e)}")
+
+    async def test_baileys_qr_generation(self):
+        """Test Baileys QR code generation"""
+        try:
+            async with self.session.get(f"{self.whatsapp_service_url}/qr", timeout=15) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    has_qr = data.get('qr') is not None
+                    has_raw = data.get('raw') is not None
+                    
+                    self.log_test(
+                        "Baileys QR Code Generation", 
+                        True, 
+                        f"QR available: {has_qr}, Raw QR data: {has_raw}"
+                    )
+                else:
+                    self.log_test(
+                        "Baileys QR Code Generation", 
+                        False, 
+                        f"HTTP {response.status}",
+                        await response.text()
+                    )
+        except Exception as e:
+            self.log_test("Baileys QR Code Generation", False, f"Error: {str(e)}")
+
+    async def test_baileys_status_endpoint(self):
+        """Test Baileys status endpoint with user info"""
+        try:
+            async with self.session.get(f"{self.whatsapp_service_url}/status", timeout=10) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    connected = data.get('connected', False)
+                    has_qr = data.get('hasQR', False)
+                    user = data.get('user')
+                    
+                    user_info = "No user info" if not user else f"User: {user.get('name', 'Unknown')}"
+                    
+                    self.log_test(
+                        "Baileys Status Endpoint", 
+                        True, 
+                        f"Connected: {connected}, Has QR: {has_qr}, {user_info}"
+                    )
+                else:
+                    self.log_test(
+                        "Baileys Status Endpoint", 
+                        False, 
+                        f"HTTP {response.status}",
+                        await response.text()
+                    )
+        except Exception as e:
+            self.log_test("Baileys Status Endpoint", False, f"Error: {str(e)}")
+
+    async def test_bot_activation_command(self):
+        """Test bot activation command processing"""
+        try:
+            activation_message = {
+                "phone_number": "5491234567890",
+                "message": "activar bot",
+                "message_id": "test_activate_001",
+                "timestamp": int(time.time())
+            }
+            
+            async with self.session.post(
+                f"{self.backend_url}/api/whatsapp/process-message",
+                json=activation_message,
+                timeout=30
+            ) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    success = data.get('success', False)
+                    reply = data.get('reply', '')
+                    
+                    # Check if the reply contains activation confirmation
+                    contains_activation = 'activado' in reply.lower() or 'bot' in reply.lower()
+                    
+                    self.log_test(
+                        "Bot Activation Command", 
+                        True, 
+                        f"Success: {success}, Contains activation response: {contains_activation}, Reply: {reply[:100]}..."
+                    )
+                else:
+                    self.log_test(
+                        "Bot Activation Command", 
+                        False, 
+                        f"HTTP {response.status}",
+                        await response.text()
+                    )
+        except Exception as e:
+            self.log_test("Bot Activation Command", False, f"Error: {str(e)}")
+
+    async def test_bot_suspension_command(self):
+        """Test bot suspension command processing"""
+        try:
+            suspension_message = {
+                "phone_number": "5491234567890",
+                "message": "suspender bot",
+                "message_id": "test_suspend_001",
+                "timestamp": int(time.time())
+            }
+            
+            async with self.session.post(
+                f"{self.backend_url}/api/whatsapp/process-message",
+                json=suspension_message,
+                timeout=30
+            ) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    success = data.get('success', False)
+                    reply = data.get('reply', '')
+                    
+                    # Check if the reply contains suspension confirmation
+                    contains_suspension = 'suspendido' in reply.lower() or 'bot' in reply.lower()
+                    
+                    self.log_test(
+                        "Bot Suspension Command", 
+                        True, 
+                        f"Success: {success}, Contains suspension response: {contains_suspension}, Reply: {reply[:100]}..."
+                    )
+                else:
+                    self.log_test(
+                        "Bot Suspension Command", 
+                        False, 
+                        f"HTTP {response.status}",
+                        await response.text()
+                    )
+        except Exception as e:
+            self.log_test("Bot Suspension Command", False, f"Error: {str(e)}")
+
+    async def test_openai_assistant_integration(self):
+        """Test OpenAI Assistant integration with specific legal query"""
+        try:
+            legal_query = {
+                "phone_number": "5491234567890",
+                "message": "¿Qué servicios ofrece el Estudio Jurídico Villegas Otárola?",
+                "message_id": "test_legal_001",
+                "timestamp": int(time.time())
+            }
+            
+            async with self.session.post(
+                f"{self.backend_url}/api/whatsapp/process-message",
+                json=legal_query,
+                timeout=30
+            ) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    success = data.get('success', False)
+                    reply = data.get('reply', '')
+                    
+                    # Check if reply mentions the law firm
+                    mentions_firm = 'villegas' in reply.lower() and 'otárola' in reply.lower()
+                    mentions_legal = 'jurídico' in reply.lower() or 'legal' in reply.lower()
+                    
+                    self.log_test(
+                        "OpenAI Assistant Integration", 
+                        True, 
+                        f"Success: {success}, Mentions firm: {mentions_firm}, Legal context: {mentions_legal}, Reply length: {len(reply)}"
+                    )
+                else:
+                    self.log_test(
+                        "OpenAI Assistant Integration", 
+                        False, 
+                        f"HTTP {response.status}",
+                        await response.text()
+                    )
+        except Exception as e:
+            self.log_test("OpenAI Assistant Integration", False, f"Error: {str(e)}")
+
     async def test_error_handling(self):
         """Test error handling with invalid requests"""
         # Test invalid message processing
