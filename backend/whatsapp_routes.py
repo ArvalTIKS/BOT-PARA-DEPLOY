@@ -18,15 +18,38 @@ def get_whatsapp_service_url():
     if os.environ.get('WHATSAPP_SERVICE_URL'):
         return os.environ.get('WHATSAPP_SERVICE_URL')
     
-    # CRITICAL FIX: Even in deploy, use internal networking
-    # Emergent doesn't expose custom ports externally
-    # All inter-service communication must use internal IPs
-    
-    # Always use internal networking for WhatsApp service
-    return 'http://localhost:3001'
+    # EXACT SOLUTION: Different networking for preview vs deploy
+    if os.environ.get('EMERGENT_ENV') == 'deploy':
+        # In deploy, services are in separate containers
+        # Try internal service names that Emergent should provide
+        service_urls = [
+            'http://whatsapp-service:3001',  # Internal service name
+            'http://127.0.0.1:3001',        # Internal IP
+            'http://localhost:3001'         # Fallback
+        ]
+        
+        for url in service_urls:
+            try:
+                print(f"Attempting to connect to: {url}")
+                import socket
+                from urllib.parse import urlparse
+                parsed = urlparse(url)
+                socket.getaddrinfo(parsed.hostname, parsed.port or 80, timeout=2)
+                print(f"Successfully resolved: {url}")
+                return url
+            except Exception as e:
+                print(f"Failed to resolve {url}: {e}")
+                continue
+                
+        # If all fail, return default
+        return 'http://localhost:3001'
+    else:
+        # In preview, everything is in same container
+        return 'http://localhost:3001'
 
 WHATSAPP_SERVICE_URL = get_whatsapp_service_url()
 print(f"WhatsApp service URL configured: {WHATSAPP_SERVICE_URL}")
+print(f"Environment: EMERGENT_ENV={os.environ.get('EMERGENT_ENV')}")
 
 class IncomingMessage(BaseModel):
     phone_number: str
