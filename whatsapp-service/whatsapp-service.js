@@ -78,6 +78,7 @@ async function initializeWhatsApp() {
             if (qr) {
                 console.log('QR Code received');
                 qrCodeData = qr;
+                reconnectAttempts = 0; // Reset reconnect attempts when QR is generated
                 try {
                     const qrDataUrl = await qrcode.toDataURL(qr);
                     console.log('QR Code generated successfully');
@@ -94,10 +95,25 @@ async function initializeWhatsApp() {
                 connectedUser = null;
                 qrCodeData = null;
                 
-                if (shouldReconnect) {
+                if (shouldReconnect && reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+                    reconnectAttempts++;
+                    console.log(`Reconnection attempt ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS}`);
+                    
+                    const delay = Math.min(5000 * reconnectAttempts, 30000); // Progressive backoff
                     setTimeout(() => {
                         initializeWhatsApp();
-                    }, 5000);
+                    }, delay);
+                } else if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+                    console.log('Max reconnection attempts reached, stopping automatic reconnection');
+                    // Clear auth data if too many failures
+                    if (fs.existsSync(authDir)) {
+                        fs.rmSync(authDir, { recursive: true, force: true });
+                    }
+                    // Try once more with clean state
+                    setTimeout(() => {
+                        reconnectAttempts = 0;
+                        initializeWhatsApp();
+                    }, 60000); // Wait 1 minute before trying with clean state
                 }
             } else if (connection === 'open') {
                 console.log('WhatsApp connection opened successfully');
