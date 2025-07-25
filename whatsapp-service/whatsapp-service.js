@@ -6,33 +6,27 @@ const cors = require('cors');
 const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
+const deployConfig = require('./deploy-config');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-const PORT = process.env.PORT || 3001;
+const PORT = deployConfig.server.port;
 const FASTAPI_URL = process.env.FASTAPI_URL || 'http://localhost:8001';
+
+// Deploy-aware environment detection
+const isDeployEnv = deployConfig.isProduction || process.env.EMERGENT_ENV === 'deploy';
+console.log(`Running in ${isDeployEnv ? 'DEPLOY' : 'PREVIEW'} environment`);
 
 let sock = null;
 let qrCodeData = null;
 let isConnected = false;
 let connectedUser = null;
-let authDir = './baileys_auth_info';
+let authDir = deployConfig.session.authDirectory;
 let isInitializing = false;
 let reconnectAttempts = 0;
-const MAX_RECONNECT_ATTEMPTS = 3;
-
-// Environment-specific configurations
-const ENV_CONFIG = {
-    // Deploy environment needs more robust settings
-    connectTimeoutMs: process.env.NODE_ENV === 'production' ? 120000 : 90000,
-    keepAliveIntervalMs: process.env.NODE_ENV === 'production' ? 45000 : 30000,
-    reconnectDelayMs: process.env.NODE_ENV === 'production' ? 10000 : 5000,
-    maxReconnectDelay: process.env.NODE_ENV === 'production' ? 60000 : 30000,
-    // More permissive session management for deploy
-    sessionPersistence: process.env.NODE_ENV === 'production' ? true : false
-};
+const MAX_RECONNECT_ATTEMPTS = deployConfig.reconnection.maxAttempts;
 
 // Initialize WhatsApp with Baileys
 async function initializeWhatsApp() {
