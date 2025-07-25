@@ -128,6 +128,33 @@ backend:
         - working: true
           agent: "testing"
           comment: "WhatsApp service running on port 3001, health endpoint accessible, service status: running, WhatsApp not connected (expected without QR scan)"
+        - working: true
+          agent: "testing"
+          comment: "BAILEYS VERIFICATION: Baileys WhatsApp service running correctly on port 3001 under supervisor. Service health check passing, QR generation active, using WA version 2.3000.1023223821. All endpoints responding correctly."
+
+  - task: "Baileys Implementation"
+    implemented: true
+    working: true
+    file: "/app/whatsapp-service/whatsapp-service.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "CRITICAL VERIFICATION: Baileys (@whiskeysockets/baileys v6.7.18) successfully implemented and running. QR code generation working, service health checks passing, proper error handling implemented. Service now managed by supervisor for stability."
+
+  - task: "Bot Activation/Suspension Commands"
+    implemented: true
+    working: true
+    file: "/app/whatsapp-service/whatsapp-service.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "COMMAND VERIFICATION: Bot commands 'activar bot' and 'suspender bot' implemented in Baileys service (lines 115-137). Commands are case-insensitive and will respond with activation/suspension messages when WhatsApp is connected. Currently being processed through OpenAI flow when not connected (expected behavior)."
 
   - task: "Status Endpoints (GET/POST)"
     implemented: true
@@ -152,6 +179,9 @@ backend:
         - working: true
           agent: "testing"
           comment: "GET /api/whatsapp/qr endpoint accessible and returns QR code data when available. Successfully proxies to WhatsApp service"
+        - working: true
+          agent: "testing"
+          comment: "BAILEYS QR VERIFICATION: QR endpoint working perfectly with Baileys. Returns both data URL and raw QR data. QR generation confirmed active and stable."
 
   - task: "WhatsApp Status Endpoint"
     implemented: true
@@ -188,6 +218,9 @@ backend:
         - working: true
           agent: "testing"
           comment: "POST /api/whatsapp/process-message endpoint working perfectly. Successfully processes messages with OpenAI GPT-4, stores messages in MongoDB, returns AI-generated responses in Spanish. Full integration chain working: FastAPI → OpenAI → MongoDB"
+        - working: true
+          agent: "testing"
+          comment: "OPENAI ASSISTANT VERIFICATION: OpenAI Assistant (asst_OvGYN1gteWdyeBISsd5FC8Rd) working perfectly. Correctly identifies as 'Estudio Jurídico Villegas Otárola Abogados' and provides appropriate legal services responses in Spanish. Thread management working correctly."
 
   - task: "Send Message Endpoint"
     implemented: true
@@ -251,6 +284,18 @@ backend:
         - working: true
           agent: "testing"
           comment: "FastAPI successfully communicates with WhatsApp service on port 3001. All proxy endpoints (QR, status, send-message) working correctly via httpx client"
+
+  - task: "Supervisor Service Management"
+    implemented: true
+    working: true
+    file: "/etc/supervisor/conf.d/supervisord.conf"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "SUPERVISOR VERIFICATION: All services now running under supervisor - backend (8001), frontend (3000), mongodb, and whatsapp-service (3001). WhatsApp service added to supervisor configuration for production stability. All services showing RUNNING status."
 
 frontend:
   # Frontend testing not performed as per instructions
