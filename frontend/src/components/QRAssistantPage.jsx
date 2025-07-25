@@ -8,7 +8,7 @@ import ConnectionStatus from './ConnectionStatus';
 import AssistantInfo from './AssistantInfo';
 import axios from 'axios';
 
-const API_BASE = process.env.REACT_APP_BACKEND_URL;
+const API_BASE = process.env.REACT_APP_BACKEND_URL || window.location.origin;
 
 const QRAssistantPage = () => {
   const [connectionStatus, setConnectionStatus] = useState('disconnected');
