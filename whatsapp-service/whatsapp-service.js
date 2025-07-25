@@ -23,6 +23,17 @@ let isInitializing = false;
 let reconnectAttempts = 0;
 const MAX_RECONNECT_ATTEMPTS = 3;
 
+// Environment-specific configurations
+const ENV_CONFIG = {
+    // Deploy environment needs more robust settings
+    connectTimeoutMs: process.env.NODE_ENV === 'production' ? 120000 : 90000,
+    keepAliveIntervalMs: process.env.NODE_ENV === 'production' ? 45000 : 30000,
+    reconnectDelayMs: process.env.NODE_ENV === 'production' ? 10000 : 5000,
+    maxReconnectDelay: process.env.NODE_ENV === 'production' ? 60000 : 30000,
+    // More permissive session management for deploy
+    sessionPersistence: process.env.NODE_ENV === 'production' ? true : false
+};
+
 // Initialize WhatsApp with Baileys
 async function initializeWhatsApp() {
     try {
