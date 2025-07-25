@@ -14,28 +14,38 @@ router = APIRouter(prefix="/api/whatsapp", tags=["whatsapp"])
 openai.api_key = os.environ.get('OPENAI_API_KEY')
 # Auto-detect WhatsApp service URL based on environment
 def get_whatsapp_service_url():
+    print(f"DEBUG: Checking WHATSAPP_SERVICE_URL: {os.environ.get('WHATSAPP_SERVICE_URL')}")
+    print(f"DEBUG: EMERGENT_ENV: {os.environ.get('EMERGENT_ENV')}")
+    print(f"DEBUG: NODE_ENV: {os.environ.get('NODE_ENV')}")
+    
     # Check for explicit environment variable first
     if os.environ.get('WHATSAPP_SERVICE_URL'):
+        print(f"DEBUG: Using explicit WHATSAPP_SERVICE_URL: {os.environ.get('WHATSAPP_SERVICE_URL')}")
         return os.environ.get('WHATSAPP_SERVICE_URL')
     
     # Auto-detect based on environment
     # Method 1: Check for containerized environment indicators
     if os.path.exists('/.dockerenv') or os.environ.get('KUBERNETES_SERVICE_HOST'):
+        print("DEBUG: Detected containerized environment")
         return 'http://whatsapp-service:3001'
     
     # Method 2: Try to resolve service name
     try:
         import socket
         socket.gethostbyname('whatsapp-service')
+        print("DEBUG: Resolved whatsapp-service hostname")
         return 'http://whatsapp-service:3001'
-    except:
+    except Exception as e:
+        print(f"DEBUG: Could not resolve whatsapp-service: {e}")
         pass
     
     # Method 3: Check if we're in Emergent deployed environment
     if os.environ.get('EMERGENT_ENV') == 'deploy' or os.environ.get('NODE_ENV') == 'production':
+        print("DEBUG: Detected Emergent deploy environment")
         return 'http://whatsapp-service:3001'
     
     # Default to localhost for local development
+    print("DEBUG: Using localhost for local development")
     return 'http://localhost:3001'
 
 WHATSAPP_SERVICE_URL = get_whatsapp_service_url()
