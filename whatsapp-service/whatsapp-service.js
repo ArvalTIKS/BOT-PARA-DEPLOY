@@ -114,21 +114,33 @@ async function initializeWhatsApp() {
                     reconnectAttempts++;
                     console.log(`Reconnection attempt ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS}`);
                     
-                    const delay = Math.min(5000 * reconnectAttempts, 30000); // Progressive backoff
+                    // Deploy-optimized reconnection strategy
+                    const baseDelay = ENV_CONFIG.reconnectDelayMs;
+                    const delay = Math.min(baseDelay * reconnectAttempts, ENV_CONFIG.maxReconnectDelay);
+                    
                     setTimeout(() => {
                         initializeWhatsApp();
                     }, delay);
                 } else if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
-                    console.log('Max reconnection attempts reached, stopping automatic reconnection');
-                    // Clear auth data if too many failures
-                    if (fs.existsSync(authDir)) {
-                        fs.rmSync(authDir, { recursive: true, force: true });
+                    console.log('Max reconnection attempts reached, implementing deploy-specific recovery');
+                    
+                    // Deploy-specific recovery: Don't immediately clear auth data
+                    if (ENV_CONFIG.sessionPersistence) {
+                        console.log('Attempting session recovery in deploy environment');
+                        setTimeout(() => {
+                            reconnectAttempts = 0;
+                            initializeWhatsApp();
+                        }, ENV_CONFIG.maxReconnectDelay);
+                    } else {
+                        // Clear auth data if not in deploy
+                        if (fs.existsSync(authDir)) {
+                            fs.rmSync(authDir, { recursive: true, force: true });
+                        }
+                        setTimeout(() => {
+                            reconnectAttempts = 0;
+                            initializeWhatsApp();
+                        }, 60000);
                     }
-                    // Try once more with clean state
-                    setTimeout(() => {
-                        reconnectAttempts = 0;
-                        initializeWhatsApp();
-                    }, 60000); // Wait 1 minute before trying with clean state
                 }
             } else if (connection === 'open') {
                 console.log('WhatsApp connection opened successfully');
