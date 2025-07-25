@@ -587,6 +587,19 @@ class BackendTester:
         await self.test_message_processing_endpoint()
         await self.test_send_message_endpoint()
         await self.test_conversation_history_endpoint()
+        
+        # Baileys-specific tests
+        await self.test_baileys_service_health()
+        await self.test_baileys_qr_generation()
+        await self.test_baileys_status_endpoint()
+        
+        # Bot command tests
+        await self.test_bot_activation_command()
+        await self.test_bot_suspension_command()
+        
+        # OpenAI Assistant integration test
+        await self.test_openai_assistant_integration()
+        
         await self.test_error_handling()
         
         # Summary
