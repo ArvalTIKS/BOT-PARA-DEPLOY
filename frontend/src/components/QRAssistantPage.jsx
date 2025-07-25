@@ -65,8 +65,11 @@ const QRAssistantPage = () => {
   // Check WhatsApp connection status
   const checkConnectionStatus = async () => {
     try {
+      console.log('Checking status at:', `${API_BASE}/api/whatsapp/status`);
       const response = await axios.get(`${API_BASE}/api/whatsapp/status`);
       const data = response.data;
+      
+      console.log('Status response:', data);
       
       if (data.connected) {
         setConnectionStatus('connected');
@@ -75,14 +78,17 @@ const QRAssistantPage = () => {
       } else if (data.hasQR) {
         setConnectionStatus('disconnected');
         setConnectedUser(null);
+        console.log('QR available, fetching...');
         await fetchQRCode();
       } else {
         setConnectionStatus('disconnected');
         setConnectedUser(null);
         setQrCode(null);
+        console.log('No QR available yet');
       }
     } catch (error) {
       console.error('Error checking connection status:', error);
+      console.error('Request URL:', `${API_BASE}/api/whatsapp/status`);
       setConnectionStatus('error');
     }
   };
