@@ -12,7 +12,27 @@ router = APIRouter(prefix="/api/whatsapp", tags=["whatsapp"])
 
 # OpenAI client
 openai.api_key = os.environ.get('OPENAI_API_KEY')
-WHATSAPP_SERVICE_URL = os.environ.get('WHATSAPP_SERVICE_URL', 'http://localhost:3001')
+# Auto-detect WhatsApp service URL based on environment
+def get_whatsapp_service_url():
+    # Check for explicit environment variable first
+    if os.environ.get('WHATSAPP_SERVICE_URL'):
+        return os.environ.get('WHATSAPP_SERVICE_URL')
+    
+    # Auto-detect based on environment
+    # In containerized/deployed environments, use service name
+    # In local development, use localhost
+    try:
+        # Try to detect if we're in a containerized environment
+        import socket
+        socket.gethostbyname('whatsapp-service')
+        # If we can resolve 'whatsapp-service', we're in containerized environment
+        return 'http://whatsapp-service:3001'
+    except:
+        # If we can't resolve service name, we're in local development
+        return 'http://localhost:3001'
+
+WHATSAPP_SERVICE_URL = get_whatsapp_service_url()
+print(f"Using WhatsApp service URL: {WHATSAPP_SERVICE_URL}")
 
 class IncomingMessage(BaseModel):
     phone_number: str
