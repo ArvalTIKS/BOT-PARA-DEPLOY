@@ -39,7 +39,7 @@ async function initializeWhatsApp() {
             version,
             auth: state,
             printQRInTerminal: false,
-            logger: { level: 'silent' },
+            logger: require('pino')({ level: 'silent' }),
             browser: ['WhatsApp Assistant', 'Chrome', '4.0.0'],
             connectTimeoutMs: 60000,
             defaultQueryTimeoutMs: 0,
