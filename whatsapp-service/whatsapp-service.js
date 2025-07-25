@@ -19,6 +19,9 @@ let qrCodeData = null;
 let isConnected = false;
 let connectedUser = null;
 let authDir = './baileys_auth_info';
+let isInitializing = false;
+let reconnectAttempts = 0;
+const MAX_RECONNECT_ATTEMPTS = 3;
 
 // Initialize WhatsApp with Baileys
 async function initializeWhatsApp() {
