@@ -182,6 +182,9 @@ async def generate_ai_response(message: str, phone_number: str, db) -> str:
         
     except Exception as e:
         print(f"Error with OpenAI Assistant: {str(e)}")
+        print(f"API Key configured: {bool(os.environ.get('OPENAI_API_KEY'))}")
+        print(f"Assistant ID: {os.environ.get('OPENAI_ASSISTANT_ID')}")
+        print(f"Error details: {type(e).__name__}: {e}")
         return "¡Hola! Gracias por tu mensaje. En este momento estoy procesando tu consulta. ¿En qué puedo ayudarte?"
 
 async def get_or_create_thread(db, phone_number: str) -> str:
