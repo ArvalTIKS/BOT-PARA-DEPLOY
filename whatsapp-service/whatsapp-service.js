@@ -26,7 +26,21 @@ const MAX_RECONNECT_ATTEMPTS = 3;
 // Initialize WhatsApp with Baileys
 async function initializeWhatsApp() {
     try {
+        // Prevent multiple initializations
+        if (isInitializing) {
+            console.log('WhatsApp is already initializing, skipping...');
+            return;
+        }
+        
+        isInitializing = true;
         console.log('Initializing WhatsApp with Baileys...');
+        
+        // Close existing socket if present
+        if (sock) {
+            console.log('Closing existing socket...');
+            sock.end();
+            sock = null;
+        }
         
         // Ensure auth directory exists
         if (!fs.existsSync(authDir)) {
@@ -44,14 +58,18 @@ async function initializeWhatsApp() {
             printQRInTerminal: false,
             logger: require('pino')({ level: 'silent' }),
             browser: ['WhatsApp Assistant', 'Chrome', '4.0.0'],
-            connectTimeoutMs: 60000,
+            connectTimeoutMs: 90000, // Increased timeout
             defaultQueryTimeoutMs: 0,
-            keepAliveIntervalMs: 10000,
+            keepAliveIntervalMs: 30000, // Increased keep-alive
             emitOwnEvents: true,
+            markOnlineOnConnect: false,
+            syncFullHistory: false,
             getMessage: async (key) => {
                 return { conversation: '' };
             }
         });
+
+        isInitializing = false;
 
         // QR Code event
         sock.ev.on('connection.update', async (update) => {
