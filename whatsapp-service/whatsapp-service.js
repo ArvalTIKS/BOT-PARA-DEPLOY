@@ -380,36 +380,88 @@ server.on('error', (err) => {
     }
 });
 
-// Graceful shutdown
+// Enhanced graceful shutdown for deploy environment
 process.on('SIGINT', async () => {
     console.log('Shutting down gracefully...');
+    
+    // Close WhatsApp socket
     if (sock) {
+        console.log('Closing WhatsApp socket...');
         sock.end();
     }
+    
+    // Close HTTP server
     if (server) {
-        server.close();
+        console.log('Closing HTTP server...');
+        server.close(() => {
+            console.log('HTTP server closed');
+            process.exit(0);
+        });
+        
+        // Force close after timeout
+        setTimeout(() => {
+            console.log('Forcing shutdown...');
+            process.exit(1);
+        }, deployConfig.server.gracefulShutdownTimeoutMs);
+    } else {
+        process.exit(0);
     }
-    process.exit(0);
 });
 
 process.on('SIGTERM', async () => {
     console.log('Received SIGTERM, shutting down gracefully...');
+    
+    // Close WhatsApp socket
     if (sock) {
+        console.log('Closing WhatsApp socket...');
         sock.end();
     }
+    
+    // Close HTTP server
     if (server) {
-        server.close();
+        console.log('Closing HTTP server...');
+        server.close(() => {
+            console.log('HTTP server closed');
+            process.exit(0);
+        });
+        
+        // Force close after timeout
+        setTimeout(() => {
+            console.log('Forcing shutdown...');
+            process.exit(1);
+        }, deployConfig.server.gracefulShutdownTimeoutMs);
+    } else {
+        process.exit(0);
     }
-    process.exit(0);
 });
 
-// Handle uncaught exceptions
+// Enhanced error handling for deploy
 process.on('uncaughtException', (error) => {
     console.error('Uncaught exception:', error);
-    // Don't exit, try to recover
+    
+    if (isDeployEnv) {
+        // In deploy, attempt graceful recovery
+        console.log('Attempting graceful recovery in deploy environment...');
+        setTimeout(() => {
+            process.exit(1); // Let supervisor restart
+        }, 5000);
+    } else {
+        // In preview, try to continue
+        console.log('Continuing in preview mode...');
+    }
 });
 
 process.on('unhandledRejection', (reason, promise) => {
     console.error('Unhandled rejection at:', promise, 'reason:', reason);
-    // Don't exit, try to recover
+    
+    if (isDeployEnv) {
+        // In deploy, be more conservative
+        console.log('Unhandled rejection in deploy environment, restarting...');
+        setTimeout(() => {
+            process.exit(1); // Let supervisor restart
+        }, 3000);
+    } else {
+        // In preview, try to continue
+        console.log('Continuing in preview mode...');
+    }
 });
