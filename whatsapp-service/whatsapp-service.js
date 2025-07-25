@@ -57,22 +57,32 @@ async function initializeWhatsApp() {
         
         console.log(`Using WA version ${version.join('.')}, isLatest: ${isLatest}`);
 
+        // Use deploy-optimized configuration
+        const connectionConfig = isDeployEnv ? deployConfig.connection : {
+            connectTimeoutMs: 90000,
+            keepAliveIntervalMs: 30000,
+            defaultQueryTimeoutMs: 0,
+            retryRequestDelayMs: 1000,
+            maxMsgRetryCount: 3,
+            requestTimeoutMs: 30000,
+        };
+
         sock = makeWASocket({
             version,
             auth: state,
             printQRInTerminal: false,
-            logger: require('pino')({ level: 'silent' }),
+            logger: require('pino')({ level: deployConfig.logging.level }),
             browser: ['WhatsApp Assistant', 'Chrome', '4.0.0'],
-            connectTimeoutMs: ENV_CONFIG.connectTimeoutMs,
-            defaultQueryTimeoutMs: 0,
-            keepAliveIntervalMs: ENV_CONFIG.keepAliveIntervalMs,
+            connectTimeoutMs: connectionConfig.connectTimeoutMs,
+            defaultQueryTimeoutMs: connectionConfig.defaultQueryTimeoutMs,
+            keepAliveIntervalMs: connectionConfig.keepAliveIntervalMs,
             emitOwnEvents: true,
             markOnlineOnConnect: false,
             syncFullHistory: false,
             // Deploy-specific optimizations
-            retryRequestDelayMs: 1000,
-            maxMsgRetryCount: 3,
-            requestTimeoutMs: 30000,
+            retryRequestDelayMs: connectionConfig.retryRequestDelayMs,
+            maxMsgRetryCount: connectionConfig.maxMsgRetryCount,
+            requestTimeoutMs: connectionConfig.requestTimeoutMs,
             getMessage: async (key) => {
                 return { conversation: '' };
             }
