@@ -208,6 +208,15 @@ async function initializeWhatsApp() {
 
     } catch (error) {
         console.error('Error initializing WhatsApp:', error);
+        isInitializing = false;
+        
+        // If there's a persistent initialization error, try with clean state
+        if (fs.existsSync(authDir)) {
+            console.log('Removing auth directory due to initialization error');
+            fs.rmSync(authDir, { recursive: true, force: true });
+        }
+        
+        // Retry initialization after a delay
         setTimeout(() => {
             initializeWhatsApp();
         }, 10000);
