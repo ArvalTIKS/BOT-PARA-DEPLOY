@@ -334,13 +334,30 @@ process.on('SIGINT', async () => {
     if (sock) {
         sock.end();
     }
-    process.exit();
+    if (server) {
+        server.close();
+    }
+    process.exit(0);
 });
 
 process.on('SIGTERM', async () => {
-    console.log('Shutting down gracefully...');
+    console.log('Received SIGTERM, shutting down gracefully...');
     if (sock) {
         sock.end();
     }
-    process.exit();
+    if (server) {
+        server.close();
+    }
+    process.exit(0);
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (error) => {
+    console.error('Uncaught exception:', error);
+    // Don't exit, try to recover
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled rejection at:', promise, 'reason:', reason);
+    // Don't exit, try to recover
 });
