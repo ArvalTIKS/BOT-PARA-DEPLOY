@@ -19,19 +19,27 @@ def get_whatsapp_service_url():
         return os.environ.get('WHATSAPP_SERVICE_URL')
     
     # Auto-detect based on environment
-    # In containerized/deployed environments, use service name
-    # In local development, use localhost
+    # Method 1: Check for containerized environment indicators
+    if os.path.exists('/.dockerenv') or os.environ.get('KUBERNETES_SERVICE_HOST'):
+        return 'http://whatsapp-service:3001'
+    
+    # Method 2: Try to resolve service name
     try:
-        # Try to detect if we're in a containerized environment
         import socket
         socket.gethostbyname('whatsapp-service')
-        # If we can resolve 'whatsapp-service', we're in containerized environment
         return 'http://whatsapp-service:3001'
     except:
-        # If we can't resolve service name, we're in local development
-        return 'http://localhost:3001'
+        pass
+    
+    # Method 3: Check if we're in Emergent deployed environment
+    if os.environ.get('EMERGENT_ENV') == 'deploy' or os.environ.get('NODE_ENV') == 'production':
+        return 'http://whatsapp-service:3001'
+    
+    # Default to localhost for local development
+    return 'http://localhost:3001'
 
 WHATSAPP_SERVICE_URL = get_whatsapp_service_url()
+print(f"Environment indicators: EMERGENT_ENV={os.environ.get('EMERGENT_ENV')}, NODE_ENV={os.environ.get('NODE_ENV')}")
 print(f"Using WhatsApp service URL: {WHATSAPP_SERVICE_URL}")
 
 class IncomingMessage(BaseModel):
