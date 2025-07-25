@@ -14,18 +14,12 @@ router = APIRouter(prefix="/api/whatsapp", tags=["whatsapp"])
 openai.api_key = os.environ.get('OPENAI_API_KEY')
 # Auto-detect WhatsApp service URL based on environment
 def get_whatsapp_service_url():
-    print(f"DEBUG: Checking WHATSAPP_SERVICE_URL: {os.environ.get('WHATSAPP_SERVICE_URL')}")
-    print(f"DEBUG: EMERGENT_ENV: {os.environ.get('EMERGENT_ENV')}")
-    print(f"DEBUG: NODE_ENV: {os.environ.get('NODE_ENV')}")
-    
     # Check for explicit environment variable first
     if os.environ.get('WHATSAPP_SERVICE_URL'):
-        print(f"DEBUG: Using explicit WHATSAPP_SERVICE_URL: {os.environ.get('WHATSAPP_SERVICE_URL')}")
         return os.environ.get('WHATSAPP_SERVICE_URL')
     
     # Check if we're in Emergent deployed environment
     if os.environ.get('EMERGENT_ENV') == 'deploy' or os.environ.get('NODE_ENV') == 'production':
-        print("DEBUG: Detected Emergent deploy environment")
         # In deployed environment, try service name first, fallback to localhost
         service_urls = [
             'http://whatsapp-service:3001',
@@ -39,19 +33,15 @@ def get_whatsapp_service_url():
                 from urllib.parse import urlparse
                 parsed = urlparse(url)
                 socket.getaddrinfo(parsed.hostname, parsed.port)
-                print(f"DEBUG: Successfully resolved {url}")
                 return url
-            except Exception as e:
-                print(f"DEBUG: Could not resolve {url}: {e}")
+            except Exception:
                 continue
     
     # Default to localhost for local development
-    print("DEBUG: Using localhost for local development")
     return 'http://localhost:3001'
 
 WHATSAPP_SERVICE_URL = get_whatsapp_service_url()
-print(f"Environment indicators: EMERGENT_ENV={os.environ.get('EMERGENT_ENV')}, NODE_ENV={os.environ.get('NODE_ENV')}")
-print(f"Using WhatsApp service URL: {WHATSAPP_SERVICE_URL}")
+print(f"WhatsApp service URL configured: {WHATSAPP_SERVICE_URL}")
 
 class IncomingMessage(BaseModel):
     phone_number: str
