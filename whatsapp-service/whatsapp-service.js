@@ -114,16 +114,16 @@ async function initializeWhatsApp() {
                 connectedUser = null;
                 qrCodeData = null;
                 
-                // Check for specific 401 conflict error that requires session cleanup
-                const isConflictError = lastDisconnect?.error?.output?.statusCode === 401 && 
-                                      lastDisconnect?.error?.output?.payload?.message?.includes('conflict');
+                // Check for specific 401 error (ANY 401 error needs cleanup)
+                const is401Error = lastDisconnect?.error?.output?.statusCode === 401;
                 
-                if (isConflictError) {
-                    console.log('Detected 401 conflict error - cleaning session and reinitializing');
+                if (is401Error) {
+                    console.log('🚨 Detected 401 error - cleaning session and reinitializing');
+                    console.log('Error details:', lastDisconnect?.error?.output?.payload);
                     
                     // Clean up auth data for fresh start
                     if (fs.existsSync(authDir)) {
-                        console.log('Removing corrupted auth data');
+                        console.log('🧹 Removing corrupted auth data');
                         fs.rmSync(authDir, { recursive: true, force: true });
                     }
                     
@@ -132,7 +132,7 @@ async function initializeWhatsApp() {
                     
                     // Reinitialize after short delay
                     setTimeout(() => {
-                        console.log('Reinitializing WhatsApp after conflict error');
+                        console.log('🔄 Reinitializing WhatsApp after 401 error');
                         initializeWhatsApp();
                     }, 5000);
                     
