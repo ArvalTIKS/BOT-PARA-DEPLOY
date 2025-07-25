@@ -21,27 +21,38 @@ def get_whatsapp_service_url():
     # EXACT SOLUTION: Different networking for preview vs deploy
     if os.environ.get('EMERGENT_ENV') == 'deploy':
         # In deploy, services are in separate containers
-        # Try internal service names that Emergent should provide
+        # Try multiple possible service names based on Emergent patterns
         service_urls = [
-            'http://whatsapp-service:3001',  # Internal service name
-            'http://127.0.0.1:3001',        # Internal IP
-            'http://localhost:3001'         # Fallback
+            'http://whatsapp-service:3001',                    # Standard service name
+            'http://app-whatsapp-service:3001',               # With app prefix
+            'http://agent-env-e9f5a271-719e-4478-b51d-ca9958d18228-whatsapp-service:3001',  # Full hostname pattern
+            'http://whatsapp-service.default.svc.cluster.local:3001',  # Kubernetes FQDN
+            'http://127.0.0.1:3001',                         # Internal IP
+            'http://localhost:3001'                          # Fallback
         ]
         
         for url in service_urls:
             try:
-                print(f"Attempting to connect to: {url}")
+                print(f"Testing connection to: {url}")
                 import socket
                 from urllib.parse import urlparse
                 parsed = urlparse(url)
-                socket.getaddrinfo(parsed.hostname, parsed.port or 80, timeout=2)
-                print(f"Successfully resolved: {url}")
-                return url
+                
+                # Test if hostname resolves
+                try:
+                    socket.getaddrinfo(parsed.hostname, parsed.port or 80)
+                    print(f"✅ Successfully resolved: {url}")
+                    return url
+                except:
+                    print(f"❌ Failed to resolve: {url}")
+                    continue
+                    
             except Exception as e:
-                print(f"Failed to resolve {url}: {e}")
+                print(f"❌ Error testing {url}: {e}")
                 continue
                 
         # If all fail, return default
+        print("⚠️ All service URLs failed, using localhost fallback")
         return 'http://localhost:3001'
     else:
         # In preview, everything is in same container
