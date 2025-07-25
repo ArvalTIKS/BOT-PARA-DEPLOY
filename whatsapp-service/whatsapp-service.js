@@ -246,15 +246,15 @@ async function initializeWhatsApp() {
         isInitializing = false;
         
         // If there's a persistent initialization error, try with deploy-specific recovery
-        if (fs.existsSync(authDir) && !ENV_CONFIG.sessionPersistence) {
+        if (fs.existsSync(authDir) && (!isDeployEnv || !deployConfig.session.persistData)) {
             console.log('Removing auth directory due to initialization error (preview mode)');
             fs.rmSync(authDir, { recursive: true, force: true });
-        } else if (ENV_CONFIG.sessionPersistence) {
+        } else if (isDeployEnv && deployConfig.session.persistData) {
             console.log('Keeping auth directory for session persistence (deploy mode)');
         }
         
         // Retry initialization with deploy-optimized delay
-        const retryDelay = ENV_CONFIG.sessionPersistence ? 15000 : 10000;
+        const retryDelay = isDeployEnv ? 15000 : 10000;
         setTimeout(() => {
             initializeWhatsApp();
         }, retryDelay);
