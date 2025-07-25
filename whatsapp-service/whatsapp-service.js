@@ -340,29 +340,43 @@ app.post('/restart', async (req, res) => {
     }
 });
 
-// Start server
-const server = app.listen(PORT, '0.0.0.0', () => {
-    console.log(`WhatsApp service (Baileys) running on port ${PORT}`);
+// Start server with deploy-optimized configuration
+const server = app.listen(PORT, deployConfig.server.host, () => {
+    console.log(`WhatsApp service (Baileys) running on port ${PORT} in ${isDeployEnv ? 'DEPLOY' : 'PREVIEW'} mode`);
     // Wait a moment before initializing to ensure server is ready
+    const initDelay = isDeployEnv ? 5000 : 2000; // Longer delay for deploy
     setTimeout(() => {
         initializeWhatsApp();
-    }, 2000);
+    }, initDelay);
 });
 
-// Handle server errors
+// Enhanced server error handling for deploy
 server.on('error', (err) => {
     if (err.code === 'EADDRINUSE') {
-        console.log(`Port ${PORT} is already in use. Trying to find available port...`);
-        // Try a different port
-        const alternativePort = PORT + 1;
-        server.listen(alternativePort, '0.0.0.0', () => {
-            console.log(`WhatsApp service (Baileys) running on alternative port ${alternativePort}`);
+        console.log(`Port ${PORT} is already in use. Attempting deploy-specific recovery...`);
+        if (isDeployEnv) {
+            // In deploy, try graceful recovery
             setTimeout(() => {
-                initializeWhatsApp();
-            }, 2000);
-        });
+                process.exit(1); // Let supervisor restart
+            }, 5000);
+        } else {
+            // In preview, try alternative port
+            const alternativePort = PORT + 1;
+            server.listen(alternativePort, deployConfig.server.host, () => {
+                console.log(`WhatsApp service (Baileys) running on alternative port ${alternativePort}`);
+                setTimeout(() => {
+                    initializeWhatsApp();
+                }, 2000);
+            });
+        }
     } else {
         console.error('Server error:', err);
+        if (isDeployEnv) {
+            // In deploy, exit gracefully to trigger supervisor restart
+            setTimeout(() => {
+                process.exit(1);
+            }, 1000);
+        }
     }
 });
 
