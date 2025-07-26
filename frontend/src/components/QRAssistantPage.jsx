@@ -206,7 +206,7 @@ const QRAssistantPage = () => {
                       </svg>
                     </div>
                     <h3 className="text-2xl font-bold text-white">¡Conectado!</h3>
-                    <p className="text-gray-300">Tu asistente del <strong>Estudio Jurídico Villegas Otárola</strong> está activo</p>
+                    <p className="text-gray-300">Tu <strong>Asistente Legal Personalizado</strong> está activo</p>
                     
                     <div className="bg-green-500/20 border border-green-500/30 rounded-lg p-4 mt-4">
                       <p className="text-green-300 font-semibold">🏛️ Asistente Jurídico Activo</p>
