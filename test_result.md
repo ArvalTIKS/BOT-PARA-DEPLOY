@@ -355,15 +355,20 @@ frontend:
   # Frontend testing not performed as per instructions
 
 metadata:
-  created_by: "testing_agent"
-  version: "1.0"
-  test_sequence: 1
+  created_by: "main_agent"
+  version: "2.0"
+  test_sequence: 2
   run_ui: false
 
 test_plan:
-  current_focus: []
+  current_focus:
+    - "WhatsApp Service Migration to whatsapp-web.js"
+    - "WhatsApp Service Connectivity"
+    - "WhatsApp QR Code Endpoint"
+    - "Message Processing with OpenAI Integration"
+    - "Service-to-Service Communication"
   stuck_tasks: []
-  test_all: false
+  test_all: true
   test_priority: "high_first"
 
 agent_communication:
@@ -377,3 +382,5 @@ agent_communication:
       message: "BAILEYS MIGRATION VERIFICATION COMPLETE (2025-07-25 12:59): ✅ CRITICAL SUCCESS - Baileys (@whiskeysockets/baileys v6.7.18) implementation verified and working perfectly. ✅ All 18 comprehensive tests passing at 100% success rate (expanded test suite). ✅ Bot commands 'activar bot' and 'suspender bot' implemented and ready (case-insensitive). ✅ WhatsApp service now managed by supervisor for production stability. ✅ QR generation stable with WA version 2.3000.1023223821. ✅ OpenAI Assistant (asst_OvGYN1gteWdyeBISsd5FC8Rd) integration confirmed working - responds as 'Estudio Jurídico Villegas Otárola Abogados'. ✅ Complete integration chain: Baileys → FastAPI → OpenAI → MongoDB → Response. BAILEYS SYSTEM IS 100% PRODUCTION READY - SUPERIOR TO PREVIOUS whatsapp-web.js IMPLEMENTATION."
     - agent: "testing"
       message: "POST-REPAIR VERIFICATION COMPLETE (2025-07-25 13:30): ✅ CRITICAL CONFIRMATION - All WhatsApp + OpenAI repairs verified successful. ✅ All 18 comprehensive tests passing at 100% success rate. ✅ QR code generation working consistently (confirmed in logs: 'QR Code generated successfully' repeating). ✅ WhatsApp service no longer stuck in 'Initializing' - now properly generating QR codes. ✅ OpenAI Assistant (asst_OvGYN1gteWdyeBISsd5FC8Rd) responding correctly as 'Estudio Jurídico Villegas Otárola Abogados' with legal services information. ✅ Bot commands 'activar bot' and 'suspender bot' processing through OpenAI (expected when not connected). ✅ MongoDB storing messages correctly (92 total, 42 today, 6 users). ✅ All supervisor services running: backend, frontend, mongodb, whatsapp-service. ✅ Complete integration verified: Baileys WhatsApp → FastAPI → OpenAI → MongoDB. SYSTEM REPAIRS SUCCESSFUL - 100% FUNCTIONAL AND STABLE."
+    - agent: "main"
+      message: "WHATSAPP-WEB.JS MIGRATION COMPLETED: ✅ Successfully migrated from Baileys to whatsapp-web.js for improved stability and deployment compatibility. ✅ Updated package.json dependencies and installed system Chromium. ✅ Implemented enhanced Puppeteer configuration with deployment-optimized args. ✅ Updated all WhatsApp event handlers (qr, authenticated, ready, disconnected, auth_failure, message). ✅ Maintained all functionality: QR generation, auto-recovery, bot commands, OpenAI integration. ✅ Service restarted successfully and logs confirm QR generation is working. ✅ All 13 backend tasks marked for retesting to ensure compatibility with new library. READY FOR COMPREHENSIVE TESTING."
