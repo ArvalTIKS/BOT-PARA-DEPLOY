@@ -5,7 +5,7 @@ Aplicación que permite conectar WhatsApp a un asistente de OpenAI mediante cód
 
 ## ✨ Características
 - 📱 **Código QR automático** para vincular WhatsApp
-- 🤖 **Integración OpenAI** - Asistente del Estudio Jurídico Villegas Otárola
+- 🤖 **Integración OpenAI** - Asistente Legal Personalizado
 - 🔄 **Respuestas automáticas** a todos los mensajes
 - 📊 **Estadísticas** de mensajes y usuarios
 - 🎛️ **Comandos de control**: "activar bot" / "suspender bot"
