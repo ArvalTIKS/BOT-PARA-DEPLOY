@@ -357,7 +357,7 @@ app.get('/status', (req, res) => {
 app.post('/send-message', async (req, res) => {
     const { phoneNumber, message } = req.body;
     
-    if (!isConnected || !sock) {
+    if (!isConnected || !client) {
         return res.status(400).json({ 
             success: false, 
             error: 'WhatsApp not connected' 
@@ -365,8 +365,8 @@ app.post('/send-message', async (req, res) => {
     }
 
     try {
-        const formattedNumber = phoneNumber.includes('@') ? phoneNumber : `${phoneNumber}@s.whatsapp.net`;
-        await sock.sendMessage(formattedNumber, { text: message });
+        const formattedNumber = phoneNumber.includes('@') ? phoneNumber : `${phoneNumber}@c.us`;
+        await client.sendMessage(formattedNumber, message);
         
         res.json({ 
             success: true,
