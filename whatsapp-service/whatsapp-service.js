@@ -28,7 +28,60 @@ let isInitializing = false;
 let reconnectAttempts = 0;
 const MAX_RECONNECT_ATTEMPTS = deployConfig.reconnection.maxAttempts;
 
-// Initialize WhatsApp with Baileys
+// Enhanced Puppeteer configuration for deployment
+const getPuppeteerConfig = () => {
+    const baseConfig = {
+        headless: true,
+        args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-accelerated-2d-canvas',
+            '--no-first-run',
+            '--no-zygote',
+            '--disable-gpu',
+            '--disable-web-security',
+            '--disable-features=VizDisplayCompositor',
+            '--disable-background-timer-throttling',
+            '--disable-backgrounding-occluded-windows',
+            '--disable-renderer-backgrounding'
+        ]
+    };
+    
+    if (isDeployEnv) {
+        // Deploy-specific Puppeteer optimizations
+        baseConfig.args.push(
+            '--single-process',
+            '--no-zygote',
+            '--disable-dev-shm-usage',
+            '--disable-gpu-sandbox',
+            '--disable-software-rasterizer',
+            '--disable-background-timer-throttling',
+            '--disable-backgrounding-occluded-windows',
+            '--disable-renderer-backgrounding',
+            '--disable-features=TranslateUI',
+            '--disable-ipc-flooding-protection'
+        );
+        
+        // Longer timeouts for deploy environment
+        baseConfig.timeout = deployConfig.puppeteer.navigationTimeout;
+        baseConfig.defaultViewport = null;
+    } else {
+        // Preview environment optimizations
+        baseConfig.timeout = 60000;
+    }
+    
+    // Use system Chromium if available
+    const chromiumPath = '/usr/bin/chromium';
+    if (fs.existsSync(chromiumPath)) {
+        baseConfig.executablePath = chromiumPath;
+        console.log('Using system Chromium:', chromiumPath);
+    }
+    
+    return baseConfig;
+};
+
+// Initialize WhatsApp with whatsapp-web.js
 async function initializeWhatsApp() {
     try {
         // Prevent multiple initializations
@@ -38,247 +91,233 @@ async function initializeWhatsApp() {
         }
         
         isInitializing = true;
-        console.log('Initializing WhatsApp with Baileys...');
+        console.log('Initializing WhatsApp with whatsapp-web.js...');
         
-        // Close existing socket if present
-        if (sock) {
-            console.log('Closing existing socket...');
-            sock.end();
-            sock = null;
+        // Close existing client if present
+        if (client) {
+            console.log('Destroying existing client...');
+            await client.destroy();
+            client = null;
         }
         
-        // Ensure auth directory exists
-        if (!fs.existsSync(authDir)) {
-            fs.mkdirSync(authDir, { recursive: true });
+        // Ensure session directory exists
+        if (!fs.existsSync(sessionDir)) {
+            fs.mkdirSync(sessionDir, { recursive: true });
         }
 
-        const { state, saveCreds } = await useMultiFileAuthState(authDir);
-        const { version, isLatest } = await fetchLatestBaileysVersion();
+        // Create client with optimized configuration
+        const puppeteerConfig = getPuppeteerConfig();
         
-        console.log(`Using WA version ${version.join('.')}, isLatest: ${isLatest}`);
-
-        // Use deploy-optimized configuration
-        const connectionConfig = isDeployEnv ? deployConfig.connection : {
-            connectTimeoutMs: 90000,
-            keepAliveIntervalMs: 30000,
-            defaultQueryTimeoutMs: 0,
-            retryRequestDelayMs: 1000,
-            maxMsgRetryCount: 3,
-            requestTimeoutMs: 30000,
-        };
-
-        sock = makeWASocket({
-            version,
-            auth: state,
-            printQRInTerminal: false,
-            logger: require('pino')({ level: deployConfig.logging.level }),
-            browser: ['WhatsApp Assistant', 'Chrome', '4.0.0'],
-            connectTimeoutMs: connectionConfig.connectTimeoutMs,
-            defaultQueryTimeoutMs: connectionConfig.defaultQueryTimeoutMs,
-            keepAliveIntervalMs: connectionConfig.keepAliveIntervalMs,
-            emitOwnEvents: true,
-            markOnlineOnConnect: false,
-            syncFullHistory: false,
-            // Deploy-specific optimizations
-            retryRequestDelayMs: connectionConfig.retryRequestDelayMs,
-            maxMsgRetryCount: connectionConfig.maxMsgRetryCount,
-            requestTimeoutMs: connectionConfig.requestTimeoutMs,
-            getMessage: async (key) => {
-                return { conversation: '' };
+        client = new Client({
+            authStrategy: new LocalAuth({
+                clientId: 'whatsapp-client',
+                dataPath: sessionDir
+            }),
+            puppeteer: puppeteerConfig,
+            webVersionCache: {
+                type: 'remote',
+                remotePath: 'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.2412.54.html',
             }
         });
 
         isInitializing = false;
 
-        // Enhanced error handling with automatic cleanup
-        sock.ev.on('connection.update', async (update) => {
-            const { connection, lastDisconnect, qr } = update;
-            
-            if (qr) {
-                console.log('QR Code received');
-                qrCodeData = qr;
-                reconnectAttempts = 0; // Reset reconnect attempts when QR is generated
-                try {
-                    const qrDataUrl = await qrcode.toDataURL(qr);
-                    console.log('QR Code generated successfully');
-                } catch (err) {
-                    console.error('Error generating QR code:', err);
-                }
+        // QR Code event
+        client.on('qr', async (qr) => {
+            console.log('QR Code received');
+            qrCodeData = qr;
+            reconnectAttempts = 0; // Reset reconnect attempts when QR is generated
+            try {
+                const qrDataUrl = await qrcode.toDataURL(qr);
+                console.log('QR Code generated successfully');
+            } catch (err) {
+                console.error('Error generating QR code:', err);
             }
+        });
 
-            if (connection === 'close') {
-                const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
-                console.log('Connection closed due to ', lastDisconnect?.error, ', reconnecting ', shouldReconnect);
+        // Authentication success
+        client.on('authenticated', () => {
+            console.log('WhatsApp authenticated successfully');
+        });
+
+        // Ready event
+        client.on('ready', async () => {
+            console.log('WhatsApp client is ready!');
+            isConnected = true;
+            qrCodeData = null;
+            
+            try {
+                const info = client.info;
+                connectedUser = {
+                    name: info.pushname || 'WhatsApp User',
+                    phone: info.wid.user || 'Unknown',
+                    profileImage: null,
+                    connectedAt: new Date().toISOString()
+                };
+                console.log('Connected user:', connectedUser);
+            } catch (err) {
+                console.error('Error getting user info:', err);
+            }
+        });
+
+        // Enhanced disconnection handling with automatic cleanup
+        client.on('disconnected', async (reason) => {
+            console.log('WhatsApp disconnected:', reason);
+            isConnected = false;
+            connectedUser = null;
+            qrCodeData = null;
+            
+            // Check for specific reasons that need cleanup
+            const needsCleanup = reason === 'LOGOUT' || reason === 'NAVIGATION' || 
+                               reason === 'UNPAIRED' || reason === 'UNPAIRED_PHONE';
+            
+            if (needsCleanup) {
+                console.log('🚨 Detected session corruption - cleaning and reinitializing');
+                console.log('Disconnect reason:', reason);
                 
-                isConnected = false;
-                connectedUser = null;
-                qrCodeData = null;
-                
-                // Check for specific 401 error (ANY 401 error needs cleanup)
-                const is401Error = lastDisconnect?.error?.output?.statusCode === 401;
-                
-                // Check for connection failure that needs cleanup
-                const isConnectionFailure = lastDisconnect?.error?.output?.payload?.message?.includes('Connection Failure');
-                
-                if (is401Error || isConnectionFailure) {
-                    console.log('🚨 Detected session corruption - cleaning and reinitializing');
-                    console.log('Error details:', lastDisconnect?.error?.output?.payload);
-                    
-                    // Clean up auth data for fresh start
-                    if (fs.existsSync(authDir)) {
-                        console.log('🧹 Removing corrupted auth data automatically');
-                        fs.rmSync(authDir, { recursive: true, force: true });
-                    }
-                    
-                    // Reset reconnection attempts
-                    reconnectAttempts = 0;
-                    
-                    // Reinitialize after short delay
-                    setTimeout(() => {
-                        console.log('🔄 Auto-reinitializing WhatsApp with clean session');
-                        initializeWhatsApp();
-                    }, 5000);
-                    
-                    return;
+                // Clean up session data for fresh start
+                if (fs.existsSync(sessionDir)) {
+                    console.log('🧹 Removing corrupted session data automatically');
+                    fs.rmSync(sessionDir, { recursive: true, force: true });
                 }
                 
-                if (shouldReconnect && reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
-                    reconnectAttempts++;
-                    console.log(`Reconnection attempt ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS}`);
-                    
-                    // Deploy-optimized reconnection strategy
-                    const reconnectConfig = isDeployEnv ? deployConfig.reconnection : {
-                        baseDelayMs: 5000,
-                        maxDelayMs: 30000
-                    };
-                    
-                    const delay = Math.min(reconnectConfig.baseDelayMs * reconnectAttempts, reconnectConfig.maxDelayMs);
-                    
-                    setTimeout(() => {
-                        initializeWhatsApp();
-                    }, delay);
-                } else if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
-                    console.log('Max reconnection attempts reached, implementing deploy-specific recovery');
-                    
-                    // Deploy-specific recovery: Don't immediately clear auth data
-                    if (isDeployEnv && deployConfig.session.persistData) {
-                        console.log('Attempting session recovery in deploy environment');
-                        setTimeout(() => {
-                            reconnectAttempts = 0;
-                            initializeWhatsApp();
-                        }, deployConfig.reconnection.sessionRecoveryDelayMs);
-                    } else {
-                        // Clear auth data if not in deploy
-                        if (fs.existsSync(authDir)) {
-                            fs.rmSync(authDir, { recursive: true, force: true });
-                        }
-                        setTimeout(() => {
-                            reconnectAttempts = 0;
-                            initializeWhatsApp();
-                        }, 60000);
-                    }
-                }
-            } else if (connection === 'open') {
-                console.log('WhatsApp connection opened successfully');
-                isConnected = true;
-                qrCodeData = null;
+                // Reset reconnection attempts
+                reconnectAttempts = 0;
                 
-                try {
-                    const userInfo = sock.user;
-                    connectedUser = {
-                        name: userInfo?.name || 'WhatsApp User',
-                        phone: userInfo?.id?.split(':')[0] || 'Unknown',
-                        profileImage: null,
-                        connectedAt: new Date().toISOString()
-                    };
-                    console.log('Connected user:', connectedUser);
-                } catch (err) {
-                    console.error('Error getting user info:', err);
+                // Reinitialize after short delay
+                setTimeout(() => {
+                    console.log('🔄 Auto-reinitializing WhatsApp with clean session');
+                    initializeWhatsApp();
+                }, 5000);
+                
+                return;
+            }
+            
+            // Normal reconnection logic
+            if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+                reconnectAttempts++;
+                console.log(`Reconnection attempt ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS}`);
+                
+                // Deploy-optimized reconnection strategy
+                const reconnectConfig = isDeployEnv ? deployConfig.reconnection : {
+                    baseDelayMs: 5000,
+                    maxDelayMs: 30000
+                };
+                
+                const delay = Math.min(reconnectConfig.baseDelayMs * reconnectAttempts, reconnectConfig.maxDelayMs);
+                
+                setTimeout(() => {
+                    initializeWhatsApp();
+                }, delay);
+            } else if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+                console.log('Max reconnection attempts reached, implementing deploy-specific recovery');
+                
+                // Deploy-specific recovery: Don't immediately clear session data
+                if (isDeployEnv && deployConfig.session.persistData) {
+                    console.log('Attempting session recovery in deploy environment');
+                    setTimeout(() => {
+                        reconnectAttempts = 0;
+                        initializeWhatsApp();
+                    }, deployConfig.reconnection.sessionRecoveryDelayMs);
+                } else {
+                    // Clear session data if not in deploy
+                    if (fs.existsSync(sessionDir)) {
+                        fs.rmSync(sessionDir, { recursive: true, force: true });
+                    }
+                    setTimeout(() => {
+                        reconnectAttempts = 0;
+                        initializeWhatsApp();
+                    }, 60000);
                 }
             }
         });
 
-        // Save credentials when updated
-        sock.ev.on('creds.update', saveCreds);
+        // Authentication failure
+        client.on('auth_failure', async (msg) => {
+            console.error('Authentication failure:', msg);
+            
+            // Clean up corrupted auth data
+            if (fs.existsSync(sessionDir)) {
+                console.log('🧹 Removing corrupted auth data due to auth failure');
+                fs.rmSync(sessionDir, { recursive: true, force: true });
+            }
+            
+            // Reinitialize after delay
+            setTimeout(() => {
+                console.log('🔄 Reinitializing after auth failure');
+                initializeWhatsApp();
+            }, 10000);
+        });
 
         // Message received event
-        sock.ev.on('messages.upsert', async (m) => {
-            const message = m.messages[0];
-            if (!message.key.fromMe && message.message) {
-                const messageText = message.message.conversation || 
-                                 message.message.extendedTextMessage?.text || '';
+        client.on('message', async (message) => {
+            if (!message.fromMe && message.body) {
+                const messageText = message.body;
+                const normalizedMessage = messageText.toLowerCase().trim();
                 
-                if (messageText) {
-                    const normalizedMessage = messageText.toLowerCase().trim();
-                    
-                    // Check for bot control commands
-                    if (normalizedMessage === 'activar bot') {
-                        try {
-                            await sock.sendMessage(message.key.remoteJid, { 
-                                text: '✅ Bot activado. Responderé automáticamente a todos los mensajes con tu Asistente Legal Personalizado.' 
-                            });
-                            console.log('Bot activated for:', message.key.remoteJid);
-                            return;
-                        } catch (error) {
-                            console.error('Error activating bot:', error);
-                        }
-                    }
-                    
-                    if (normalizedMessage === 'suspender bot') {
-                        try {
-                            await sock.sendMessage(message.key.remoteJid, { 
-                                text: '⏸️ Bot suspendido. Ahora puedes usar tu celular normalmente.' 
-                            });
-                            console.log('Bot suspended for:', message.key.remoteJid);
-                            return;
-                        } catch (error) {
-                            console.error('Error suspending bot:', error);
-                        }
-                    }
-                    
-                    console.log('Received message:', messageText);
-                    console.log('From:', message.key.remoteJid);
-                    
+                // Check for bot control commands
+                if (normalizedMessage === 'activar bot') {
                     try {
-                        // Send message to FastAPI for OpenAI processing
-                        const response = await axios.post(`${FASTAPI_URL}/api/whatsapp/process-message`, {
-                            phone_number: message.key.remoteJid.split('@')[0],
-                            message: messageText,
-                            message_id: message.key.id,
-                            timestamp: message.messageTimestamp
-                        });
-
-                        // Send AI response back to WhatsApp
-                        if (response.data.reply) {
-                            await sock.sendMessage(message.key.remoteJid, { 
-                                text: response.data.reply 
-                            });
-                            console.log('Reply sent:', response.data.reply);
-                        }
+                        await message.reply('✅ Bot activado. Responderé automáticamente a todos los mensajes con tu Asistente Legal Personalizado.');
+                        console.log('Bot activated for:', message.from);
+                        return;
                     } catch (error) {
-                        console.error('Error processing message:', error);
-                        try {
-                            await sock.sendMessage(message.key.remoteJid, { 
-                                text: 'Lo siento, hubo un error procesando tu mensaje. Por favor intenta nuevamente.' 
-                            });
-                        } catch (replyError) {
-                            console.error('Error sending fallback message:', replyError);
-                        }
+                        console.error('Error activating bot:', error);
+                    }
+                }
+                
+                if (normalizedMessage === 'suspender bot') {
+                    try {
+                        await message.reply('⏸️ Bot suspendido. Ahora puedes usar tu celular normalmente.');
+                        console.log('Bot suspended for:', message.from);
+                        return;
+                    } catch (error) {
+                        console.error('Error suspending bot:', error);
+                    }
+                }
+                
+                console.log('Received message:', messageText);
+                console.log('From:', message.from);
+                
+                try {
+                    // Send message to FastAPI for OpenAI processing
+                    const response = await axios.post(`${FASTAPI_URL}/api/whatsapp/process-message`, {
+                        phone_number: message.from.split('@')[0],
+                        message: messageText,
+                        message_id: message.id.id,
+                        timestamp: message.timestamp
+                    });
+
+                    // Send AI response back to WhatsApp
+                    if (response.data.reply) {
+                        await message.reply(response.data.reply);
+                        console.log('Reply sent:', response.data.reply);
+                    }
+                } catch (error) {
+                    console.error('Error processing message:', error);
+                    try {
+                        await message.reply('Lo siento, hubo un error procesando tu mensaje. Por favor intenta nuevamente.');
+                    } catch (replyError) {
+                        console.error('Error sending fallback message:', replyError);
                     }
                 }
             }
         });
+
+        // Initialize the client
+        console.log('Starting WhatsApp client initialization...');
+        await client.initialize();
 
     } catch (error) {
         console.error('Error initializing WhatsApp:', error);
         isInitializing = false;
         
         // If there's a persistent initialization error, try with deploy-specific recovery
-        if (fs.existsSync(authDir) && (!isDeployEnv || !deployConfig.session.persistData)) {
-            console.log('Removing auth directory due to initialization error (preview mode)');
-            fs.rmSync(authDir, { recursive: true, force: true });
+        if (fs.existsSync(sessionDir) && (!isDeployEnv || !deployConfig.session.persistData)) {
+            console.log('Removing session directory due to initialization error (preview mode)');
+            fs.rmSync(sessionDir, { recursive: true, force: true });
         } else if (isDeployEnv && deployConfig.session.persistData) {
-            console.log('Keeping auth directory for session persistence (deploy mode)');
+            console.log('Keeping session directory for persistence (deploy mode)');
         }
         
         // Retry initialization with deploy-optimized delay
