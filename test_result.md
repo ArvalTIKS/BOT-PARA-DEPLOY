@@ -102,28 +102,43 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Necesito probar la funcionalidad completa del backend que acabamos de implementar para la plataforma de WhatsApp + OpenAI. El sistema tiene: 1. Servicio WhatsApp (Node.js) corriendo en puerto 3001, 2. Backend FastAPI en puerto 8001 con endpoints, 3. Integración OpenAI configurada con GPT-4. Por favor prueba: conectividad entre servicios, endpoints principales del API, manejo de errores, respuestas correctas del sistema, verificar que la integración WhatsApp service → FastAPI → OpenAI funcione."
+user_problem_statement: "Migración completa de Baileys a whatsapp-web.js para mayor estabilidad y compatibilidad con deployment. El sistema debe mantener toda la funcionalidad: WhatsApp service (Node.js) en puerto 3001, Backend FastAPI en puerto 8001 con endpoints, integración OpenAI configurada. Funcionalidades requeridas: conectividad entre servicios, endpoints principales del API, manejo de errores, respuestas correctas del sistema, verificar que la integración WhatsApp service → FastAPI → OpenAI funcione completamente."
 
 backend:
+  - task: "WhatsApp Service Migration to whatsapp-web.js"
+    implemented: true
+    working: false
+    file: "/app/whatsapp-service/whatsapp-service.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "MIGRATION COMPLETED: Successfully migrated from Baileys (@whiskeysockets/baileys) to whatsapp-web.js. Updated package.json dependencies, installed system chromium, implemented enhanced Puppeteer configuration for deployment with optimized args and timeouts. Service restarted and logs show successful initialization with QR code generation."
+
   - task: "Basic API Connectivity"
     implemented: true
-    working: true
+    working: false
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
         - working: true
           agent: "testing"
           comment: "API is running correctly at https://bd69d742-9d53-4bda-944a-b2586a148fd3.preview.emergentagent.com/api/ - returns proper welcome message"
+        - working: false
+          agent: "main"
+          comment: "Needs retesting after WhatsApp service migration to whatsapp-web.js"
 
   - task: "WhatsApp Service Connectivity"
     implemented: true
-    working: true
+    working: false
     file: "/app/whatsapp-service/whatsapp-service.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
         - working: true
           agent: "testing"
@@ -131,50 +146,59 @@ backend:
         - working: true
           agent: "testing"
           comment: "BAILEYS VERIFICATION: Baileys WhatsApp service running correctly on port 3001 under supervisor. Service health check passing, QR generation active, using WA version 2.3000.1023223821. All endpoints responding correctly."
+        - working: false
+          agent: "main"
+          comment: "MIGRATION UPDATE: Service migrated from Baileys to whatsapp-web.js. Logs show successful QR generation but needs comprehensive testing to verify all endpoints work with new library."
 
-  - task: "Baileys Implementation"
+  - task: "whatsapp-web.js Implementation"
     implemented: true
-    working: true
+    working: false
     file: "/app/whatsapp-service/whatsapp-service.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
-        - working: true
-          agent: "testing"
-          comment: "CRITICAL VERIFICATION: Baileys (@whiskeysockets/baileys v6.7.18) successfully implemented and running. QR code generation working, service health checks passing, proper error handling implemented. Service now managed by supervisor for stability."
+        - working: false
+          agent: "main"
+          comment: "FRESH IMPLEMENTATION: Successfully implemented whatsapp-web.js with LocalAuth strategy, enhanced Puppeteer configuration for deployment, system Chromium integration, and all event handlers (qr, authenticated, ready, disconnected, auth_failure, message). Auto-recovery mechanisms implemented. Service showing QR generation in logs."
 
   - task: "Bot Activation/Suspension Commands"
     implemented: true
-    working: true
+    working: false
     file: "/app/whatsapp-service/whatsapp-service.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
         - working: true
           agent: "testing"
           comment: "COMMAND VERIFICATION: Bot commands 'activar bot' and 'suspender bot' implemented in Baileys service (lines 115-137). Commands are case-insensitive and will respond with activation/suspension messages when WhatsApp is connected. Currently being processed through OpenAI flow when not connected (expected behavior)."
+        - working: false
+          agent: "main"
+          comment: "Commands migrated to whatsapp-web.js using message.reply() instead of sock.sendMessage(). Needs testing to verify functionality with new library."
 
   - task: "Status Endpoints (GET/POST)"
     implemented: true
-    working: true
+    working: false
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
         - working: true
           agent: "testing"
           comment: "Both GET and POST /api/status endpoints working correctly. GET retrieves status checks, POST creates new status checks with UUID generation"
+        - working: false
+          agent: "main"
+          comment: "Needs retesting after WhatsApp service migration"
 
   - task: "WhatsApp QR Code Endpoint"
     implemented: true
-    working: true
+    working: false
     file: "/app/backend/whatsapp_routes.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
         - working: true
           agent: "testing"
@@ -182,38 +206,47 @@ backend:
         - working: true
           agent: "testing"
           comment: "BAILEYS QR VERIFICATION: QR endpoint working perfectly with Baileys. Returns both data URL and raw QR data. QR generation confirmed active and stable."
+        - working: false
+          agent: "main"
+          comment: "QR endpoint needs retesting with whatsapp-web.js. Service logs show QR generation is working, but API integration needs verification."
 
   - task: "WhatsApp Status Endpoint"
     implemented: true
-    working: true
+    working: false
     file: "/app/backend/whatsapp_routes.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
         - working: true
           agent: "testing"
           comment: "GET /api/whatsapp/status endpoint working correctly. Returns connection status and QR availability. Currently shows connected: false, hasQR: true (expected)"
+        - working: false
+          agent: "main"
+          comment: "Status endpoint needs retesting with whatsapp-web.js implementation"
 
   - task: "WhatsApp Statistics Endpoint"
     implemented: true
-    working: true
+    working: false
     file: "/app/backend/whatsapp_routes.py"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
         - working: true
           agent: "testing"
           comment: "GET /api/whatsapp/stats endpoint working correctly. Returns total_messages, messages_today, and unique_users counts from MongoDB"
+        - working: false
+          agent: "main"
+          comment: "Stats endpoint needs retesting after migration"
 
   - task: "Message Processing with OpenAI Integration"
     implemented: true
-    working: true
+    working: false
     file: "/app/backend/whatsapp_routes.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
         - working: true
           agent: "testing"
@@ -221,26 +254,32 @@ backend:
         - working: true
           agent: "testing"
           comment: "OPENAI ASSISTANT VERIFICATION: OpenAI Assistant (asst_OvGYN1gteWdyeBISsd5FC8Rd) working perfectly. Correctly identifies as 'Estudio Jurídico Villegas Otárola Abogados' and provides appropriate legal services responses in Spanish. Thread management working correctly."
+        - working: false
+          agent: "main"
+          comment: "OpenAI integration needs retesting. Message processing in whatsapp-web.js uses message.from instead of message.key.remoteJid and message.id.id instead of message.key.id. Integration chain needs verification."
 
   - task: "Send Message Endpoint"
     implemented: true
-    working: true
+    working: false
     file: "/app/backend/whatsapp_routes.py"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
         - working: true
           agent: "testing"
           comment: "POST /api/whatsapp/send-message endpoint accessible and handles requests correctly. Returns appropriate error when WhatsApp not connected (expected behavior)"
+        - working: false
+          agent: "main"
+          comment: "Send message endpoint updated for whatsapp-web.js. Now uses client.sendMessage() with @c.us format instead of @s.whatsapp.net. Needs testing."
 
   - task: "Conversation History Endpoint"
     implemented: true
-    working: true
+    working: false
     file: "/app/backend/whatsapp_routes.py"
     stuck_count: 1
     priority: "medium"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
         - working: false
           agent: "testing"
@@ -248,42 +287,54 @@ backend:
         - working: true
           agent: "testing"
           comment: "Fixed ObjectId serialization issue by converting ObjectIds to strings. GET /api/whatsapp/messages/{phone_number} now working correctly, retrieves conversation history from MongoDB"
+        - working: false
+          agent: "main"
+          comment: "Needs retesting after migration to ensure compatibility"
 
   - task: "Error Handling and Validation"
     implemented: true
-    working: true
+    working: false
     file: "/app/backend/whatsapp_routes.py"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
         - working: true
           agent: "testing"
           comment: "Error handling working correctly. Invalid input returns HTTP 422 with proper Pydantic validation errors. 404 errors handled correctly for non-existent endpoints"
+        - working: false
+          agent: "main"
+          comment: "Error handling needs verification after migration"
 
   - task: "MongoDB Database Integration"
     implemented: true
-    working: true
+    working: false
     file: "/app/backend/database.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
         - working: true
           agent: "testing"
           comment: "MongoDB integration working correctly. Messages are stored and retrieved properly. Database connection via Motor async driver functioning well"
+        - working: false
+          agent: "main"
+          comment: "MongoDB integration should be unaffected by WhatsApp service migration, but needs verification"
 
   - task: "Service-to-Service Communication"
     implemented: true
-    working: true
+    working: false
     file: "/app/backend/whatsapp_routes.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
         - working: true
           agent: "testing"
           comment: "FastAPI successfully communicates with WhatsApp service on port 3001. All proxy endpoints (QR, status, send-message) working correctly via httpx client"
+        - working: false
+          agent: "main"
+          comment: "Service-to-service communication needs retesting with whatsapp-web.js implementation to ensure all endpoints respond correctly"
 
   - task: "Supervisor Service Management"
     implemented: true
@@ -296,6 +347,9 @@ backend:
         - working: true
           agent: "testing"
           comment: "SUPERVISOR VERIFICATION: All services now running under supervisor - backend (8001), frontend (3000), mongodb, and whatsapp-service (3001). WhatsApp service added to supervisor configuration for production stability. All services showing RUNNING status."
+        - working: true
+          agent: "main"
+          comment: "MIGRATION CONFIRMED: All services running after migration. whatsapp-service restarted successfully and showing RUNNING status with pid 2562."
 
 frontend:
   # Frontend testing not performed as per instructions
