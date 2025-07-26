@@ -1,18 +1,15 @@
-// Deploy-specific configuration for WhatsApp Baileys service
+// Deploy-specific configuration for WhatsApp service
 // This file contains configurations optimized for production deployment
 
 module.exports = {
     // Production environment detection
     isProduction: process.env.NODE_ENV === 'production' || process.env.EMERGENT_ENV === 'deploy',
     
-    // WebSocket and connection settings optimized for deploy
-    connection: {
-        connectTimeoutMs: 180000, // 3 minutes for deploy
-        keepAliveIntervalMs: 60000, // 1 minute keep-alive
-        defaultQueryTimeoutMs: 30000, // 30 seconds for queries
-        retryRequestDelayMs: 2000, // 2 seconds between retries
-        maxMsgRetryCount: 5, // More retries in deploy
-        requestTimeoutMs: 45000, // 45 seconds request timeout
+    // Puppeteer settings optimized for deploy
+    puppeteer: {
+        navigationTimeout: 120000, // 2 minutes for deploy
+        pageLoadTimeout: 90000, // 90 seconds page load
+        defaultTimeout: 60000, // 60 seconds default timeout
     },
     
     // Reconnection strategy for deploy
@@ -26,7 +23,7 @@ module.exports = {
     // Session persistence settings
     session: {
         persistData: true, // Always persist in deploy
-        authDirectory: './baileys_auth_info',
+        authDirectory: './whatsapp_session',
         cleanupOnFailure: false, // Don't cleanup auth data in deploy
         backupAuthData: true, // Create backups in deploy
     },
