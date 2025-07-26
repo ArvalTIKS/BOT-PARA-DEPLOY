@@ -174,7 +174,7 @@ const QRAssistantPage = () => {
             </h1>
           </div>
           <p className="text-xl text-gray-300 max-w-2xl mx-auto leading-relaxed">
-            Escanea el código QR para activar tu asistente del <strong>Estudio Jurídico Villegas Otárola</strong>
+            Escanea el código QR para activar tu <strong>Asistente Legal Personalizado</strong>
           </p>
         </div>
 
