@@ -300,7 +300,7 @@ const QRAssistantPage = () => {
               </div>
               
               <div className="mt-4 p-4 bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 rounded-lg">
-                <p className="text-blue-300 text-sm font-semibold mb-1">🤖 Estudio Jurídico Villegas Otárola</p>
+                <p className="text-blue-300 text-sm font-semibold mb-1">🤖 Asistente Legal Personalizado</p>
                 <p className="text-blue-200 text-xs">
                   Una vez conectado, tu asistente legal responderá automáticamente a todas las consultas 
                   sin necesidad de tu intervención. Perfecto para atender clientes 24/7.
