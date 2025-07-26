@@ -215,7 +215,7 @@ async function initializeWhatsApp() {
                     if (normalizedMessage === 'activar bot') {
                         try {
                             await sock.sendMessage(message.key.remoteJid, { 
-                                text: '✅ Bot activado. Responderé automáticamente a todos los mensajes del Estudio Jurídico Villegas Otárola.' 
+                                text: '✅ Bot activado. Responderé automáticamente a todos los mensajes con tu Asistente Legal Personalizado.' 
                             });
                             console.log('Bot activated for:', message.key.remoteJid);
                             return;
