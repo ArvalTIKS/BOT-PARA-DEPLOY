@@ -394,8 +394,8 @@ app.get('/health', (req, res) => {
 app.post('/restart', async (req, res) => {
     console.log('Manual restart requested');
     try {
-        if (sock) {
-            sock.end();
+        if (client) {
+            await client.destroy();
         }
         setTimeout(() => {
             initializeWhatsApp();
