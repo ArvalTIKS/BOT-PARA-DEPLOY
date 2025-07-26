@@ -115,7 +115,7 @@ backend:
     status_history:
         - working: true
           agent: "testing"
-          comment: "API is running correctly at https://e9f5a271-719e-4478-b51d-ca9958d18228.preview.emergentagent.com/api/ - returns proper welcome message"
+          comment: "API is running correctly at https://bd69d742-9d53-4bda-944a-b2586a148fd3.preview.emergentagent.com/api/ - returns proper welcome message"
 
   - task: "WhatsApp Service Connectivity"
     implemented: true
