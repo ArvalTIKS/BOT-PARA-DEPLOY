@@ -1,11 +1,11 @@
-const { default: makeWASocket, useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion } = require('@whiskeysockets/baileys');
-const { Boom } = require('@hapi/boom');
+const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
 const qrcode = require('qrcode');
 const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
+const puppeteer = require('puppeteer');
 const deployConfig = require('./deploy-config');
 
 const app = express();
@@ -19,11 +19,11 @@ const FASTAPI_URL = process.env.FASTAPI_URL || 'http://localhost:8001';
 const isDeployEnv = deployConfig.isProduction || process.env.EMERGENT_ENV === 'deploy';
 console.log(`Running in ${isDeployEnv ? 'DEPLOY' : 'PREVIEW'} environment`);
 
-let sock = null;
+let client = null;
 let qrCodeData = null;
 let isConnected = false;
 let connectedUser = null;
-let authDir = deployConfig.session.authDirectory;
+let sessionDir = deployConfig.session.authDirectory;
 let isInitializing = false;
 let reconnectAttempts = 0;
 const MAX_RECONNECT_ATTEMPTS = deployConfig.reconnection.maxAttempts;
