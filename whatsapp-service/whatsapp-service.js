@@ -448,13 +448,17 @@ server.on('error', (err) => {
 });
 
 // Enhanced graceful shutdown for deploy environment
-process.on('SIGINT', async () => {
+const gracefulShutdown = async () => {
     console.log('Shutting down gracefully...');
     
-    // Close WhatsApp socket
-    if (sock) {
-        console.log('Closing WhatsApp socket...');
-        sock.end();
+    // Close WhatsApp client
+    if (client) {
+        console.log('Destroying WhatsApp client...');
+        try {
+            await client.destroy();
+        } catch (error) {
+            console.error('Error destroying client:', error);
+        }
     }
     
     // Close HTTP server
@@ -473,34 +477,10 @@ process.on('SIGINT', async () => {
     } else {
         process.exit(0);
     }
-});
+};
 
-process.on('SIGTERM', async () => {
-    console.log('Received SIGTERM, shutting down gracefully...');
-    
-    // Close WhatsApp socket
-    if (sock) {
-        console.log('Closing WhatsApp socket...');
-        sock.end();
-    }
-    
-    // Close HTTP server
-    if (server) {
-        console.log('Closing HTTP server...');
-        server.close(() => {
-            console.log('HTTP server closed');
-            process.exit(0);
-        });
-        
-        // Force close after timeout
-        setTimeout(() => {
-            console.log('Forcing shutdown...');
-            process.exit(1);
-        }, deployConfig.server.gracefulShutdownTimeoutMs);
-    } else {
-        process.exit(0);
-    }
-});
+process.on('SIGINT', gracefulShutdown);
+process.on('SIGTERM', gracefulShutdown);
 
 // Enhanced error handling for deploy
 process.on('uncaughtException', (error) => {
