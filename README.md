@@ -115,7 +115,7 @@ Similar a Railway, crear servicios separados para cada componente.
 4. Usar "activar bot" / "suspender bot" para controlar
 
 ## 🤖 Asistente OpenAI:
-- **Nombre**: Estudio Jurídico Villegas Otárola
+- **Nombre**: Asistente Legal Personalizado
 - **Función**: Asistente legal que responde consultas
 - **ID**: asst_OvGYN1gteWdyeBISsd5FC8Rd
 
