@@ -194,11 +194,11 @@ backend:
 
   - task: "Status Endpoints (GET/POST)"
     implemented: true
-    working: false
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: true
           agent: "testing"
@@ -206,6 +206,9 @@ backend:
         - working: false
           agent: "main"
           comment: "Needs retesting after WhatsApp service migration"
+        - working: true
+          agent: "testing"
+          comment: "POST-MIGRATION VERIFICATION: ✅ Status endpoints working correctly after whatsapp-web.js migration. GET endpoint retrieved 1 status check, POST endpoint successfully created new status check with UUID. Both endpoints responding correctly via production URL."
 
   - task: "WhatsApp QR Code Endpoint"
     implemented: true
