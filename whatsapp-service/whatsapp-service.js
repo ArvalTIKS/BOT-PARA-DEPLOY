@@ -178,6 +178,10 @@ async function initializeWhatsApp() {
                     profileImage: null,
                     connectedAt: new Date().toISOString()
                 };
+                
+                // 📱 STORE OWNER'S PHONE NUMBER for command authorization
+                ownerPhoneNumber = info.wid.user;
+                console.log('✅ Owner phone number registered:', ownerPhoneNumber);
                 console.log('Connected user:', connectedUser);
             } catch (err) {
                 console.error('Error getting user info:', err);
