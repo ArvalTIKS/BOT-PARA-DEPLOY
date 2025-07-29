@@ -287,8 +287,22 @@ async function initializeWhatsApp() {
         // Message received event
         client.on('message', async (message) => {
             if (!message.fromMe && message.body) {
+                // 🚫 CRITICAL: IGNORE GROUP MESSAGES - Only respond to private chats
+                if (message.from.includes('-') || message.from.includes('@g.us')) {
+                    console.log(`🚫 IGNORED GROUP MESSAGE from ${message.from}: ${message.body}`);
+                    return; // Exit early - do not process group messages
+                }
+                
+                // Only process private messages (format: number@c.us)
+                if (!message.from.includes('@c.us')) {
+                    console.log(`🚫 IGNORED NON-PRIVATE MESSAGE from ${message.from}`);
+                    return;
+                }
+                
                 const messageText = message.body;
                 const normalizedMessage = messageText.toLowerCase().trim();
+                
+                console.log(`📱 PRIVATE MESSAGE from ${message.from}: ${messageText}`);
                 
                 // Check for legacy bot control commands (compatibility)
                 if (normalizedMessage === 'activar bot') {
@@ -315,7 +329,7 @@ async function initializeWhatsApp() {
                 const pauseCommands = ['pausar', 'reactivar', 'pausar todo', 'activar todo', 'estado'];
                 if (pauseCommands.includes(normalizedMessage)) {
                     console.log(`Pause command detected: ${normalizedMessage} from ${message.from}`);
-                    // Let the consolidated manager handle pause commands - they will be processed there
+                    // Let the backend handle pause commands - they will be processed there
                 }
                 
                 console.log('Received message:', messageText);
