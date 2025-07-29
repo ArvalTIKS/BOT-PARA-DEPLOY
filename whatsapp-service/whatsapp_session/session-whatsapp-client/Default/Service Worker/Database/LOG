@@ -1,3 +1,2 @@
-2025/07/29-20:52:53.185 26d9 Reusing MANIFEST /app/whatsapp-service/whatsapp_session/session-whatsapp-client/Default/Service Worker/Database/MANIFEST-000001
-2025/07/29-20:52:53.185 26d9 Recovering log #3
-2025/07/29-20:52:53.185 26d9 Reusing old log /app/whatsapp-service/whatsapp_session/session-whatsapp-client/Default/Service Worker/Database/000003.log 
+2025/07/29-20:55:35.016 281a Creating DB /app/whatsapp-service/whatsapp_session/session-whatsapp-client/Default/Service Worker/Database since it was missing.
+2025/07/29-20:55:35.033 281a Reusing MANIFEST /app/whatsapp-service/whatsapp_session/session-whatsapp-client/Default/Service Worker/Database/MANIFEST-000001

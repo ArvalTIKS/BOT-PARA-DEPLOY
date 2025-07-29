@@ -1,2 +1,2 @@
-2025/07/29-20:46:45.627 23de Creating DB /app/whatsapp-service/whatsapp_session/session-whatsapp-client/Default/Local Storage/leveldb since it was missing.
-2025/07/29-20:46:45.633 23de Reusing MANIFEST /app/whatsapp-service/whatsapp_session/session-whatsapp-client/Default/Local Storage/leveldb/MANIFEST-000001
+2025/07/29-20:55:24.355 27d9 Creating DB /app/whatsapp-service/whatsapp_session/session-whatsapp-client/Default/Local Storage/leveldb since it was missing.
+2025/07/29-20:55:24.368 27d9 Reusing MANIFEST /app/whatsapp-service/whatsapp_session/session-whatsapp-client/Default/Local Storage/leveldb/MANIFEST-000001

@@ -1,2 +1,2 @@
-2025/07/29-20:46:45.880 23dd Creating DB /app/whatsapp-service/whatsapp_session/session-whatsapp-client/Default/shared_proto_db since it was missing.
-2025/07/29-20:46:45.885 23dd Reusing MANIFEST /app/whatsapp-service/whatsapp_session/session-whatsapp-client/Default/shared_proto_db/MANIFEST-000001
+2025/07/29-20:55:24.571 27e1 Creating DB /app/whatsapp-service/whatsapp_session/session-whatsapp-client/Default/shared_proto_db since it was missing.
+2025/07/29-20:55:24.576 27e1 Reusing MANIFEST /app/whatsapp-service/whatsapp_session/session-whatsapp-client/Default/shared_proto_db/MANIFEST-000001
