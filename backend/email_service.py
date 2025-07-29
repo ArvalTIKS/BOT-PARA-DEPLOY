@@ -21,9 +21,14 @@ class EmailService:
         
     async def send_client_invitation(self, client_email: str, client_name: str, landing_url: str) -> bool:
         """Send invitation email to client with their landing page URL"""
+        
+        if not self.sender_password:
+            print(f"❌ Cannot send email - EMAIL_PASSWORD not configured")
+            return False
+            
         try:
             msg = MIMEMultipart()
-            msg['From'] = self.sender_email
+            msg['From'] = f"TIKS Platform <{self.sender_email}>"
             msg['To'] = client_email
             msg['Subject'] = f"🤖 Tu Asistente WhatsApp está listo - {client_name}"
             
