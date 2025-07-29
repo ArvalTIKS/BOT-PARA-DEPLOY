@@ -56,3 +56,6 @@ class EmailTemplate(BaseModel):
     
 class ToggleClientRequest(BaseModel):
     action: str  # "connect" or "disconnect"
+
+class UpdateEmailRequest(BaseModel):
+    new_email: EmailStr
