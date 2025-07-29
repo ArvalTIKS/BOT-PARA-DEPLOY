@@ -6,6 +6,9 @@ const AdminPanel = () => {
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showEditEmailForm, setShowEditEmailForm] = useState(false);
+  const [editingClient, setEditingClient] = useState(null);
+  const [newEmail, setNewEmail] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     email: '',
