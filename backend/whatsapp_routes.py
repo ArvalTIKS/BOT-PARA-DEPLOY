@@ -144,12 +144,12 @@ async def generate_ai_response(message: str, phone_number: str, db) -> str:
             assistant_id=assistant_id
         )
         
-        # Wait for completion
-        max_attempts = 30  # 30 seconds max
+        # Wait for completion with faster polling
+        max_attempts = 60  # 30 seconds max (0.5s intervals)
         attempts = 0
         
         while run.status in ['queued', 'in_progress'] and attempts < max_attempts:
-            await asyncio.sleep(1)
+            await asyncio.sleep(0.5)  # Faster polling - check every 0.5 seconds instead of 1
             run = client.beta.threads.runs.retrieve(
                 thread_id=thread_id,
                 run_id=run.id
