@@ -100,10 +100,39 @@ async def process_client_message(
         
         print(f"Processing message for client {client.name} from {phone_number}: {message_text}")
         
-        # Store message in client_messages collection
+        # Import pause service
+        from pause_service import pause_service
+        
+        # Store original message
         await store_client_message(db, client_id, phone_number, message_text, timestamp)
         
-        # Generate AI response using client's OpenAI config
+        # Check if it's a pause control command from the client
+        if pause_service.is_pause_command(message_text):
+            # Assume the client's phone is the connected_phone (when they connect via QR)
+            client_phone = client.connected_phone or phone_number  # Fallback for testing
+            
+            command_response = await pause_service.process_pause_command(
+                message_text, client_id, phone_number, client_phone
+            )
+            
+            if command_response:
+                # Store command response
+                await store_client_message(
+                    db, client_id, phone_number, command_response, 
+                    timestamp=int(datetime.now().timestamp()), 
+                    is_from_ai=True
+                )
+                return {"reply": command_response, "success": True}
+        
+        # Check if conversation is paused
+        is_paused = await pause_service.is_conversation_paused(client_id, phone_number)
+        
+        if is_paused:
+            # Conversation is paused, don't send to AI
+            print(f"Conversation paused for client {client.name}, phone {phone_number}")
+            return {"reply": None, "success": True, "paused": True}
+        
+        # Generate AI response using client's OpenAI config (normal flow)
         ai_response = await generate_client_ai_response(
             message_text, 
             phone_number, 
