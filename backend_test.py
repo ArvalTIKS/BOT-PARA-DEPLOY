@@ -1038,7 +1038,7 @@ class BackendTester:
     async def run_all_tests(self):
         """Run all backend tests"""
         print("=" * 80)
-        print("BACKEND TESTING - WhatsApp + OpenAI Platform")
+        print("BACKEND TESTING - CONSOLIDATED WHATSAPP SYSTEM")
         print("=" * 80)
         print(f"Backend URL: {self.backend_url}")
         print(f"WhatsApp Service URL: {self.whatsapp_service_url}")
@@ -1053,7 +1053,34 @@ class BackendTester:
             print("❌ CRITICAL: Backend API is not accessible. Stopping tests.")
             return
             
-        # Run all endpoint tests
+        # Test WhatsApp service stability
+        await self.test_whatsapp_service_stability()
+        
+        # ========== CONSOLIDATED SYSTEM TESTS ==========
+        print("\n🔄 TESTING CONSOLIDATED WHATSAPP SYSTEM...")
+        await self.test_consolidated_status()
+        await self.test_consolidated_clients()
+        await self.test_consolidated_qr()
+        await self.test_consolidated_phone_connected()
+        await self.test_consolidated_process_message()
+        await self.test_consolidated_associate_phone()
+        
+        # ========== ADMIN PANEL WITH CONSOLIDATED SYSTEM ==========
+        print("\n👨‍💼 TESTING ADMIN PANEL WITH CONSOLIDATED SYSTEM...")
+        await self.test_admin_routes()
+        await self.test_admin_client_toggle_consolidated()
+        
+        # ========== CLIENT LANDING PAGES WITH CONSOLIDATED SYSTEM ==========
+        print("\n🌐 TESTING CLIENT LANDING PAGES WITH CONSOLIDATED SYSTEM...")
+        await self.test_client_routes()
+        await self.test_client_landing_consolidated()
+        
+        # ========== MULTI-TENANT OPENAI INTEGRATION ==========
+        print("\n🤖 TESTING MULTI-TENANT OPENAI INTEGRATION...")
+        await self.test_multi_tenant_openai_integration()
+        
+        # ========== LEGACY ENDPOINT COMPATIBILITY ==========
+        print("\n🔄 TESTING LEGACY ENDPOINT COMPATIBILITY...")
         await self.test_status_endpoints()
         await self.test_whatsapp_qr_endpoint()
         await self.test_whatsapp_status_endpoint()
@@ -1062,24 +1089,25 @@ class BackendTester:
         await self.test_send_message_endpoint()
         await self.test_conversation_history_endpoint()
         
-        # Multi-tenant specific tests
-        await self.test_admin_routes()
-        await self.test_client_routes()
+        # ========== DATABASE AND ERROR HANDLING ==========
+        print("\n💾 TESTING DATABASE AND ERROR HANDLING...")
         await self.test_database_integration()
+        await self.test_error_handling()
         
-        # Baileys-specific tests
+        # ========== WHATSAPP SERVICE TESTS ==========
+        print("\n📱 TESTING WHATSAPP SERVICE...")
         await self.test_baileys_service_health()
         await self.test_baileys_qr_generation()
         await self.test_baileys_status_endpoint()
         
-        # Bot command tests
+        # ========== BOT COMMAND TESTS ==========
+        print("\n🤖 TESTING BOT COMMANDS...")
         await self.test_bot_activation_command()
         await self.test_bot_suspension_command()
         
-        # OpenAI Assistant integration test
+        # ========== OPENAI ASSISTANT INTEGRATION ==========
+        print("\n🧠 TESTING OPENAI ASSISTANT INTEGRATION...")
         await self.test_openai_assistant_integration()
-        
-        await self.test_error_handling()
         
         # Summary
         self.print_summary()
