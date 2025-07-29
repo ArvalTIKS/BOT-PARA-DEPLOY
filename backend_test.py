@@ -510,6 +510,97 @@ class BackendTester:
         except Exception as e:
             self.log_test("OpenAI Assistant Integration", False, f"Error: {str(e)}")
 
+    async def test_admin_routes(self):
+        """Test admin panel routes"""
+        try:
+            async with self.session.get(f"{self.backend_url}/api/admin/clients", timeout=10) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    self.log_test(
+                        "Admin - Get All Clients", 
+                        True, 
+                        f"Retrieved {len(data)} clients successfully"
+                    )
+                else:
+                    self.log_test(
+                        "Admin - Get All Clients", 
+                        False, 
+                        f"HTTP {response.status}",
+                        await response.text()
+                    )
+        except Exception as e:
+            self.log_test("Admin - Get All Clients", False, f"Error: {str(e)}")
+
+    async def test_client_routes(self):
+        """Test client landing page routes"""
+        # Test with a known client URL
+        test_client_url = "e2d7bce6"  # Cliente Prueba
+        
+        try:
+            async with self.session.get(f"{self.backend_url}/api/client/{test_client_url}/status", timeout=10) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    client_name = data.get('client', {}).get('name', 'Unknown')
+                    self.log_test(
+                        "Client - Landing Status", 
+                        True, 
+                        f"Client status retrieved for {client_name}"
+                    )
+                else:
+                    self.log_test(
+                        "Client - Landing Status", 
+                        False, 
+                        f"HTTP {response.status}",
+                        await response.text()
+                    )
+        except Exception as e:
+            self.log_test("Client - Landing Status", False, f"Error: {str(e)}")
+        
+        try:
+            async with self.session.get(f"{self.backend_url}/api/client/{test_client_url}/qr", timeout=10) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    has_qr = data.get('qr') is not None
+                    self.log_test(
+                        "Client - Landing QR", 
+                        True, 
+                        f"QR endpoint accessible, Has QR: {has_qr}"
+                    )
+                else:
+                    self.log_test(
+                        "Client - Landing QR", 
+                        False, 
+                        f"HTTP {response.status}",
+                        await response.text()
+                    )
+        except Exception as e:
+            self.log_test("Client - Landing QR", False, f"Error: {str(e)}")
+
+    async def test_database_integration(self):
+        """Test MongoDB database integration"""
+        try:
+            # Test stats endpoint which queries database
+            async with self.session.get(f"{self.backend_url}/api/whatsapp/stats", timeout=10) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    total_messages = data.get('total_messages', 0)
+                    messages_today = data.get('messages_today', 0)
+                    unique_users = data.get('unique_users', 0)
+                    self.log_test(
+                        "Database Integration", 
+                        True, 
+                        f"Database queries working - Total: {total_messages}, Today: {messages_today}, Users: {unique_users}"
+                    )
+                else:
+                    self.log_test(
+                        "Database Integration", 
+                        False, 
+                        f"HTTP {response.status}",
+                        await response.text()
+                    )
+        except Exception as e:
+            self.log_test("Database Integration", False, f"Error: {str(e)}")
+
     async def test_error_handling(self):
         """Test error handling with invalid requests"""
         # Test invalid message processing
