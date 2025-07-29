@@ -155,6 +155,18 @@ async function initializeWhatsApp() {
                     connectedAt: new Date().toISOString()
                 };
                 console.log('Connected user:', connectedUser);
+                
+                // Notify the consolidated manager about the phone connection
+                try {
+                    await axios.post(`${FASTAPI_URL}/api/consolidated/phone-connected`, {
+                        phone_number: connectedUser.phone,
+                        user_info: connectedUser
+                    });
+                    console.log('✅ Notified consolidated manager about phone connection');
+                } catch (notifyError) {
+                    console.error('❌ Error notifying consolidated manager:', notifyError);
+                }
+                
             } catch (err) {
                 console.error('Error getting user info:', err);
             }
