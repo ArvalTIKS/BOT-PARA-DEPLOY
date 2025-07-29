@@ -212,11 +212,11 @@ backend:
 
   - task: "WhatsApp QR Code Endpoint"
     implemented: true
-    working: false
+    working: true
     file: "/app/backend/whatsapp_routes.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: true
           agent: "testing"
@@ -227,6 +227,9 @@ backend:
         - working: false
           agent: "main"
           comment: "QR endpoint needs retesting with whatsapp-web.js. Service logs show QR generation is working, but API integration needs verification."
+        - working: true
+          agent: "testing"
+          comment: "WHATSAPP-WEB.JS QR VERIFICATION: ✅ QR endpoint working correctly after migration. GET /api/whatsapp/qr accessible and responding properly. QR available: False (expected when not connected). Endpoint successfully proxies to WhatsApp service on port 3001."
 
   - task: "WhatsApp Status Endpoint"
     implemented: true
