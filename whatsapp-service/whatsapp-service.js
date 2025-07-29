@@ -375,14 +375,35 @@ async function initializeWhatsApp() {
             reconnectAttempts++;
             console.log(`Initialization retry ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS}`);
             
-            // Deploy-optimized retry delay
-            const retryDelay = isDeployEnv ? 15000 : 10000;
+            // Clean session data on each retry to avoid persistence issues
+            if (fs.existsSync(sessionDir)) {
+                try {
+                    fs.rmSync(sessionDir, { recursive: true, force: true });
+                } catch (rmError) {
+                    console.log('Error removing session (safe to ignore):', rmError.message);
+                }
+            }
+            
+            // Longer delay for deployment
+            const retryDelay = isDeployEnv ? 20000 : 10000;
             setTimeout(() => {
                 initializeWhatsApp();
             }, retryDelay);
         } else {
-            console.log('❌ Max initialization attempts reached. Stopping retries.');
-            console.log('💡 You may need to manually restart the service or clear session data.');
+            console.log('❌ Max initialization attempts reached. Resetting attempts and trying again...');
+            // Reset attempts and try one more time with full cleanup
+            reconnectAttempts = 0;
+            if (fs.existsSync(sessionDir)) {
+                try {
+                    fs.rmSync(sessionDir, { recursive: true, force: true });
+                } catch (rmError) {
+                    console.log('Error removing session (safe to ignore):', rmError.message);
+                }
+            }
+            setTimeout(() => {
+                console.log('🔄 Final attempt after full reset...');
+                initializeWhatsApp();
+            }, 30000);
         }
     }
 }
