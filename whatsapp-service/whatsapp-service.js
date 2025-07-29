@@ -30,6 +30,9 @@ const MAX_RECONNECT_ATTEMPTS = deployConfig.reconnection.maxAttempts;
 
 // Enhanced Puppeteer configuration for deployment
 const getPuppeteerConfig = () => {
+    // Create unique profile directory for this instance
+    const uniqueProfileDir = `/tmp/whatsapp-chrome-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    
     const baseConfig = {
         headless: true,
         args: [
@@ -52,10 +55,10 @@ const getPuppeteerConfig = () => {
             '--disable-translate',
             '--disable-plugins',
             '--disable-component-extensions-with-background-pages',
-            '--user-data-dir=/tmp/whatsapp-chrome-profile',
             '--disable-background-timer-throttling',
             '--disable-backgrounding-occluded-windows',
-            '--disable-renderer-backgrounding'
+            '--disable-renderer-backgrounding',
+            `--user-data-dir=${uniqueProfileDir}`
         ]
     };
     
