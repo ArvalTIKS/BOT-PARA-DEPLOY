@@ -49,9 +49,47 @@ const ClientLanding = () => {
     }
   };
 
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
     setRefreshing(true);
-    fetchClientData();
+    try {
+      await fetchClientData();
+      await fetchQRCode();
+    } catch (error) {
+      console.error('Error refreshing data:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  const handleDisconnectWhatsApp = async () => {
+    if (!window.confirm('¿Estás seguro que quieres desvincular WhatsApp? Esto eliminará el dispositivo de tu lista de dispositivos vinculados y tendrás que escanear un nuevo código QR para volver a conectar.')) {
+      return;
+    }
+
+    try {
+      setRefreshing(true);
+      
+      // Call logout endpoint
+      const response = await axios.get(`${backendUrl}/api/whatsapp/logout`);
+      
+      if (response.data.success) {
+        // Show success message
+        alert('✅ WhatsApp desvinculado exitosamente. El dispositivo ha sido eliminado de tu lista de dispositivos vinculados.');
+        
+        // Refresh data to show new QR
+        setTimeout(async () => {
+          await fetchClientData();
+          await fetchQRCode();
+        }, 3000);
+      } else {
+        alert('❌ Error al desvincular WhatsApp. Por favor intenta nuevamente.');
+      }
+    } catch (error) {
+      console.error('Error disconnecting WhatsApp:', error);
+      alert('❌ Error al desvincular WhatsApp. Por favor intenta nuevamente.');
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   if (loading) {
