@@ -6,10 +6,10 @@ from typing import Optional
 
 class EmailService:
     def __init__(self):
-        # Bluehosting SMTP configuration
-        self.smtp_server = "mail.tiks.cl"
-        self.smtp_port = 587  # TLS port (insecure outbound)
-        self.sender_email = "contacto@tiks.cl"
+        # Gmail SMTP configuration
+        self.smtp_server = "smtp.gmail.com"
+        self.smtp_port = 587  # TLS port
+        self.sender_email = "tikschile@gmail.com"
         
         # Get password from environment
         self.sender_password = os.environ.get('EMAIL_PASSWORD', '')
