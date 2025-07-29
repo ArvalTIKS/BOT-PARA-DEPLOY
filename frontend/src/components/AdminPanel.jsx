@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { AlertCircle, CheckCircle, User, Mail, Key, Robot, Trash2, Power, PowerOff, Plus } from 'lucide-react';
+import { AlertCircle, CheckCircle, User, Mail, Key, Bot, Trash2, Power, PowerOff, Plus } from 'lucide-react';
 
 const AdminPanel = () => {
   const [clients, setClients] = useState([]);
