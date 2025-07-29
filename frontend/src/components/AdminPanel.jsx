@@ -221,7 +221,7 @@ const AdminPanel = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Assistant ID OpenAI</label>
                     <div className="mt-1 relative">
-                      <Robot className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                      <Bot className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                       <input
                         type="text"
                         required
