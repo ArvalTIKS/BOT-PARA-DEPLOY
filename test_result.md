@@ -233,11 +233,11 @@ backend:
 
   - task: "WhatsApp Status Endpoint"
     implemented: true
-    working: false
+    working: true
     file: "/app/backend/whatsapp_routes.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: true
           agent: "testing"
@@ -245,6 +245,9 @@ backend:
         - working: false
           agent: "main"
           comment: "Status endpoint needs retesting with whatsapp-web.js implementation"
+        - working: true
+          agent: "testing"
+          comment: "WHATSAPP-WEB.JS STATUS VERIFICATION: ✅ Status endpoint working correctly after migration. GET /api/whatsapp/status returns proper connection status. Connected: False, Has QR: False (expected when not connected). Endpoint successfully communicates with WhatsApp service."
 
   - task: "WhatsApp Statistics Endpoint"
     implemented: true
