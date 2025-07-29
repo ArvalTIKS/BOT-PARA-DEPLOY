@@ -430,12 +430,7 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus:
-    - "WhatsApp Service Migration to whatsapp-web.js"
-    - "WhatsApp Service Connectivity"
-    - "WhatsApp QR Code Endpoint"
-    - "Message Processing with OpenAI Integration"
-    - "Service-to-Service Communication"
+  current_focus: []
   stuck_tasks: []
   test_all: true
   test_priority: "high_first"
