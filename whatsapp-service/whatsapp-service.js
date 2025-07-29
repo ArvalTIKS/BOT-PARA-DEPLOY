@@ -290,9 +290,14 @@ async function initializeWhatsApp() {
             }, 10000);
         });
 
-        // Message received event
+        // Message received event - Process commands from owner AND clients
         client.on('message', async (message) => {
-            if (!message.fromMe && message.body) {
+            // 🎯 SPECIAL HANDLING: Allow owner to use commands even though fromMe = true
+            const isOwnerCommand = message.fromMe && message.body && 
+                ['pausar', 'reactivar', 'pausar todo', 'activar todo', 'estado'].includes(message.body.toLowerCase().trim());
+            
+            // Process messages from others OR owner commands
+            if ((!message.fromMe && message.body) || isOwnerCommand) {
                 // 🚫 CRITICAL: IGNORE GROUP MESSAGES - Only respond to private chats
                 if (message.from.includes('-') || message.from.includes('@g.us')) {
                     console.log(`🚫 IGNORED GROUP MESSAGE from ${message.from}: ${message.body}`);
@@ -308,33 +313,37 @@ async function initializeWhatsApp() {
                 const messageText = message.body;
                 const normalizedMessage = messageText.toLowerCase().trim();
                 
-                console.log(`📱 PRIVATE MESSAGE from ${message.from}: ${messageText}`);
+                // 👤 Log message source
+                const messageSource = message.fromMe ? "OWNER" : "CLIENT";
+                console.log(`📱 ${messageSource} MESSAGE from ${message.from}: ${messageText}`);
                 
-                // Check for legacy bot control commands (compatibility)
-                if (normalizedMessage === 'activar bot') {
-                    try {
-                        await message.reply('✅ Bot activado. Responderé automáticamente a todos los mensajes con tu asistente personalizado.');
-                        console.log('Bot activated for:', message.from);
-                        return;
-                    } catch (error) {
-                        console.error('Error activating bot:', error);
+                // Check for legacy bot control commands (compatibility) - only for clients
+                if (!message.fromMe) {
+                    if (normalizedMessage === 'activar bot') {
+                        try {
+                            await message.reply('✅ Bot activado. Responderé automáticamente a todos los mensajes con tu asistente personalizado.');
+                            console.log('Bot activated for:', message.from);
+                            return;
+                        } catch (error) {
+                            console.error('Error activating bot:', error);
+                        }
                     }
-                }
-                
-                if (normalizedMessage === 'suspender bot') {
-                    try {
-                        await message.reply('⏸️ Bot suspendido. Ahora puedes usar tu celular normalmente.');
-                        console.log('Bot suspended for:', message.from);
-                        return;
-                    } catch (error) {
-                        console.error('Error suspending bot:', error);
+                    
+                    if (normalizedMessage === 'suspender bot') {
+                        try {
+                            await message.reply('⏸️ Bot suspendido. Ahora puedes usar tu celular normalmente.');
+                            console.log('Bot suspended for:', message.from);
+                            return;
+                        } catch (error) {
+                            console.error('Error suspending bot:', error);
+                        }
                     }
                 }
                 
                 // Check for pause control commands - ANYONE can use them
                 const pauseCommands = ['pausar', 'reactivar', 'pausar todo', 'activar todo', 'estado'];
                 if (pauseCommands.includes(normalizedMessage)) {
-                    console.log(`✅ COMMAND DETECTED: ${normalizedMessage} from ${message.from.split('@')[0]}`);
+                    console.log(`✅ COMMAND DETECTED: ${normalizedMessage} from ${messageSource} (${message.from.split('@')[0]})`);
                     
                     // Process pause commands immediately - do NOT send to OpenAI
                     try {
@@ -348,7 +357,7 @@ async function initializeWhatsApp() {
                         // Send command response back to WhatsApp
                         if (response.data.reply) {
                             await message.reply(response.data.reply);
-                            console.log('✅ Command reply sent:', response.data.reply);
+                            console.log(`✅ Command reply sent to ${messageSource}:`, response.data.reply);
                         }
                         
                         return; // STOP HERE - do not process with OpenAI
@@ -362,6 +371,12 @@ async function initializeWhatsApp() {
                         }
                         return; // STOP HERE even on error
                     }
+                }
+                
+                // 🤖 For owner messages that are NOT commands, don't process with AI
+                if (message.fromMe) {
+                    console.log(`🤐 OWNER MESSAGE (not command) - ignoring: ${messageText}`);
+                    return;
                 }
                 
                 console.log('Received message:', messageText);
