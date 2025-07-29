@@ -534,6 +534,7 @@ app.get('/logout', (req, res) => {
                 // Reset all connection states
                 isConnected = false;
                 connectedUser = null;
+                ownerPhoneNumber = null; // 📱 CLEAR owner phone on logout
                 qrCodeData = null;
                 
                 // Clean up session data completely
