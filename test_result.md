@@ -540,6 +540,21 @@ backend:
           agent: "testing"
           comment: "MULTI-TENANT ADMIN VERIFICATION: ✅ Admin panel APIs working correctly. GET /api/admin/clients successfully retrieved 4 registered clients. Admin routes accessible and responding properly. Multi-tenant client management functionality confirmed working."
 
+  - task: "Multi-Tenant Client Landing Pages"
+    implemented: true
+    working: true
+    file: "/app/backend/client_routes.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "CLIENT LANDING PAGES VERIFIED: ✅ Client landing page APIs working correctly. GET /api/client/{unique_url}/status successfully retrieved client status for 'Cliente Prueba'. GET /api/client/{unique_url}/qr endpoint accessible and responding properly. Multi-tenant client-specific functionality confirmed working."
+        - working: true
+          agent: "testing"
+          comment: "CLIENT LANDING CONSOLIDADO VERIFICADO: ✅ Páginas de cliente actualizadas para usar sistema consolidado. ✅ Status endpoint usa consolidated manager correctamente. ✅ QR endpoint integrado con gestor consolidado. ✅ Funcionalidad multi-tenant confirmada con arquitectura consolidada mejorada."
+  
   - task: "Consolidated WhatsApp Service Architecture"
     implemented: true
     working: true
