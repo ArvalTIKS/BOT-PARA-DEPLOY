@@ -1,6 +1,3 @@
-2025/07/29-21:28:34.776 2efc Reusing MANIFEST /app/whatsapp-service/whatsapp_session/session-whatsapp-client/Default/Local Storage/leveldb/MANIFEST-000001
-2025/07/29-21:28:34.777 2efc Recovering log #3
-2025/07/29-21:28:34.778 2efc Reusing old log /app/whatsapp-service/whatsapp_session/session-whatsapp-client/Default/Local Storage/leveldb/000003.log 
-2025/07/29-21:48:43.915 2efc Level-0 table #5: started
-2025/07/29-21:48:43.917 2efc Level-0 table #5: 15604 bytes OK
-2025/07/29-21:48:43.919 2efc Delete type=0 #3
+2025/07/29-21:49:41.679 314c Reusing MANIFEST /app/whatsapp-service/whatsapp_session/session-whatsapp-client/Default/Local Storage/leveldb/MANIFEST-000001
+2025/07/29-21:49:41.680 314c Recovering log #4
+2025/07/29-21:49:41.680 314c Reusing old log /app/whatsapp-service/whatsapp_session/session-whatsapp-client/Default/Local Storage/leveldb/000004.log 

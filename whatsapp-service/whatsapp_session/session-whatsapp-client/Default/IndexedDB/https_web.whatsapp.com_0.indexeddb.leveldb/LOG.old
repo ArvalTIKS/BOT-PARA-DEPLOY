@@ -1,4 +1,15 @@
-2025/07/29-21:16:17.881 2d10 Reusing MANIFEST /app/whatsapp-service/whatsapp_session/session-whatsapp-client/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
-2025/07/29-21:16:17.881 2d10 Recovering log #134
-2025/07/29-21:16:17.975 2d10 Reusing old log /app/whatsapp-service/whatsapp_session/session-whatsapp-client/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/000134.log 
-2025/07/29-21:16:19.574 2d0e Manual compaction at level-0 from '\x00+\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00,\x00\x00\x00' @ 0 : 0; will stop at (end)
+2025/07/29-21:28:35.939 2efc Reusing MANIFEST /app/whatsapp-service/whatsapp_session/session-whatsapp-client/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2025/07/29-21:28:35.939 2efc Recovering log #134
+2025/07/29-21:28:36.072 2efc Reusing old log /app/whatsapp-service/whatsapp_session/session-whatsapp-client/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/000134.log 
+2025/07/29-21:28:37.272 2efb Level-0 table #140: started
+2025/07/29-21:28:37.341 2efb Level-0 table #140: 673904 bytes OK
+2025/07/29-21:28:37.342 2efb Delete type=0 #134
+2025/07/29-21:28:37.368 2efb Manual compaction at level-0 from '\x00,\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00-\x00\x00\x00' @ 0 : 0; will stop at (end)
+2025/07/29-21:28:39.999 2efb Compacting 1@1 + 2@2 files
+2025/07/29-21:28:40.186 2efb Generated table #141@1: 47331 keys, 2210410 bytes
+2025/07/29-21:28:40.380 2efb Generated table #142@1: 48364 keys, 2110431 bytes
+2025/07/29-21:28:40.380 2efb Compacted 1@1 + 2@2 files => 4320841 bytes
+2025/07/29-21:28:40.382 2efb compacted to: files[ 0 0 2 0 0 0 0 ]
+2025/07/29-21:28:40.382 2efb Delete type=2 #136
+2025/07/29-21:28:40.383 2efb Delete type=2 #140
+2025/07/29-21:28:40.383 2efb Delete type=2 #137
