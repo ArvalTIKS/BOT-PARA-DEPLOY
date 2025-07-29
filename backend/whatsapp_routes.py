@@ -272,6 +272,20 @@ async def get_conversation_history(db, phone_number: str, limit: int = 20):
         print(f"Error getting conversation history: {str(e)}")
         return []
 
+@router.get("/logout")
+async def logout_whatsapp():
+    """Completely logout from WhatsApp and remove device from linked devices"""
+    try:
+        service_url = get_whatsapp_service_url()
+        
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.get(f"{service_url}/logout")
+            return response.json()
+            
+    except Exception as e:
+        print(f"Error during WhatsApp logout: {str(e)}")
+        return {"success": False, "error": str(e)}
+
 @router.get("/qr")
 async def get_qr_code():
     """Get current QR code for WhatsApp authentication"""
