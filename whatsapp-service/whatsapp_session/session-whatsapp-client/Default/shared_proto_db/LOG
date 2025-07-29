@@ -1,3 +1,2 @@
-2025/07/29-18:48:29.133 30d2 Reusing MANIFEST /app/whatsapp-service/whatsapp_session/session-whatsapp-client/Default/shared_proto_db/MANIFEST-000001
-2025/07/29-18:48:29.133 30d2 Recovering log #3
-2025/07/29-18:48:29.134 30d2 Reusing old log /app/whatsapp-service/whatsapp_session/session-whatsapp-client/Default/shared_proto_db/000003.log 
+2025/07/29-19:44:41.093 157d Creating DB /app/whatsapp-service/whatsapp_session/session-whatsapp-client/Default/shared_proto_db since it was missing.
+2025/07/29-19:44:41.132 157d Reusing MANIFEST /app/whatsapp-service/whatsapp_session/session-whatsapp-client/Default/shared_proto_db/MANIFEST-000001

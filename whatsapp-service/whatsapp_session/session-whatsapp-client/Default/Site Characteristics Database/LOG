@@ -1,3 +1,2 @@
-2025/07/29-18:48:28.934 30c9 Reusing MANIFEST /app/whatsapp-service/whatsapp_session/session-whatsapp-client/Default/Site Characteristics Database/MANIFEST-000001
-2025/07/29-18:48:28.934 30c9 Recovering log #3
-2025/07/29-18:48:28.935 30c9 Reusing old log /app/whatsapp-service/whatsapp_session/session-whatsapp-client/Default/Site Characteristics Database/000003.log 
+2025/07/29-19:44:40.847 1588 Creating DB /app/whatsapp-service/whatsapp_session/session-whatsapp-client/Default/Site Characteristics Database since it was missing.
+2025/07/29-19:44:40.853 1588 Reusing MANIFEST /app/whatsapp-service/whatsapp_session/session-whatsapp-client/Default/Site Characteristics Database/MANIFEST-000001

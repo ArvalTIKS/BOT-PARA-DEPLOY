@@ -1,3 +1,2 @@
-2025/07/29-18:48:28.927 30c9 Reusing MANIFEST /app/whatsapp-service/whatsapp_session/session-whatsapp-client/Default/Local Storage/leveldb/MANIFEST-000001
-2025/07/29-18:48:28.928 30c9 Recovering log #3
-2025/07/29-18:48:28.933 30c9 Reusing old log /app/whatsapp-service/whatsapp_session/session-whatsapp-client/Default/Local Storage/leveldb/000003.log 
+2025/07/29-19:44:40.839 157c Creating DB /app/whatsapp-service/whatsapp_session/session-whatsapp-client/Default/Local Storage/leveldb since it was missing.
+2025/07/29-19:44:40.847 157c Reusing MANIFEST /app/whatsapp-service/whatsapp_session/session-whatsapp-client/Default/Local Storage/leveldb/MANIFEST-000001

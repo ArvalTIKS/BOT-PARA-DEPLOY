@@ -1,3 +1,2 @@
-2025/07/29-18:48:29.166 30c9 Reusing MANIFEST /app/whatsapp-service/whatsapp_session/session-whatsapp-client/Default/Extension State/MANIFEST-000001
-2025/07/29-18:48:29.166 30c9 Recovering log #3
-2025/07/29-18:48:29.166 30c9 Reusing old log /app/whatsapp-service/whatsapp_session/session-whatsapp-client/Default/Extension State/000003.log 
+2025/07/29-19:44:41.275 157c Creating DB /app/whatsapp-service/whatsapp_session/session-whatsapp-client/Default/Extension State since it was missing.
+2025/07/29-19:44:41.279 157c Reusing MANIFEST /app/whatsapp-service/whatsapp_session/session-whatsapp-client/Default/Extension State/MANIFEST-000001

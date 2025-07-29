@@ -1,3 +1,2 @@
-2025/07/29-18:48:29.088 30c8 Reusing MANIFEST /app/whatsapp-service/whatsapp_session/session-whatsapp-client/Default/shared_proto_db/metadata/MANIFEST-000001
-2025/07/29-18:48:29.089 30c8 Recovering log #3
-2025/07/29-18:48:29.089 30c8 Reusing old log /app/whatsapp-service/whatsapp_session/session-whatsapp-client/Default/shared_proto_db/metadata/000003.log 
+2025/07/29-19:44:41.088 157d Creating DB /app/whatsapp-service/whatsapp_session/session-whatsapp-client/Default/shared_proto_db/metadata since it was missing.
+2025/07/29-19:44:41.092 157d Reusing MANIFEST /app/whatsapp-service/whatsapp_session/session-whatsapp-client/Default/shared_proto_db/metadata/MANIFEST-000001
