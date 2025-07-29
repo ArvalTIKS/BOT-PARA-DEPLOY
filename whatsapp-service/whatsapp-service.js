@@ -193,6 +193,7 @@ async function initializeWhatsApp() {
             console.log('WhatsApp disconnected:', reason);
             isConnected = false;
             connectedUser = null;
+            ownerPhoneNumber = null; // 📱 CLEAR owner phone on disconnect
             qrCodeData = null;
             
             // Check for specific reasons that need cleanup
