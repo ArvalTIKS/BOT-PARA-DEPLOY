@@ -175,15 +175,15 @@ class EmailService:
             
             msg.attach(MIMEText(html_body, 'html'))
             
-            # Send email
+            # Send email using Bluehosting SMTP
             server = smtplib.SMTP(self.smtp_server, self.smtp_port)
-            server.starttls()
+            server.starttls()  # Enable TLS encryption
             server.login(self.sender_email, self.sender_password)
             text = msg.as_string()
             server.sendmail(self.sender_email, client_email, text)
             server.quit()
             
-            print(f"✅ Email sent successfully to {client_email}")
+            print(f"✅ Email sent successfully to {client_email} from {self.sender_email}")
             return True
             
         except Exception as e:
