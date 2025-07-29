@@ -53,7 +53,6 @@ const ClientLanding = () => {
     setRefreshing(true);
     try {
       await fetchClientData();
-      await fetchQRCode();
     } catch (error) {
       console.error('Error refreshing data:', error);
     } finally {
@@ -79,7 +78,6 @@ const ClientLanding = () => {
         // Refresh data to show new QR
         setTimeout(async () => {
           await fetchClientData();
-          await fetchQRCode();
         }, 3000);
       } else {
         alert('❌ Error al desvincular WhatsApp. Por favor intenta nuevamente.');
