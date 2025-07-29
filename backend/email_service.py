@@ -159,7 +159,7 @@ class EmailService:
                         <div style="text-align: center; margin-top: 30px;">
                             <p style="color: #666; font-size: 14px;">
                                 ¿Necesitas ayuda? <br>
-                                Contáctanos: <a href="mailto:contacto@tiks.cl" style="color: #25D366;">contacto@tiks.cl</a>
+                                Contáctanos: <a href="mailto:tikschile@gmail.com" style="color: #25D366;">tikschile@gmail.com</a>
                             </p>
                         </div>
                     </div>
