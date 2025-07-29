@@ -216,7 +216,7 @@ const ClientLanding = () => {
                     <p className="font-medium">Instrucciones:</p>
                     <ol className="text-left space-y-1">
                       <li>1. Abre WhatsApp en tu teléfono</li>
-                      <li>2. Ve a Menú > Dispositivos vinculados</li>
+                      <li>2. Ve a Menú → Dispositivos vinculados</li>
                       <li>3. Toca "Vincular un dispositivo"</li>
                       <li>4. Escanea este código QR</li>
                     </ol>
