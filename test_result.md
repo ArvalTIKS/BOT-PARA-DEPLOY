@@ -251,11 +251,11 @@ backend:
 
   - task: "WhatsApp Statistics Endpoint"
     implemented: true
-    working: false
+    working: true
     file: "/app/backend/whatsapp_routes.py"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: true
           agent: "testing"
@@ -263,6 +263,9 @@ backend:
         - working: false
           agent: "main"
           comment: "Stats endpoint needs retesting after migration"
+        - working: true
+          agent: "testing"
+          comment: "WHATSAPP-WEB.JS STATS VERIFICATION: ✅ Statistics endpoint working correctly after migration. GET /api/whatsapp/stats returns proper database statistics. Total messages: 14, Today: 14, Users: 1. MongoDB integration functioning correctly."
 
   - task: "Message Processing with OpenAI Integration"
     implemented: true
