@@ -194,7 +194,11 @@ async function initializeWhatsApp() {
                 // Clean up session data for fresh start
                 if (fs.existsSync(sessionDir)) {
                     console.log('🧹 Removing corrupted session data automatically');
-                    fs.rmSync(sessionDir, { recursive: true, force: true });
+                    try {
+                        fs.rmSync(sessionDir, { recursive: true, force: true });
+                    } catch (rmError) {
+                        console.log('Error removing session (safe to ignore):', rmError.message);
+                    }
                 }
                 
                 // Reset reconnection attempts
@@ -238,7 +242,11 @@ async function initializeWhatsApp() {
                 } else {
                     // Clear session data if not in deploy
                     if (fs.existsSync(sessionDir)) {
-                        fs.rmSync(sessionDir, { recursive: true, force: true });
+                        try {
+                            fs.rmSync(sessionDir, { recursive: true, force: true });
+                        } catch (rmError) {
+                            console.log('Error removing session (safe to ignore):', rmError.message);
+                        }
                     }
                     setTimeout(() => {
                         reconnectAttempts = 0;
