@@ -679,6 +679,11 @@ class BackendTester:
         await self.test_send_message_endpoint()
         await self.test_conversation_history_endpoint()
         
+        # Multi-tenant specific tests
+        await self.test_admin_routes()
+        await self.test_client_routes()
+        await self.test_database_integration()
+        
         # Baileys-specific tests
         await self.test_baileys_service_health()
         await self.test_baileys_qr_generation()
