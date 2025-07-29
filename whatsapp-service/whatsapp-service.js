@@ -331,44 +331,36 @@ async function initializeWhatsApp() {
                     }
                 }
                 
-                // Check for new pause control commands - ONLY FOR OWNER
+                // Check for pause control commands - ANYONE can use them
                 const pauseCommands = ['pausar', 'reactivar', 'pausar todo', 'activar todo', 'estado'];
                 if (pauseCommands.includes(normalizedMessage)) {
-                    // 🔐 SECURITY: Only allow owner to use commands
-                    const senderPhone = message.from.split('@')[0];
+                    console.log(`✅ COMMAND DETECTED: ${normalizedMessage} from ${message.from.split('@')[0]}`);
                     
-                    if (senderPhone !== ownerPhoneNumber) {
-                        console.log(`🚫 COMMAND DENIED: ${normalizedMessage} from ${senderPhone} (not owner: ${ownerPhoneNumber})`);
-                        // Don't respond to unauthorized command attempts - just continue to OpenAI
-                    } else {
-                        console.log(`✅ OWNER COMMAND: ${normalizedMessage} from ${senderPhone}`);
-                        
-                        // Process pause commands immediately - do NOT send to OpenAI
-                        try {
-                            const response = await axios.post(`${FASTAPI_URL}/api/whatsapp/process-message`, {
-                                phone_number: senderPhone,
-                                message: messageText,
-                                message_id: message.id.id,
-                                timestamp: message.timestamp
-                            });
+                    // Process pause commands immediately - do NOT send to OpenAI
+                    try {
+                        const response = await axios.post(`${FASTAPI_URL}/api/whatsapp/process-message`, {
+                            phone_number: message.from.split('@')[0],
+                            message: messageText,
+                            message_id: message.id.id,
+                            timestamp: message.timestamp
+                        });
 
-                            // Send command response back to WhatsApp
-                            if (response.data.reply) {
-                                await message.reply(response.data.reply);
-                                console.log('Owner command reply sent:', response.data.reply);
-                            }
-                            
-                            return; // STOP HERE - do not process with OpenAI
-                            
-                        } catch (error) {
-                            console.error('Error processing owner command:', error);
-                            try {
-                                await message.reply('❌ Error procesando comando. Intenta nuevamente.');
-                            } catch (replyError) {
-                                console.error('Error sending error message:', replyError);
-                            }
-                            return; // STOP HERE even on error
+                        // Send command response back to WhatsApp
+                        if (response.data.reply) {
+                            await message.reply(response.data.reply);
+                            console.log('✅ Command reply sent:', response.data.reply);
                         }
+                        
+                        return; // STOP HERE - do not process with OpenAI
+                        
+                    } catch (error) {
+                        console.error('❌ Error processing command:', error);
+                        try {
+                            await message.reply('❌ Error procesando comando. Intenta nuevamente.');
+                        } catch (replyError) {
+                            console.error('Error sending error message:', replyError);
+                        }
+                        return; // STOP HERE even on error
                     }
                 }
                 
