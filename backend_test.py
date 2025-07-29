@@ -601,6 +601,389 @@ class BackendTester:
         except Exception as e:
             self.log_test("Database Integration", False, f"Error: {str(e)}")
 
+    # ========== CONSOLIDATED WHATSAPP SYSTEM TESTS ==========
+    
+    async def test_consolidated_phone_connected(self):
+        """Test consolidated phone connection notification endpoint"""
+        try:
+            test_data = {
+                "phone_number": "5491234567890",
+                "user_info": {
+                    "name": "Test User",
+                    "pushname": "Test"
+                }
+            }
+            
+            async with self.session.post(
+                f"{self.backend_url}/api/consolidated/phone-connected",
+                json=test_data,
+                timeout=15
+            ) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    success = data.get('success', False)
+                    message = data.get('message', '')
+                    self.log_test(
+                        "Consolidated - Phone Connected", 
+                        True, 
+                        f"Success: {success}, Message: {message}"
+                    )
+                else:
+                    self.log_test(
+                        "Consolidated - Phone Connected", 
+                        False, 
+                        f"HTTP {response.status}",
+                        await response.text()
+                    )
+        except Exception as e:
+            self.log_test("Consolidated - Phone Connected", False, f"Error: {str(e)}")
+
+    async def test_consolidated_process_message(self):
+        """Test consolidated message processing endpoint"""
+        try:
+            test_message = {
+                "phone_number": "5491234567890",
+                "message": "Hola, necesito información sobre servicios legales consolidados",
+                "message_id": "consolidated_test_001",
+                "timestamp": int(time.time())
+            }
+            
+            async with self.session.post(
+                f"{self.backend_url}/api/consolidated/process-message",
+                json=test_message,
+                timeout=30
+            ) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    success = data.get('success', False)
+                    has_reply = data.get('reply') is not None
+                    reply_length = len(data.get('reply', '')) if has_reply else 0
+                    
+                    self.log_test(
+                        "Consolidated - Process Message", 
+                        True, 
+                        f"Success: {success}, Has reply: {has_reply}, Reply length: {reply_length}"
+                    )
+                else:
+                    self.log_test(
+                        "Consolidated - Process Message", 
+                        False, 
+                        f"HTTP {response.status}",
+                        await response.text()
+                    )
+        except Exception as e:
+            self.log_test("Consolidated - Process Message", False, f"Error: {str(e)}")
+
+    async def test_consolidated_status(self):
+        """Test consolidated system status endpoint"""
+        try:
+            async with self.session.get(f"{self.backend_url}/api/consolidated/status", timeout=15) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    whatsapp_connected = data.get('whatsapp_connected', False)
+                    active_clients = data.get('active_clients', 0)
+                    phone_connections = data.get('phone_connections', 0)
+                    
+                    self.log_test(
+                        "Consolidated - System Status", 
+                        True, 
+                        f"WhatsApp Connected: {whatsapp_connected}, Active Clients: {active_clients}, Phone Connections: {phone_connections}"
+                    )
+                else:
+                    self.log_test(
+                        "Consolidated - System Status", 
+                        False, 
+                        f"HTTP {response.status}",
+                        await response.text()
+                    )
+        except Exception as e:
+            self.log_test("Consolidated - System Status", False, f"Error: {str(e)}")
+
+    async def test_consolidated_clients(self):
+        """Test consolidated active clients endpoint"""
+        try:
+            async with self.session.get(f"{self.backend_url}/api/consolidated/clients", timeout=10) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    active_clients = data.get('active_clients', [])
+                    total_active = data.get('total_active', 0)
+                    
+                    self.log_test(
+                        "Consolidated - Active Clients", 
+                        True, 
+                        f"Total Active Clients: {total_active}, Clients retrieved: {len(active_clients)}"
+                    )
+                else:
+                    self.log_test(
+                        "Consolidated - Active Clients", 
+                        False, 
+                        f"HTTP {response.status}",
+                        await response.text()
+                    )
+        except Exception as e:
+            self.log_test("Consolidated - Active Clients", False, f"Error: {str(e)}")
+
+    async def test_consolidated_associate_phone(self):
+        """Test consolidated manual phone association endpoint"""
+        try:
+            # First get a client ID from admin endpoint
+            async with self.session.get(f"{self.backend_url}/api/admin/clients", timeout=10) as response:
+                if response.status == 200:
+                    clients = await response.json()
+                    if clients:
+                        client_id = clients[0]['id']
+                        
+                        test_data = {
+                            "phone_number": "5491234567890",
+                            "client_id": client_id
+                        }
+                        
+                        async with self.session.post(
+                            f"{self.backend_url}/api/consolidated/associate-phone",
+                            json=test_data,
+                            timeout=15
+                        ) as assoc_response:
+                            if assoc_response.status == 200:
+                                data = await assoc_response.json()
+                                success = data.get('success', False)
+                                client_name = data.get('client_name', 'Unknown')
+                                
+                                self.log_test(
+                                    "Consolidated - Associate Phone", 
+                                    True, 
+                                    f"Success: {success}, Associated with: {client_name}"
+                                )
+                            else:
+                                self.log_test(
+                                    "Consolidated - Associate Phone", 
+                                    False, 
+                                    f"HTTP {assoc_response.status}",
+                                    await assoc_response.text()
+                                )
+                    else:
+                        self.log_test(
+                            "Consolidated - Associate Phone", 
+                            False, 
+                            "No clients available for association test"
+                        )
+                else:
+                    self.log_test(
+                        "Consolidated - Associate Phone", 
+                        False, 
+                        f"Could not get clients: HTTP {response.status}"
+                    )
+        except Exception as e:
+            self.log_test("Consolidated - Associate Phone", False, f"Error: {str(e)}")
+
+    async def test_consolidated_qr(self):
+        """Test consolidated QR code endpoint"""
+        try:
+            async with self.session.get(f"{self.backend_url}/api/consolidated/qr", timeout=15) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    has_qr = data.get('qr') is not None
+                    has_raw = data.get('raw') is not None
+                    
+                    self.log_test(
+                        "Consolidated - QR Code", 
+                        True, 
+                        f"QR available: {has_qr}, Raw QR data: {has_raw}"
+                    )
+                else:
+                    self.log_test(
+                        "Consolidated - QR Code", 
+                        False, 
+                        f"HTTP {response.status}",
+                        await response.text()
+                    )
+        except Exception as e:
+            self.log_test("Consolidated - QR Code", False, f"Error: {str(e)}")
+
+    async def test_admin_client_toggle_consolidated(self):
+        """Test admin client toggle with consolidated system"""
+        try:
+            # Get first client
+            async with self.session.get(f"{self.backend_url}/api/admin/clients", timeout=10) as response:
+                if response.status == 200:
+                    clients = await response.json()
+                    if clients:
+                        client_id = clients[0]['id']
+                        client_name = clients[0]['name']
+                        
+                        # Test connect action
+                        toggle_data = {"action": "connect"}
+                        async with self.session.put(
+                            f"{self.backend_url}/api/admin/clients/{client_id}/toggle",
+                            json=toggle_data,
+                            timeout=15
+                        ) as toggle_response:
+                            if toggle_response.status == 200:
+                                data = await toggle_response.json()
+                                message = data.get('message', '')
+                                status = data.get('status', '')
+                                
+                                self.log_test(
+                                    "Admin - Client Toggle (Consolidated)", 
+                                    True, 
+                                    f"Client: {client_name}, Status: {status}, Message: {message}"
+                                )
+                            else:
+                                self.log_test(
+                                    "Admin - Client Toggle (Consolidated)", 
+                                    False, 
+                                    f"HTTP {toggle_response.status}",
+                                    await toggle_response.text()
+                                )
+                    else:
+                        self.log_test(
+                            "Admin - Client Toggle (Consolidated)", 
+                            False, 
+                            "No clients available for toggle test"
+                        )
+                else:
+                    self.log_test(
+                        "Admin - Client Toggle (Consolidated)", 
+                        False, 
+                        f"Could not get clients: HTTP {response.status}"
+                    )
+        except Exception as e:
+            self.log_test("Admin - Client Toggle (Consolidated)", False, f"Error: {str(e)}")
+
+    async def test_client_landing_consolidated(self):
+        """Test client landing pages with consolidated system"""
+        # Test with a known client URL
+        test_client_url = "e2d7bce6"  # Cliente Prueba
+        
+        try:
+            # Test status endpoint
+            async with self.session.get(f"{self.backend_url}/api/client/{test_client_url}/status", timeout=10) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    client_name = data.get('client', {}).get('name', 'Unknown')
+                    connected = data.get('client', {}).get('connected', False)
+                    registered = data.get('client', {}).get('registered', False)
+                    
+                    self.log_test(
+                        "Client Landing - Status (Consolidated)", 
+                        True, 
+                        f"Client: {client_name}, Connected: {connected}, Registered: {registered}"
+                    )
+                else:
+                    self.log_test(
+                        "Client Landing - Status (Consolidated)", 
+                        False, 
+                        f"HTTP {response.status}",
+                        await response.text()
+                    )
+        except Exception as e:
+            self.log_test("Client Landing - Status (Consolidated)", False, f"Error: {str(e)}")
+        
+        try:
+            # Test QR endpoint
+            async with self.session.get(f"{self.backend_url}/api/client/{test_client_url}/qr", timeout=15) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    has_qr = data.get('qr') is not None
+                    connected = data.get('connected', False)
+                    client_name = data.get('client_name', 'Unknown')
+                    
+                    self.log_test(
+                        "Client Landing - QR (Consolidated)", 
+                        True, 
+                        f"Client: {client_name}, Has QR: {has_qr}, Connected: {connected}"
+                    )
+                else:
+                    self.log_test(
+                        "Client Landing - QR (Consolidated)", 
+                        False, 
+                        f"HTTP {response.status}",
+                        await response.text()
+                    )
+        except Exception as e:
+            self.log_test("Client Landing - QR (Consolidated)", False, f"Error: {str(e)}")
+
+    async def test_whatsapp_service_stability(self):
+        """Test WhatsApp service stability on port 3001"""
+        try:
+            # Test multiple rapid requests to check stability
+            stable_requests = 0
+            total_requests = 5
+            
+            for i in range(total_requests):
+                try:
+                    async with self.session.get(f"{self.whatsapp_service_url}/health", timeout=5) as response:
+                        if response.status == 200:
+                            stable_requests += 1
+                        await asyncio.sleep(0.5)  # Small delay between requests
+                except:
+                    pass
+            
+            stability_rate = (stable_requests / total_requests) * 100
+            
+            self.log_test(
+                "WhatsApp Service Stability", 
+                stability_rate >= 80,  # Consider stable if 80%+ requests succeed
+                f"Stability rate: {stability_rate:.1f}% ({stable_requests}/{total_requests} requests succeeded)"
+            )
+            
+        except Exception as e:
+            self.log_test("WhatsApp Service Stability", False, f"Error: {str(e)}")
+
+    async def test_multi_tenant_openai_integration(self):
+        """Test OpenAI integration with multiple client credentials"""
+        try:
+            # Get clients to test different OpenAI configurations
+            async with self.session.get(f"{self.backend_url}/api/admin/clients", timeout=10) as response:
+                if response.status == 200:
+                    clients = await response.json()
+                    if clients:
+                        # Test with first client
+                        client = clients[0]
+                        
+                        test_message = {
+                            "phone_number": "5491234567890",
+                            "message": f"Hola, soy un cliente de {client['name']}. ¿Pueden ayudarme?",
+                            "message_id": f"multi_tenant_test_{client['id']}",
+                            "timestamp": int(time.time())
+                        }
+                        
+                        async with self.session.post(
+                            f"{self.backend_url}/api/consolidated/process-message",
+                            json=test_message,
+                            timeout=30
+                        ) as msg_response:
+                            if msg_response.status == 200:
+                                data = await msg_response.json()
+                                success = data.get('success', False)
+                                has_reply = data.get('reply') is not None
+                                
+                                self.log_test(
+                                    "Multi-Tenant OpenAI Integration", 
+                                    True, 
+                                    f"Client: {client['name']}, Success: {success}, Has Reply: {has_reply}"
+                                )
+                            else:
+                                self.log_test(
+                                    "Multi-Tenant OpenAI Integration", 
+                                    False, 
+                                    f"HTTP {msg_response.status}",
+                                    await msg_response.text()
+                                )
+                    else:
+                        self.log_test(
+                            "Multi-Tenant OpenAI Integration", 
+                            False, 
+                            "No clients available for multi-tenant test"
+                        )
+                else:
+                    self.log_test(
+                        "Multi-Tenant OpenAI Integration", 
+                        False, 
+                        f"Could not get clients: HTTP {response.status}"
+                    )
+        except Exception as e:
+            self.log_test("Multi-Tenant OpenAI Integration", False, f"Error: {str(e)}")
+
     async def test_error_handling(self):
         """Test error handling with invalid requests"""
         # Test invalid message processing
