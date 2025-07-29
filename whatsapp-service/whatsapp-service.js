@@ -255,10 +255,10 @@ async function initializeWhatsApp() {
                 const messageText = message.body;
                 const normalizedMessage = messageText.toLowerCase().trim();
                 
-                // Check for bot control commands
+                // Check for legacy bot control commands (compatibility)
                 if (normalizedMessage === 'activar bot') {
                     try {
-                        await message.reply('✅ Bot activado. Responderé automáticamente a todos los mensajes con tu Asistente Legal Personalizado.');
+                        await message.reply('✅ Bot activado. Responderé automáticamente a todos los mensajes con tu asistente personalizado.');
                         console.log('Bot activated for:', message.from);
                         return;
                     } catch (error) {
@@ -276,11 +276,18 @@ async function initializeWhatsApp() {
                     }
                 }
                 
+                // Check for new pause control commands
+                const pauseCommands = ['pausar', 'reactivar', 'pausar todo', 'activar todo', 'estado'];
+                if (pauseCommands.includes(normalizedMessage)) {
+                    console.log(`Pause command detected: ${normalizedMessage} from ${message.from}`);
+                    // Let the backend handle pause commands - they will be processed there
+                }
+                
                 console.log('Received message:', messageText);
                 console.log('From:', message.from);
                 
                 try {
-                    // Send message to FastAPI for OpenAI processing
+                    // Send message to FastAPI for processing (including pause commands)
                     const response = await axios.post(`${FASTAPI_URL}/api/whatsapp/process-message`, {
                         phone_number: message.from.split('@')[0],
                         message: messageText,
@@ -288,10 +295,12 @@ async function initializeWhatsApp() {
                         timestamp: message.timestamp
                     });
 
-                    // Send AI response back to WhatsApp
+                    // Send AI response back to WhatsApp if there's a reply
                     if (response.data.reply) {
                         await message.reply(response.data.reply);
                         console.log('Reply sent:', response.data.reply);
+                    } else if (response.data.paused) {
+                        console.log('Conversation is paused, no automatic reply sent');
                     }
                 } catch (error) {
                     console.error('Error processing message:', error);
