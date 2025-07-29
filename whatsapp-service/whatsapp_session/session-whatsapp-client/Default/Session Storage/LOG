@@ -1,2 +1,3 @@
-2025/07/29-17:40:09.607 2a6d Creating DB /app/whatsapp-service/whatsapp_session/session-whatsapp-client/Default/Session Storage since it was missing.
-2025/07/29-17:40:09.635 2a6d Reusing MANIFEST /app/whatsapp-service/whatsapp_session/session-whatsapp-client/Default/Session Storage/MANIFEST-000001
+2025/07/29-18:48:29.077 30c8 Reusing MANIFEST /app/whatsapp-service/whatsapp_session/session-whatsapp-client/Default/Session Storage/MANIFEST-000001
+2025/07/29-18:48:29.078 30c8 Recovering log #3
+2025/07/29-18:48:29.078 30c8 Reusing old log /app/whatsapp-service/whatsapp_session/session-whatsapp-client/Default/Session Storage/000003.log 
