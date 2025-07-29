@@ -460,6 +460,50 @@ app.post('/send-message', async (req, res) => {
 });
 
 // Health check
+app.get('/logout', (req, res) => {
+    res.json({
+        success: true,
+        message: 'Logout initiated. WhatsApp device will be disconnected.',
+        instructions: 'Please wait while we disconnect your device from WhatsApp.'
+    });
+    
+    // Perform logout in background
+    setTimeout(async () => {
+        try {
+            console.log('🔐 Initiating complete WhatsApp logout...');
+            
+            if (client) {
+                // Log out from WhatsApp completely
+                await client.logout();
+                console.log('✅ WhatsApp logout completed');
+                
+                // Reset all connection states
+                isConnected = false;
+                connectedUser = null;
+                qrCodeData = null;
+                
+                // Clean up session data completely
+                const sessionDir = './.wwebjs_auth';
+                if (fs.existsSync(sessionDir)) {
+                    console.log('🧹 Removing all session data...');
+                    fs.rmSync(sessionDir, { recursive: true, force: true });
+                }
+                
+                console.log('✅ Complete logout and cleanup finished');
+                console.log('ℹ️  Device should now be removed from WhatsApp linked devices');
+                
+                // Destroy client instance
+                client = null;
+                
+            } else {
+                console.log('ℹ️  No active client to logout');
+            }
+        } catch (error) {
+            console.error('❌ Error during logout:', error);
+        }
+    }, 1000);
+});
+
 app.get('/health', (req, res) => {
     res.json({
         status: 'running',
