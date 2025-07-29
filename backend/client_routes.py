@@ -13,7 +13,7 @@ router = APIRouter(prefix="/api/client", tags=["client"])
 
 @router.get("/{unique_url}/status")
 async def get_client_landing_status(unique_url: str, db = Depends(get_database)):
-    """Get client status for landing page"""
+    """Get client status for landing page using consolidated system"""
     try:
         clients_collection = db.clients
         client_data = await clients_collection.find_one({"unique_url": unique_url})
@@ -21,24 +21,17 @@ async def get_client_landing_status(unique_url: str, db = Depends(get_database))
         if not client_data:
             raise HTTPException(status_code=404, detail="Client not found")
         
-        client = Client(**client_data)
+        client = Client(**{k:v for k,v in client_data.items() if k != '_id'})
         
-        # Get WhatsApp service status
-        service_url = f"http://localhost:{client.whatsapp_port}"
-        whatsapp_status = {"connected": False, "hasQR": False}
-        
-        try:
-            async with httpx.AsyncClient() as http_client:
-                response = await http_client.get(f"{service_url}/status", timeout=5.0)
-                whatsapp_status = response.json()
-        except Exception as e:
-            print(f"Error getting WhatsApp status for {client.name}: {str(e)}")
+        # Get WhatsApp status from consolidated manager
+        whatsapp_status = await service_manager.get_whatsapp_status_for_client(client.id)
         
         return {
             "client": {
                 "name": client.name,
                 "status": client.status,
-                "connected": whatsapp_status.get("connected", False)
+                "connected": whatsapp_status.get("connected", False),
+                "registered": whatsapp_status.get("client_registered", False)
             },
             "whatsapp": whatsapp_status
         }
