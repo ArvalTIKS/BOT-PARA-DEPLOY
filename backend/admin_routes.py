@@ -279,6 +279,39 @@ async def update_client_openai(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.get("/clients/{client_id}/paused-conversations")
+async def get_paused_conversations(client_id: str, db = Depends(get_database)):
+    """Get list of paused conversations for a client"""
+    try:
+        paused_conversations = db.paused_conversations
+        paused = await paused_conversations.find({"client_id": client_id}).to_list(length=None)
+        
+        # Clean up data
+        for conversation in paused:
+            if '_id' in conversation:
+                del conversation['_id']
+        
+        return {"paused_conversations": paused, "count": len(paused)}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/clients/{client_id}/clear-paused")
+async def clear_all_paused_conversations(client_id: str, db = Depends(get_database)):
+    """Clear all paused conversations for a client"""
+    try:
+        paused_conversations = db.paused_conversations
+        result = await paused_conversations.delete_many({"client_id": client_id})
+        
+        return {
+            "message": f"Cleared {result.deleted_count} paused conversations",
+            "success": True,
+            "cleared_count": result.deleted_count
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.put("/clients/{client_id}/update-email")
 async def update_client_email(
     client_id: str,
