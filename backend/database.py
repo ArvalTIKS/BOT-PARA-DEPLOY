@@ -15,6 +15,10 @@ async def get_database():
     """Dependency to get database instance"""
     return database
 
+async def get_database_direct():
+    """Direct database access for services"""
+    return database
+
 async def close_database():
     """Close database connection"""
     client.close()
