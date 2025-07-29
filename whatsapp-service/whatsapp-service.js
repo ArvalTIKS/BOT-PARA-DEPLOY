@@ -96,7 +96,11 @@ async function initializeWhatsApp() {
         // Close existing client if present
         if (client) {
             console.log('Destroying existing client...');
-            await client.destroy();
+            try {
+                await client.destroy();
+            } catch (destroyError) {
+                console.log('Error destroying client (safe to ignore):', destroyError.message);
+            }
             client = null;
         }
         
