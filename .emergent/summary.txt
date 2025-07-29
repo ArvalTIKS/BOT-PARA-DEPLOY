@@ -1,98 +1,126 @@
 <analysis>
-The previous AI engineer's primary task was to develop a full-stack application connecting WhatsApp to an OpenAI assistant via a QR code. The core challenge, identified early on, was the persistent failure of the WhatsApp service (using , then ) to maintain a connection and generate QR codes in the Emergent production environment, despite working perfectly in the preview environment.
-
-The engineer made numerous attempts to debug and fix this, including switching libraries, adjusting Puppeteer settings, implementing robust error handling, session cleaning, and auto-reconnection logic for WhatsApp. A significant focus was on correctly configuring environment variables and inter-service communication URLs, recognizing the difference between preview's single-container setup and deploy's separate containers. Despite multiple iterations and troubleshooting efforts, including official suggestions that later proved incorrect or incomplete, the deployment issue (WhatsApp service error: All connection attempts failed) remained unresolved due to underlying networking limitations in the Emergent platform.
-
-Towards the end, the engineer pivoted to improving the local preview environment, successfully resolving OpenAI thread corruption issues and implementing automatic QR regeneration after disconnections. The latest work involved sanitizing hardcoded references to the old law firm name in the frontend and WhatsApp service to support a new client. The deploy problem persists, confirming it as an infrastructure limitation beyond code fixes.
+The previous AI engineer initially focused on debugging a WhatsApp-to-OpenAI application, primarily struggling with persistent connection failures in the production environment (Emergent platform) despite local functionality. This was identified as an infrastructure limitation. The scope then dramatically expanded to a multi-tenant platform, enabling distinct OpenAI assistants and WhatsApp numbers per client. The engineer successfully implemented a comprehensive multi-tenant architecture including an admin panel, unique client landing pages, dynamic service provisioning, and conversation management (pause/reactivate). Significant efforts were made to resolve email delivery issues in deployment, transitioning from Bluehosting SMTP (blocked by MailChannels) to a working Gmail SMTP setup. While the core multi-tenant platform is functional and stable for moderate usage, the dynamic per-client WhatsApp service instances remain unstable, leading to reliance on a single, shared WhatsApp service for QR generation.
 </analysis>
 
 <product_requirements>
-The user requires a simple, single-view web platform to display a QR code for connecting a client's WhatsApp number to a specific OpenAI assistant (Estudio Jurídico Villegas Otárola Abogados, later updated to a new assistant ID).
-Key requirements include:
-*   **Automatic Connection:** The bot must be installed on the WhatsApp number to automatically answer messages.
-*   **Real-time Updates:** The QR code and connection status must update dynamically.
-*   **Simplicity:** A professional, single-page platform with no login, extra buttons, or editing features, displaying Escanee este código para activar su asistente.
-*   **Responsive Design:** Functional on both mobile (iPhone) and desktop.
-*   **Specific OpenAI Assistant:** Must connect to a particular OpenAI Assistant ID (, later ).
-*   **No WhatsApp Business API:** Client explicitly forbade the official API.
-*   **Existing Phone Number Usage:** The bot should ideally use the client's existing WhatsApp number, with a compromise implemented for command-based bot activation/suspension.
-The main problem is ensuring the application functions correctly upon deployment, as it consistently fails there despite working in the preview environment.
+The initial requirement was a single-view web platform to connect a client's WhatsApp to a specific OpenAI assistant via QR code, emphasizing automatic connection, real-time status updates, simplicity, responsiveness, and using  (later ) without the official WhatsApp Business API. The primary problem was consistent deployment failure.
+
+The user subsequently requested a **multi-tenant platform** with:
+*   A central **admin panel** to add new clients, providing their OpenAI API Key, Assistant ID, and email.
+*   Ability to send an automated email with a unique link to each client's dedicated landing page.
+*   A **client-specific landing page** displaying connection status and a QR code for their unique bot instance.
+*   Each client's WhatsApp service should be isolated () and connectable to only one phone.
+*   Automatic conversation cleanup every 24 hours.
+*   Admin ability to connect/disconnect client bots from the panel.
+*   A new feature to **pause/reactivate specific conversations** from the client's WhatsApp (via commands like pausar, reactivar, pausar todo, activar todo, estado) without requiring the client to input phone numbers.
 </product_requirements>
 
 <key_technical_concepts>
--   **React:** Frontend framework for user interface.
--   **FastAPI:** Backend framework (Python) for API routes.
--   **MongoDB:** Database for persistent storage (e.g., chat threads).
--   **Baileys (formerly whatsapp-web.js):** Node.js library for WhatsApp Web integration.
--   **OpenAI Assistants API:** Used for the conversational AI bot.
--   **Puppeteer/Chromium:** Headless browser for WhatsApp Web interaction.
--   **Supervisorctl:** Process manager for services (frontend, backend, whatsapp-service).
--   **Environment Variables:** For configuration in different environments.
+-   **React:** Frontend framework.
+-   **FastAPI:** Backend framework.
+-   **MongoDB:** Database for persistent storage of client data, chat threads, and paused conversations.
+-   **whatsapp-web.js (migrated from Baileys):** Node.js library for WhatsApp Web integration.
+-   **OpenAI Assistants API:** For conversational AI bot.
+-   **Puppeteer/Chromium:** Headless browser for WhatsApp Web.
+-   **Supervisorctl:** Process manager.
+-   **SMTP:** For email sending (Bluehosting, then Gmail).
 </key_technical_concepts>
 
 <code_architecture>
 
 
 -   ****:
-    -   **Summary**: Main React component managing application structure and rendering the .
-    -   **Changes**: Initial API call removed. Focus shifted to rendering .
+    -   **Summary**: Main React component; defines application routes.
+    -   **Changes**: Initially rendered . Modified extensively to integrate  for multi-page navigation, routing to  for the admin panel,  for client landing pages, and  for the original single-QR page.
 -   ****:
-    -   **Summary**: Displays the QR code, connection status, and assistant details, making API calls to the backend.
-    -   **Changes**: Created to display QR, connection, and assistant info. Modified to fetch data from  and . Updated  to dynamically determine the backend URL based on  (for  deployments) or . Old hardcoded Estudio Jurídico Villegas Otárola references were replaced with generic su asistente or removed.
+    -   **Summary**: Original component for single QR display and status.
+    -   **Changes**: Updated  for dynamic URL detection. Generalized hardcoded text. It now serves as the legacy page.
 -   ****:
-    -   **Summary**: Renders the base64-encoded QR code image.
-    -   **Changes**: Created to handle QR image display. Includes loading and error states.
+    -   **Summary**: Renders base64-encoded QR codes.
+    -   **Changes**: Created to handle QR image display with loading/error states. Used by  and .
 -   ****:
-    -   **Summary**: Displays details about the OpenAI assistant.
-    -   **Changes**: Populated with mock data, then integrated with real backend data. Wording made generic.
+    -   **Summary**: Displays OpenAI assistant details.
+    -   **Changes**: Integrated with real backend data, generic wording.
 -   ****:
-    -   **Summary**: Shows WhatsApp connection status (connected, disconnected, etc.).
+    -   **Summary**: Shows WhatsApp connection status.
     -   **Changes**: Initial implementation to reflect connection state.
+-   ** (NEW)**:
+    -   **Summary**: New React component for the administrator dashboard.
+    -   **Changes**: Created to manage clients (create, list, activate/deactivate bots, edit email, resend email, delete). Integrates with  and displays client statistics.  icon imports were corrected to .
+-   ** (NEW)**:
+    -   **Summary**: New React component for individual client landing pages.
+    -   **Changes**: Created to display client-specific QR codes, bot status, and assistant information. Fetches data from  using a unique URL. Includes basic responsive design.
 -   ****:
-    -   **Summary**: Provides mock data for UI development.
-    -   **Changes**: Created and modified to remove specific OpenAI GPT-4 mentions and include generic terms.
+    -   **Summary**: Provides mock data.
+    -   **Changes**: Modified for generic terms.
 -   ****:
-    -   **Summary**: FastAPI application. Sets up API routes and handles middleware.
-    -   **Changes**: Initial API endpoints  and  were set up.  configured to .
+    -   **Summary**: FastAPI application entry point, sets up API routes and middleware.
+    -   **Changes**: Configured . Integrated new routers: , , .
 -   ****:
     -   **Summary**: Defines API routes for WhatsApp interaction and OpenAI integration.
-    -   **Changes**: Added , ,  endpoints. Extensive modifications to  for auto-detection of environment (, ) and fallback URLs (, , , , and ). Implemented retry logic for API calls to WhatsApp service. The  function was heavily modified to handle OpenAI Assistant API interactions, including robust error handling, adding logging for OpenAI errors, and specifically implementing logic to verify if an existing  from MongoDB still exists in OpenAI, deleting it from the database and creating a new one if it's corrupted or not found.
+    -   **Changes**: Heavily modified for dynamic  detection. Implemented retry logic. Key changes include robust OpenAI Assistant API interaction with thread ID validation, deleting corrupted threads from MongoDB, and creating new ones.
+-   ** (NEW)**:
+    -   **Summary**: Defines API routes for admin panel functionalities (client management).
+    -   **Changes**: Created to handle client CRUD operations (create, list, toggle status, update email, resend email) and integrate with , , .
+-   ** (NEW)**:
+    -   **Summary**: Defines API routes for client-specific landing pages and message processing.
+    -   **Changes**: Created to handle fetching client status, QR codes, and processing incoming WhatsApp messages, integrating with  to check conversation pause status.
+-   ** (NEW)**:
+    -   **Summary**: Defines Pydantic models for database schema (Clients, Messages, PausedConversations) and API request/response structures.
+    -   **Changes**: Created  and  models. Later added  model and ensured  includes OpenAI ID fields.
+-   ** (NEW)**:
+    -   **Summary**: Handles sending emails to clients.
+    -   **Changes**: Created to manage SMTP connection, email templating, and sending unique links. Configured to use corporate email (contacto@tiks.cl) via Bluehosting initially, then switched to Gmail SMTP (tikschile@gmail.com) with app password to resolve delivery issues. Includes improved error handling.
+-   ** (NEW)**:
+    -   **Summary**: Manages dynamic WhatsApp service instances for each client.
+    -   **Changes**: Created to start, stop, and manage individual WhatsApp processes for clients on dynamic ports (e.g., 3001, 3002, 3003). This is crucial for multi-tenancy.
+-   ** (NEW)**:
+    -   **Summary**: Implements scheduled cleanup of old conversations.
+    -   **Changes**: Created for MongoDB to remove conversations older than 24 hours.
+-   ** (NEW)**:
+    -   **Summary**: Manages the pausing and reactivation of individual WhatsApp conversations.
+    -   **Changes**: Created to handle persistence of paused states in MongoDB and provide logic for checking conversation status.
 -   ****:
-    -   **Summary**: Stores environment variables for the backend.
-    -   **Changes**:  was repeatedly commented/uncommented, and finally intended to be driven by dynamic detection.  and  (changed from  to ) were added and updated.
+    -   **Summary**: Stores backend environment variables.
+    -   **Changes**:  and  were updated. New variables , , , ,  were added and updated multiple times to support email functionality and multi-tenant URL generation.  was specifically corrected to point to the deploy URL.
 -   ****:
-    -   **Summary**: Node.js service for WhatsApp Web (Baileys), QR generation, session management, and message handling.
-    -   **Changes**: Initial  implementation replaced with . Extensive modifications to  for QR code generation (base64), session management (using ), and persistent connection. Enhanced  event handling to implement automatic recovery: if  or  occurs, it automatically deletes the  session folder and reinicializes WhatsApp, allowing a new QR to be generated. Hardcoded Estudio Jurídico Villegas Otárola messages were generalized.
+    -   **Summary**: Node.js service for WhatsApp Web.
+    -   **Changes**: Migrated from  back to  (initially  was introduced). Extensive modifications for QR generation, session management, and auto-recovery on 401/connection failure. Generalized hardcoded messages. Critical updates to integrate logic for conversation pause/reactivation commands, detecting commands from the owner of the bot and interacting with the backend's . Installed system  as 's default wasn't working.
 -   ****:
-    -   **Summary**: Defines Node.js dependencies for the WhatsApp service.
-    -   **Changes**:  and  replaced by  and related dependencies.
+    -   **Summary**: Node.js dependencies for WhatsApp service.
+    -   **Changes**: Dependencies for  (and later ) and  were managed.
 -   ****:
-    -   **Summary**: Holds deployment-specific configuration for the WhatsApp service.
-    -   **Changes**: Created to contain higher timeouts (180s vs 90s) and more reconnect attempts (5 vs 3) for the  client when  is set to 'deploy'.
+    -   **Summary**: Deployment-specific configuration for WhatsApp service.
+    -   **Changes**: Increased timeouts and reconnect attempts for  environment.
 -   ****:
-    -   **Summary**: Environment variables specific to the deploy environment for the WhatsApp service.
-    -   **Changes**: Created to store .
+    -   **Summary**: Environment variables specific to deploy.
+    -   **Changes**: Stored .
 -   ****:
-    -   **Summary**: Supervisor configuration for backend and WhatsApp services.
-    -   **Changes**:  was added to both  and  sections to ensure environment variables are correctly passed to the deployed services.
+    -   **Summary**: Supervisor configuration for services.
+    -   **Changes**:  variables  and  were added to program configurations.
 -   ****:
-    -   **Summary**: Project README file.
-    -   **Changes**: Modified to remove specific law firm names and make descriptions more generic.
+    -   **Summary**: Project README.
+    -   **Changes**: Generalized names.
 </code_architecture>
 
 <pending_tasks>
--   The core issue of the WhatsApp service failing to connect and generate QR codes in the Emergent production/deployed environment remains unresolved, despite extensive debugging and theoretical fixes.
--   The activar bot and suspender bot commands functionality, though implemented, cannot be fully verified in the production environment due to the primary connection issue.
+-   The dynamic, per-client WhatsApp service instances are not fully stable, leading to reliance on the single, shared WhatsApp service for QR generation.
+-   The activar bot and suspender bot commands functionality (for the overall bot, not specific conversations) needs to be re-verified in the production environment.
+-   The overall deployment status, especially QR code generation and email sending, needs final verification from the user in their actual deployed environment.
 </pending_tasks>
 
 <current_work>
-The immediate work focused on resolving two main areas:
-1.  **OpenAI Assistant Functionality:** The system was incorrectly returning a generic fallback message instead of actual AI responses. This was traced to corrupted OpenAI thread IDs stored in MongoDB which were not being validated against the OpenAI API. The  file was modified to include logic that attempts to retrieve a thread from OpenAI; if it's not found (Error 404), it deletes the corrupted thread ID from MongoDB and creates a new one, ensuring fresh conversation threads for each user. This fix was verified to work correctly in the preview environment.
-2.  **WhatsApp Service Recovery (Preview):** The WhatsApp service was observed to fail in generating a new QR code after a disconnection (e.g., unlinking from the phone), reporting a 401 Unauthorized or Connection Failure error. The  file was modified to implement an automatic recovery mechanism. This mechanism now detects 401 errors or Connection Failure messages, automatically deletes the  session directory to clear corrupted session data, and then re-initializes the WhatsApp client to generate a new QR code without manual intervention. This auto-recovery was also successfully verified in the preview environment.
-3.  **Hardcoded Text Removal:** The frontend and WhatsApp service contained hardcoded references to the previous client (Estudio Jurídico Villegas Otárola). These were updated in , , and  to be generic (su asistente or removed entirely) to accommodate a new client.
-Despite these significant improvements to the preview environment and the underlying code logic, the fundamental problem of the WhatsApp service failing to establish and maintain a connection in the *deployed* Emergent environment (resulting in WhatsApp service error: All connection attempts failed on the deployed URL) persists and is confirmed to be an infrastructure-level networking issue.
+The immediate work focused on demonstrating the full functionality of the newly implemented multi-tenant platform and resolving critical deployment issues.
+
+1.  **Multi-Tenant Platform Verification:** The AI successfully created multiple test clients, verified the admin panel's ability to list and manage them (activate/deactivate, edit/resend email, delete), and confirmed the client-specific landing pages functioned correctly, displaying the unique client name, service status, and QR generation status.
+2.  **Email System Debugging & Resolution:** The most significant challenge was email delivery in the deployed environment. Initially, emails sent from  via Bluehosting's SMTP were blocked by MailChannels due to an Account blocked error. The AI diagnosed this as an external MailChannels issue. To resolve this without user intervention, the system was reconfigured to send emails from  using Gmail's SMTP server, requiring the user to provide a Gmail app password. This was successfully implemented and verified, with emails now sending correctly.
+3.  **Conversation Pause/Reactivate Feature Implementation:** A key new feature, allowing clients to pause/reactivate specific WhatsApp conversations using simple commands (pausar, reactivar, pausar todo, activar todo, estado), was implemented. This involved adding a new database model (), modifying message processing logic in  and , and adding new API endpoints. This feature was thoroughly tested and confirmed to work as expected, pausing responses for specific chats and reactivating them.
+4.  **WhatsApp QR Generation Discrepancy:** While the multi-tenant architecture *supports* dynamic WhatsApp services per client, the  running for individual client instances (e.g., on port 3003) was noted as unstable in generating QRs. As a workaround for user testing, the AI directed the user to the legacy page (which uses the main  on port 3001) for QR scanning, ensuring the core WhatsApp-AI connection functioned with the *user's specific assistant ID* after dynamic configuration. The AI also successfully diagnosed and fixed a  error, ensuring the  could generate QRs.
+5.  **Deployment Verification:** The AI prepared for deployment verification, but the user needed to trigger the deployment process manually. Once deployed, the AI aims to confirm full functionality (backend API, WhatsApp QR, admin panel, landing pages, email system) in the production environment.
+
+The platform is now feature-complete with multi-tenancy, email, and conversation control, but the stability of *individual* WhatsApp instances per client remains an underlying technical concern that needs future optimization if scaling beyond moderate usage.
 </current_work>
 
 <optional_next_step>
-Verify the updated hardcoded text changes in the preview environment to ensure all client-specific references have been generalized.
+Awaiting user's decision on potential scalability optimizations for the multi-tenant WhatsApp services, based on the provided stability analysis.
 </optional_next_step>

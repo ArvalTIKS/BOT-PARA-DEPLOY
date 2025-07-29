@@ -9,7 +9,7 @@ import aiohttp
 import json
 import time
 
-BACKEND_URL = "https://bd69d742-9d53-4bda-944a-b2586a148fd3.preview.emergentagent.com"
+BACKEND_URL = "https://fc1c2dc2-42f8-4a37-8285-42e88abf980c.preview.emergentagent.com"
 
 async def test_bot_commands():
     """Test bot activation and suspension commands"""
