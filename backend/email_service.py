@@ -6,13 +6,18 @@ from typing import Optional
 
 class EmailService:
     def __init__(self):
-        # Using Gmail SMTP (free)
-        self.smtp_server = "smtp.gmail.com"
-        self.smtp_port = 587
+        # Bluehosting SMTP configuration
+        self.smtp_server = "mail.tiks.cl"
+        self.smtp_port = 587  # TLS port (insecure outbound)
         self.sender_email = "contacto@tiks.cl"
         
-        # You'll need to set this in .env - use App Password for Gmail
+        # Get password from environment
         self.sender_password = os.environ.get('EMAIL_PASSWORD', '')
+        
+        if not self.sender_password:
+            print("⚠️ EMAIL_PASSWORD not configured - emails will not be sent")
+        else:
+            print(f"✅ Email service configured for {self.sender_email} via {self.smtp_server}:{self.smtp_port}")
         
     async def send_client_invitation(self, client_email: str, client_name: str, landing_url: str) -> bool:
         """Send invitation email to client with their landing page URL"""
