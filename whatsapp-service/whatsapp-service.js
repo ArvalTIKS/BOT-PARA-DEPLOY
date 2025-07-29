@@ -255,7 +255,11 @@ async function initializeWhatsApp() {
             // Clean up corrupted auth data
             if (fs.existsSync(sessionDir)) {
                 console.log('🧹 Removing corrupted auth data due to auth failure');
-                fs.rmSync(sessionDir, { recursive: true, force: true });
+                try {
+                    fs.rmSync(sessionDir, { recursive: true, force: true });
+                } catch (rmError) {
+                    console.log('Error removing session dir (safe to ignore):', rmError.message);
+                }
             }
             
             // Reinitialize after delay
