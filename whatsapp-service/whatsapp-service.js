@@ -329,7 +329,33 @@ async function initializeWhatsApp() {
                 const pauseCommands = ['pausar', 'reactivar', 'pausar todo', 'activar todo', 'estado'];
                 if (pauseCommands.includes(normalizedMessage)) {
                     console.log(`Pause command detected: ${normalizedMessage} from ${message.from}`);
-                    // Let the backend handle pause commands - they will be processed there
+                    
+                    // Process pause commands immediately - do NOT send to OpenAI
+                    try {
+                        const response = await axios.post(`${FASTAPI_URL}/api/whatsapp/process-message`, {
+                            phone_number: message.from.split('@')[0],
+                            message: messageText,
+                            message_id: message.id.id,
+                            timestamp: message.timestamp
+                        });
+
+                        // Send command response back to WhatsApp
+                        if (response.data.reply) {
+                            await message.reply(response.data.reply);
+                            console.log('Pause command reply sent:', response.data.reply);
+                        }
+                        
+                        return; // STOP HERE - do not process with OpenAI
+                        
+                    } catch (error) {
+                        console.error('Error processing pause command:', error);
+                        try {
+                            await message.reply('❌ Error procesando comando. Intenta nuevamente.');
+                        } catch (replyError) {
+                            console.error('Error sending error message:', replyError);
+                        }
+                        return; // STOP HERE even on error
+                    }
                 }
                 
                 console.log('Received message:', messageText);
