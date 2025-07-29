@@ -44,6 +44,17 @@ const getPuppeteerConfig = () => {
             '--disable-features=VizDisplayCompositor',
             '--disable-background-timer-throttling',
             '--disable-backgrounding-occluded-windows',
+            '--disable-renderer-backgrounding',
+            '--no-default-browser-check',
+            '--disable-default-apps',
+            '--disable-extensions',
+            '--disable-sync',
+            '--disable-translate',
+            '--disable-plugins',
+            '--disable-component-extensions-with-background-pages',
+            '--user-data-dir=/tmp/whatsapp-chrome-profile',
+            '--disable-background-timer-throttling',
+            '--disable-backgrounding-occluded-windows',
             '--disable-renderer-backgrounding'
         ]
     };
