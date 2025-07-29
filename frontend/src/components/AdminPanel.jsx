@@ -428,32 +428,50 @@ const AdminPanel = () => {
                           /{client.unique_url}
                         </a>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                        {client.status === 'active' ? (
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div className="flex flex-wrap gap-1">
+                          {client.status === 'active' ? (
+                            <button
+                              onClick={() => toggleClient(client.id, 'disconnect')}
+                              className="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-red-700 bg-red-100 hover:bg-red-200"
+                            >
+                              <PowerOff className="w-3 h-3 mr-1" />
+                              Desconectar
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => toggleClient(client.id, 'connect')}
+                              className="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-green-700 bg-green-100 hover:bg-green-200"
+                            >
+                              <Power className="w-3 h-3 mr-1" />
+                              Conectar
+                            </button>
+                          )}
+                          
                           <button
-                            onClick={() => toggleClient(client.id, 'disconnect')}
-                            className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded text-red-700 bg-red-100 hover:bg-red-200"
+                            onClick={() => openEditEmailForm(client)}
+                            className="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-blue-700 bg-blue-100 hover:bg-blue-200"
                           >
-                            <PowerOff className="w-3 h-3 mr-1" />
-                            Desconectar
+                            <Edit className="w-3 h-3 mr-1" />
+                            Editar Email
                           </button>
-                        ) : (
+                          
                           <button
-                            onClick={() => toggleClient(client.id, 'connect')}
-                            className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded text-green-700 bg-green-100 hover:bg-green-200"
+                            onClick={() => resendEmail(client.id, client.email, client.name)}
+                            className="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-purple-700 bg-purple-100 hover:bg-purple-200"
                           >
-                            <Power className="w-3 h-3 mr-1" />
-                            Conectar
+                            <Send className="w-3 h-3 mr-1" />
+                            Reenviar Email
                           </button>
-                        )}
-                        
-                        <button
-                          onClick={() => deleteClient(client.id, client.name)}
-                          className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded text-red-700 bg-red-100 hover:bg-red-200"
-                        >
-                          <Trash2 className="w-3 h-3 mr-1" />
-                          Eliminar
-                        </button>
+                          
+                          <button
+                            onClick={() => deleteClient(client.id, client.name)}
+                            className="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-red-700 bg-red-100 hover:bg-red-200"
+                          >
+                            <Trash2 className="w-3 h-3 mr-1" />
+                            Eliminar
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
