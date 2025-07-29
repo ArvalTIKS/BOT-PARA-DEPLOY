@@ -229,6 +229,34 @@ const ClientLanding = () => {
                     </p>
                   </div>
                 </div>
+              ) : qrCode?.connected ? (
+                <div className="text-center py-8">
+                  <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+                  <h4 className="text-lg font-semibold text-gray-900 mb-2">
+                    ¡WhatsApp Conectado!
+                  </h4>
+                  <p className="text-gray-600 mb-6">
+                    Tu asistente está funcionando y listo para atender mensajes automáticamente.
+                  </p>
+                  
+                  <div className="space-y-4">
+                    <button
+                      onClick={handleDisconnectWhatsApp}
+                      className="inline-flex items-center px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Desvincular WhatsApp
+                    </button>
+                    
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                      <p className="text-yellow-800 text-xs">
+                        <strong>Nota:</strong> Al desvincular, el dispositivo se eliminará completamente 
+                        de tu lista de "Dispositivos vinculados" en WhatsApp y necesitarás escanear 
+                        un nuevo código QR para volver a conectar.
+                      </p>
+                    </div>
+                  </div>
+                </div>
               ) : qrCode?.error ? (
                 <div className="text-center py-8">
                   <AlertTriangle className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
