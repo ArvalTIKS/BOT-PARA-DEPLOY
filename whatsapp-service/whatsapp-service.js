@@ -85,18 +85,16 @@ const getPuppeteerConfig = () => {
         baseConfig.timeout = 60000;
     }
     
-    // Use system Chromium if available
+    // Use system Chromium if available, otherwise rely on Puppeteer's bundled Chromium
     const systemChromiumPath = '/usr/bin/chromium';
-    const puppeteerChromePath = '/root/.cache/puppeteer/chrome/linux-121.0.6167.85/chrome-linux64/chrome';
     
     if (fs.existsSync(systemChromiumPath)) {
         baseConfig.executablePath = systemChromiumPath;
         console.log('Using system Chromium:', systemChromiumPath);
-    } else if (fs.existsSync(puppeteerChromePath)) {
-        baseConfig.executablePath = puppeteerChromePath;
-        console.log('Using Puppeteer Chromium:', puppeteerChromePath);
     } else {
-        console.log('Using default Puppeteer Chromium download');
+        // Let Puppeteer handle Chromium automatically
+        console.log('Using Puppeteer bundled Chromium (automatic)');
+        // Don't set executablePath, let Puppeteer handle it
     }
     
     return baseConfig;
