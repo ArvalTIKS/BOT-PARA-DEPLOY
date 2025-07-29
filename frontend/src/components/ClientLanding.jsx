@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
-import { CheckCircle, XCircle, Smartphone, RefreshCw, AlertTriangle, Bot, Wifi, WifiOff } from 'lucide-react';
+import { CheckCircle, XCircle, Smartphone, RefreshCw, AlertTriangle, Bot, Wifi, WifiOff, LogOut } from 'lucide-react';
 
 const ClientLanding = () => {
   const { unique_url } = useParams();
