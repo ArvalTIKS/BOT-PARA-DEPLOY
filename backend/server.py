@@ -15,6 +15,7 @@ import asyncio
 from whatsapp_routes import router as whatsapp_router
 from admin_routes import router as admin_router
 from client_routes import router as client_router
+from consolidated_routes import router as consolidated_router
 
 # Import cleanup service
 from cleanup_service import start_cleanup_service
