@@ -61,3 +61,10 @@ class ToggleClientRequest(BaseModel):
 
 class UpdateEmailRequest(BaseModel):
     new_email: EmailStr
+
+class PausedConversation(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    client_id: str
+    phone_number: str
+    paused_at: datetime = Field(default_factory=datetime.utcnow)
+    paused_by: str = "client"  # "client" or "global"
