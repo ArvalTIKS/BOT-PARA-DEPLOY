@@ -90,6 +90,45 @@ const AdminPanel = () => {
     }
   };
 
+  const updateClientEmail = async (e) => {
+    e.preventDefault();
+    if (!editingClient || !newEmail) return;
+
+    try {
+      await axios.put(`${backendUrl}/api/admin/clients/${editingClient.id}/update-email`, {
+        new_email: newEmail
+      });
+      
+      setShowEditEmailForm(false);
+      setEditingClient(null);
+      setNewEmail('');
+      await fetchClients();
+      
+      alert('✅ Email actualizado exitosamente!');
+    } catch (error) {
+      console.error('Error updating email:', error);
+      alert('❌ Error actualizando email');
+    }
+  };
+
+  const resendEmail = async (clientId, clientEmail, clientName) => {
+    if (window.confirm(`¿Reenviar email de invitación a ${clientEmail}?`)) {
+      try {
+        await axios.post(`${backendUrl}/api/admin/clients/${clientId}/resend-email`);
+        alert(`✅ Email reenviado exitosamente a ${clientEmail}`);
+      } catch (error) {
+        console.error('Error resending email:', error);
+        alert('❌ Error reenviando email');
+      }
+    }
+  };
+
+  const openEditEmailForm = (client) => {
+    setEditingClient(client);
+    setNewEmail(client.email);
+    setShowEditEmailForm(true);
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'active': return 'text-green-600 bg-green-100';
