@@ -347,16 +347,29 @@ async function initializeWhatsApp() {
         // If there's a persistent initialization error, try with deploy-specific recovery
         if (fs.existsSync(sessionDir) && (!isDeployEnv || !deployConfig.session.persistData)) {
             console.log('Removing session directory due to initialization error (preview mode)');
-            fs.rmSync(sessionDir, { recursive: true, force: true });
+            try {
+                fs.rmSync(sessionDir, { recursive: true, force: true });
+            } catch (rmError) {
+                console.log('Error removing session (safe to ignore):', rmError.message);
+            }
         } else if (isDeployEnv && deployConfig.session.persistData) {
             console.log('Keeping session directory for persistence (deploy mode)');
         }
         
-        // Retry initialization with deploy-optimized delay
-        const retryDelay = isDeployEnv ? 15000 : 10000;
-        setTimeout(() => {
-            initializeWhatsApp();
-        }, retryDelay);
+        // Only retry if we haven't exceeded max attempts
+        if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+            reconnectAttempts++;
+            console.log(`Initialization retry ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS}`);
+            
+            // Deploy-optimized retry delay
+            const retryDelay = isDeployEnv ? 15000 : 10000;
+            setTimeout(() => {
+                initializeWhatsApp();
+            }, retryDelay);
+        } else {
+            console.log('❌ Max initialization attempts reached. Stopping retries.');
+            console.log('💡 You may need to manually restart the service or clear session data.');
+        }
     }
 }
 
