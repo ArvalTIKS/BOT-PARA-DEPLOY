@@ -238,3 +238,14 @@ async def client_disconnected(client_id: str, db = Depends(get_database)):
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/cleanup/force")
+async def force_cleanup():
+    """Force cleanup for testing purposes"""
+    try:
+        from cleanup_service import cleanup_service
+        await cleanup_service.force_cleanup()
+        return {"message": "Cleanup executed successfully"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
