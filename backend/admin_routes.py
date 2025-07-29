@@ -250,6 +250,35 @@ async def force_cleanup():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.put("/clients/{client_id}/update-openai")
+async def update_client_openai(
+    client_id: str,
+    openai_data: dict,
+    db = Depends(get_database)
+):
+    """Update client OpenAI configuration"""
+    try:
+        clients_collection = db.clients
+        client_data = await clients_collection.find_one({"id": client_id})
+        
+        if not client_data:
+            raise HTTPException(status_code=404, detail="Client not found")
+        
+        # Update OpenAI configuration
+        await clients_collection.update_one(
+            {"id": client_id},
+            {"$set": {
+                "openai_api_key": openai_data.get("api_key"),
+                "openai_assistant_id": openai_data.get("assistant_id"),
+                "last_activity": datetime.utcnow()
+            }}
+        )
+        
+        return {"message": "OpenAI configuration updated successfully", "success": True}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.put("/clients/{client_id}/update-email")
 async def update_client_email(
     client_id: str,
