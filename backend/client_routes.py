@@ -41,7 +41,7 @@ async def get_client_landing_status(unique_url: str, db = Depends(get_database))
 
 @router.get("/{unique_url}/qr")
 async def get_client_qr(unique_url: str, db = Depends(get_database)):
-    """Get QR code for client's WhatsApp"""
+    """Get QR code for client's WhatsApp using consolidated system"""
     try:
         clients_collection = db.clients
         client_data = await clients_collection.find_one({"unique_url": unique_url})
@@ -49,25 +49,39 @@ async def get_client_qr(unique_url: str, db = Depends(get_database)):
         if not client_data:
             raise HTTPException(status_code=404, detail="Client not found")
         
-        client = Client(**client_data)
+        client = Client(**{k:v for k,v in client_data.items() if k != '_id'})
         
-        # Check if already connected (only allow one phone)
+        # Check if client is active in consolidated manager
+        if client.id not in consolidated_manager.active_clients:
+            return {
+                "qr": None,
+                "error": "Cliente no está activo en el sistema. Contacte al administrador."
+            }
+        
+        # Check if already connected (only allow one phone per client for now)
         if client.connected_phone:
             return {
                 "qr": None,
-                "error": "WhatsApp ya está conectado en otro dispositivo. Solo se permite una conexión por cliente."
+                "connected": True,
+                "message": f"WhatsApp ya está conectado ({client.connected_phone}). Solo se permite una conexión por cliente."
             }
         
-        # Get QR from client's WhatsApp service
-        service_url = f"http://localhost:{client.whatsapp_port}"
+        # Get QR from consolidated manager
+        qr_data = await service_manager.get_qr_code_for_client(client.id)
         
-        try:
-            async with httpx.AsyncClient() as http_client:
-                response = await http_client.get(f"{service_url}/qr", timeout=10.0)
-                return response.json()
-        except Exception as e:
-            print(f"Error getting QR for {client.name}: {str(e)}")
-            return {"qr": None, "error": "Error obteniendo código QR"}
+        if qr_data.get('qr'):
+            return {
+                "qr": qr_data['qr'],
+                "raw": qr_data.get('raw'),
+                "client_name": client.name,
+                "instructions": "Escanea este código QR con tu WhatsApp para conectar tu asistente personalizado."
+            }
+        else:
+            return {
+                "qr": None,
+                "error": qr_data.get('error', 'Código QR no disponible en este momento'),
+                "retry": True
+            }
             
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
