@@ -249,3 +249,70 @@ async def force_cleanup():
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.put("/clients/{client_id}/update-email")
+async def update_client_email(
+    client_id: str,
+    email_request: UpdateEmailRequest,
+    db = Depends(get_database)
+):
+    """Update client email address"""
+    try:
+        clients_collection = db.clients
+        client_data = await clients_collection.find_one({"id": client_id})
+        
+        if not client_data:
+            raise HTTPException(status_code=404, detail="Client not found")
+        
+        # Update email
+        await clients_collection.update_one(
+            {"id": client_id},
+            {"$set": {
+                "email": email_request.new_email,
+                "last_activity": datetime.utcnow()
+            }}
+        )
+        
+        return {"message": f"Email updated to {email_request.new_email}", "success": True}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/clients/{client_id}/resend-email")
+async def resend_client_email(
+    client_id: str,
+    background_tasks: BackgroundTasks,
+    db = Depends(get_database)
+):
+    """Resend invitation email to client"""
+    try:
+        clients_collection = db.clients
+        client_data = await clients_collection.find_one({"id": client_id})
+        
+        if not client_data:
+            raise HTTPException(status_code=404, detail="Client not found")
+        
+        client = Client(**client_data)
+        
+        # Generate landing URL
+        base_url = os.environ.get('BASE_URL', 'https://your-domain.com')
+        landing_url = f"{base_url}/client/{client.unique_url}"
+        
+        # Send email in background
+        background_tasks.add_task(
+            email_service.send_client_invitation,
+            client.email,
+            client.name,
+            landing_url
+        )
+        
+        # Update last activity
+        await clients_collection.update_one(
+            {"id": client_id},
+            {"$set": {"last_activity": datetime.utcnow()}}
+        )
+        
+        return {"message": f"Email reenviado a {client.email}", "success": True}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
