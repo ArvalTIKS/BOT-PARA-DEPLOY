@@ -23,6 +23,7 @@ let client = null;
 let qrCodeData = null;
 let isConnected = false;
 let connectedUser = null;
+let ownerPhoneNumber = null; // 📱 NEW: Store owner's phone number
 let sessionDir = deployConfig.session.authDirectory;
 let isInitializing = false;
 let reconnectAttempts = 0;
