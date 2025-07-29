@@ -33,6 +33,8 @@ class ClientResponse(BaseModel):
     id: str
     name: str
     email: str
+    openai_api_key: Optional[str] = None
+    openai_assistant_id: Optional[str] = None
     status: ClientStatus
     connected_phone: Optional[str]
     whatsapp_port: int
