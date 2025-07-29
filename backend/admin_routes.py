@@ -3,7 +3,7 @@ from typing import List
 import asyncio
 import os
 from datetime import datetime, timedelta
-from models import Client, ClientCreate, ClientResponse, ClientStatus, ToggleClientRequest
+from models import Client, ClientCreate, ClientResponse, ClientStatus, ToggleClientRequest, UpdateEmailRequest
 from database import get_database
 from email_service import email_service  
 from whatsapp_manager import service_manager
