@@ -263,7 +263,7 @@ const AdminPanel = () => {
           
           {clients.length === 0 ? (
             <div className="p-6 text-center text-gray-500">
-              <Robot className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+              <Bot className="w-12 h-12 mx-auto mb-4 text-gray-300" />
               <p>No hay clientes registrados aún.</p>
               <p className="text-sm">Agrega tu primer cliente usando el botón de arriba.</p>
             </div>
