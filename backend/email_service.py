@@ -178,7 +178,18 @@ class EmailService:
             # Send email using Bluehosting SMTP
             server = smtplib.SMTP(self.smtp_server, self.smtp_port)
             server.starttls()  # Enable TLS encryption
-            server.login(self.sender_email, self.sender_password)
+            
+            # Better error handling for SMTP authentication
+            try:
+                server.login(self.sender_email, self.sender_password)
+            except smtplib.SMTPAuthenticationError as auth_error:
+                print(f"❌ SMTP Authentication failed: {auth_error}")
+                print(f"   Server: {self.smtp_server}:{self.smtp_port}")
+                print(f"   User: {self.sender_email}")
+                print("   Check: Password, server settings, or contact hosting provider")
+                server.quit()
+                return False
+            
             text = msg.as_string()
             server.sendmail(self.sender_email, client_email, text)
             server.quit()
