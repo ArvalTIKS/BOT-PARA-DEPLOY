@@ -6,6 +6,8 @@ from datetime import datetime
 import openai
 from database import get_database
 from models import Client, ClientMessage
+from consolidated_whatsapp_manager import consolidated_manager
+from whatsapp_manager import service_manager
 
 router = APIRouter(prefix="/api/client", tags=["client"])
 
