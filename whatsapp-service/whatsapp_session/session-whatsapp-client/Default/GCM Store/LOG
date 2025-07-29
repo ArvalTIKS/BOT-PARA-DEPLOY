@@ -1,2 +1,3 @@
-2025/07/29-19:44:54.005 157e Creating DB /app/whatsapp-service/whatsapp_session/session-whatsapp-client/Default/GCM Store since it was missing.
-2025/07/29-19:44:54.009 157e Reusing MANIFEST /app/whatsapp-service/whatsapp_session/session-whatsapp-client/Default/GCM Store/MANIFEST-000001
+2025/07/29-19:55:14.807 1854 Reusing MANIFEST /app/whatsapp-service/whatsapp_session/session-whatsapp-client/Default/GCM Store/MANIFEST-000001
+2025/07/29-19:55:14.807 1854 Recovering log #3
+2025/07/29-19:55:14.807 1854 Reusing old log /app/whatsapp-service/whatsapp_session/session-whatsapp-client/Default/GCM Store/000003.log 
