@@ -280,15 +280,15 @@ async function initializeWhatsApp() {
                 const pauseCommands = ['pausar', 'reactivar', 'pausar todo', 'activar todo', 'estado'];
                 if (pauseCommands.includes(normalizedMessage)) {
                     console.log(`Pause command detected: ${normalizedMessage} from ${message.from}`);
-                    // Let the backend handle pause commands - they will be processed there
+                    // Let the consolidated manager handle pause commands - they will be processed there
                 }
                 
                 console.log('Received message:', messageText);
                 console.log('From:', message.from);
                 
                 try {
-                    // Send message to FastAPI for processing (including pause commands)
-                    const response = await axios.post(`${FASTAPI_URL}/api/whatsapp/process-message`, {
+                    // Use consolidated message processing endpoint
+                    const response = await axios.post(`${FASTAPI_URL}/api/consolidated/process-message`, {
                         phone_number: message.from.split('@')[0],
                         message: messageText,
                         message_id: message.id.id,
@@ -301,6 +301,12 @@ async function initializeWhatsApp() {
                         console.log('Reply sent:', response.data.reply);
                     } else if (response.data.paused) {
                         console.log('Conversation is paused, no automatic reply sent');
+                    } else if (response.data.error) {
+                        console.log('Processing error:', response.data.error);
+                        // Only send error message if it's not a "no client found" error
+                        if (!response.data.error.includes('No client found')) {
+                            await message.reply('Lo siento, hubo un error procesando tu mensaje. Por favor intenta nuevamente.');
+                        }
                     }
                 } catch (error) {
                     console.error('Error processing message:', error);
