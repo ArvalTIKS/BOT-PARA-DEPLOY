@@ -26,7 +26,7 @@ let connectedUser = null;
 let sessionDir = deployConfig.session.authDirectory;
 let isInitializing = false;
 let reconnectAttempts = 0;
-const MAX_RECONNECT_ATTEMPTS = deployConfig.reconnection.maxAttempts;
+const MAX_RECONNECT_ATTEMPTS = 10; // Aumentado para más intentos
 
 // Enhanced Puppeteer configuration for deployment
 const getPuppeteerConfig = () => {
