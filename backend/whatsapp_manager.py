@@ -3,149 +3,281 @@ import subprocess
 import psutil
 import signal
 import os
+import shutil
+import fs
 from typing import Dict, List
 from models import Client, ClientStatus
-from consolidated_whatsapp_manager import consolidated_manager
 
 class WhatsAppServiceManager:
     """
-    Gestor mejorado que usa arquitectura consolidada para mejor estabilidad
+    Multi-tenant WhatsApp service manager - cada cliente tiene su propio servicio independiente
     """
     
     def __init__(self):
-        self.services: Dict[str, dict] = {}  # client_id -> service info (legacy)
-        self.base_port = 3001
+        self.services: Dict[str, dict] = {}  # client_id -> service info
+        self.base_port = 3002  # Start from 3002 (3001 is reserved for legacy)
         
     def get_next_available_port(self) -> int:
-        """Get next available port starting from base_port (legacy compatibility)"""
+        """Get next available port starting from base_port"""
         port = self.base_port
         while port in [service['port'] for service in self.services.values()]:
             port += 1
         return port
     
     async def create_service_for_client(self, client: Client) -> bool:
-        """
-        Crear servicio para cliente usando arquitectura consolidada estable
-        """
+        """Create and start independent WhatsApp service for a specific client"""
         try:
-            # Registrar cliente en el gestor consolidado
-            success = await consolidated_manager.register_client(client)
+            port = client.whatsapp_port  # Use the port assigned to the client
+            service_dir = f"/app/whatsapp-services/client-{client.id}"
             
-            if success:
-                # Marcar como servicio "activo" para compatibilidad con el API existente
-                self.services[client.id] = {
-                    'port': 3001,  # Puerto del servicio consolidado
-                    'process': None,  # No hay proceso separado
-                    'service_dir': None,  # No hay directorio separado
-                    'status': 'running'
-                }
-                
-                print(f"✅ Cliente {client.name} registrado en el servicio consolidado")
-                return True
-            else:
-                print(f"❌ Error registrando cliente {client.name} en el servicio consolidado")
-                return False
+            # Create service directory
+            os.makedirs(service_dir, exist_ok=True)
+            
+            # Create client-specific config
+            config_content = self._generate_client_config(client, port)
+            with open(f"{service_dir}/client-config.js", "w") as f:
+                f.write(config_content)
+            
+            # Create client-specific service file
+            service_content = self._generate_client_service(client, port)
+            with open(f"{service_dir}/service.js", "w") as f:
+                f.write(service_content)
+            
+            # Copy dependencies
+            await self._copy_dependencies(service_dir)
+            
+            # Start the service
+            cmd = [
+                "node",
+                f"{service_dir}/service.js"
+            ]
+            
+            env = os.environ.copy()
+            env.update({
+                'CLIENT_ID': client.id,
+                'CLIENT_PORT': str(port),
+                'CLIENT_NAME': client.name,
+                'OPENAI_API_KEY': client.openai_api_key,
+                'OPENAI_ASSISTANT_ID': client.openai_assistant_id,
+                'FASTAPI_URL': 'http://localhost:8001',
+                'EMERGENT_ENV': os.environ.get('EMERGENT_ENV', 'preview')
+            })
+            
+            process = await asyncio.create_subprocess_exec(
+                *cmd,
+                env=env,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+                cwd=service_dir
+            )
+            
+            # Store service info
+            self.services[client.id] = {
+                'port': port,
+                'process': process,
+                'service_dir': service_dir,
+                'status': 'starting',
+                'client_name': client.name
+            }
+            
+            print(f"✅ Started WhatsApp service for client {client.name} on port {port}")
+            return True
             
         except Exception as e:
-            print(f"❌ Error creando servicio consolidado para cliente {client.name}: {str(e)}")
+            print(f"❌ Error creating service for client {client.name}: {str(e)}")
             return False
     
     async def stop_service_for_client(self, client_id: str) -> bool:
-        """
-        Detener servicio para cliente (desregistrar del consolidado)
-        """
+        """Stop WhatsApp service for a specific client"""
         try:
-            # Desregistrar del gestor consolidado
-            success = await consolidated_manager.unregister_client(client_id)
-            
-            if success:
-                # Remover de servicios locales
-                if client_id in self.services:
-                    del self.services[client_id]
-                
-                print(f"✅ Cliente {client_id} desregistrado del servicio consolidado")
+            if client_id not in self.services:
+                print(f"⚠️ No service found for client {client_id}")
                 return True
-            else:
-                print(f"❌ Error desregistrando cliente {client_id}")
-                return False
-                
+            
+            service = self.services[client_id]
+            process = service['process']
+            
+            # Terminate process
+            if process and process.returncode is None:
+                process.terminate()
+                try:
+                    await asyncio.wait_for(process.wait(), timeout=10)
+                except asyncio.TimeoutError:
+                    process.kill()
+                    await process.wait()
+            
+            # Clean up service directory
+            service_dir = service['service_dir']
+            if os.path.exists(service_dir):
+                shutil.rmtree(service_dir)
+            
+            # Remove from services
+            client_name = service.get('client_name', client_id)
+            del self.services[client_id]
+            
+            print(f"✅ Stopped service for client {client_name}")
+            return True
+            
         except Exception as e:
-            print(f"❌ Error parando servicio para cliente {client_id}: {str(e)}")
+            print(f"❌ Error stopping service for client {client_id}: {str(e)}")
             return False
     
     def get_service_status(self, client_id: str) -> dict:
-        """
-        Obtener estado del servicio para un cliente
-        """
+        """Get status of client's WhatsApp service"""
         if client_id not in self.services:
             return {"status": "stopped", "port": None}
         
-        # El servicio consolidado siempre está "running" si está registrado
         service = self.services[client_id]
-        return {
-            "status": "running",
-            "port": 3001,  # Puerto del servicio consolidado
-            "pid": "consolidated"  # Identificador especial
-        }
+        process = service['process']
+        
+        if process and process.returncode is None:
+            return {
+                "status": "running",
+                "port": service['port'],
+                "pid": process.pid
+            }
+        else:
+            return {"status": "stopped", "port": service['port']}
     
     async def get_whatsapp_status_for_client(self, client_id: str) -> dict:
-        """
-        Obtener estado específico de WhatsApp para un cliente
-        """
+        """Get WhatsApp connection status for specific client"""
         try:
-            # Obtener estado general del servicio WhatsApp consolidado
-            status = await consolidated_manager.get_whatsapp_status()
+            if client_id not in self.services:
+                return {"connected": False, "error": "Service not running"}
             
-            # Verificar si el cliente está registrado
-            if client_id in consolidated_manager.active_clients:
-                status['client_registered'] = True
-                status['client_id'] = client_id
-            else:
-                status['client_registered'] = False
+            service = self.services[client_id]
+            port = service['port']
             
-            return status
-            
+            import httpx
+            async with httpx.AsyncClient(timeout=5.0) as http_client:
+                response = await http_client.get(f"http://localhost:{port}/status")
+                if response.status_code == 200:
+                    return response.json()
+                else:
+                    return {"connected": False, "error": "Service unavailable"}
+                    
         except Exception as e:
-            print(f"❌ Error obteniendo estado de WhatsApp para cliente {client_id}: {str(e)}")
-            return {"connected": False, "error": str(e), "client_registered": False}
+            print(f"❌ Error getting WhatsApp status for client {client_id}: {str(e)}")
+            return {"connected": False, "error": str(e)}
     
     async def get_qr_code_for_client(self, client_id: str) -> dict:
-        """
-        Obtener código QR para un cliente (compartido del servicio consolidado)
-        """
+        """Get QR code for client's WhatsApp service"""
         try:
-            # Todos los clientes comparten el mismo QR del servicio consolidado
-            qr_data = await consolidated_manager.get_qr_code()
+            if client_id not in self.services:
+                return {"qr": None, "error": "Service not running"}
             
-            if client_id in consolidated_manager.active_clients:
-                qr_data['client_registered'] = True
-                qr_data['client_id'] = client_id
-            else:
-                qr_data['client_registered'] = False
-                qr_data['error'] = 'Client not registered'
+            service = self.services[client_id]
+            port = service['port']
             
-            return qr_data
-            
+            import httpx
+            async with httpx.AsyncClient(timeout=10.0) as http_client:
+                response = await http_client.get(f"http://localhost:{port}/qr")
+                if response.status_code == 200:
+                    return response.json()
+                else:
+                    return {"qr": None, "error": "QR not available"}
+                    
         except Exception as e:
-            print(f"❌ Error obteniendo QR para cliente {client_id}: {str(e)}")
-            return {"qr": None, "error": str(e), "client_registered": False}
+            print(f"❌ Error getting QR for client {client_id}: {str(e)}")
+            return {"qr": None, "error": str(e)}
     
-    async def associate_phone_with_client(self, phone_number: str, client_id: str):
-        """
-        Asociar teléfono conectado con cliente específico
-        """
-        await consolidated_manager.associate_phone_with_client(phone_number, client_id)
-        print(f"📱 Teléfono {phone_number} asociado con cliente {client_id}")
-    
-    async def get_client_stats(self, client_id: str) -> dict:
-        """
-        Obtener estadísticas del cliente desde el gestor consolidado
-        """
+    async def disconnect_client_whatsapp(self, client_id: str) -> dict:
+        """Disconnect WhatsApp for specific client"""
         try:
-            return await consolidated_manager.get_client_stats(client_id)
+            if client_id not in self.services:
+                return {"success": False, "error": "Service not running"}
+            
+            service = self.services[client_id]
+            port = service['port']
+            
+            import httpx
+            async with httpx.AsyncClient(timeout=30.0) as http_client:
+                response = await http_client.get(f"http://localhost:{port}/logout")
+                if response.status_code == 200:
+                    return response.json()
+                else:
+                    return {"success": False, "error": "Logout failed"}
+                    
         except Exception as e:
-            print(f"❌ Error obteniendo estadísticas para cliente {client_id}: {str(e)}")
-            return {"total_messages": 0, "messages_today": 0, "unique_users": 0}
+            print(f"❌ Error disconnecting client {client_id}: {str(e)}")
+            return {"success": False, "error": str(e)}
+    
+    def _generate_client_config(self, client: Client, port: int) -> str:
+        """Generate client-specific configuration"""
+        return f"""
+// Client-specific configuration for {client.name}
+module.exports = {{
+    client: {{
+        id: '{client.id}',
+        name: '{client.name}',
+        email: '{client.email}',
+        openai_api_key: '{client.openai_api_key}',
+        openai_assistant_id: '{client.openai_assistant_id}'
+    }},
+    server: {{
+        host: '0.0.0.0',
+        port: {port},
+        gracefulShutdownTimeoutMs: 30000
+    }},
+    session: {{
+        authDirectory: './whatsapp_session',
+        persistData: true,
+        backupAuthData: true
+    }},
+    puppeteer: {{
+        navigationTimeout: 120000,
+        pageLoadTimeout: 90000,
+        defaultTimeout: 60000
+    }},
+    reconnection: {{
+        maxAttempts: 10,
+        baseDelayMs: 20000,
+        maxDelayMs: 120000,
+        sessionRecoveryDelayMs: 30000
+    }}
+}};
+"""
+    
+    def _generate_client_service(self, client: Client, port: int) -> str:
+        """Generate client-specific WhatsApp service based on main service"""
+        with open('/app/whatsapp-service/whatsapp-service.js', 'r') as f:
+            main_service = f.read()
+        
+        # Customize for client
+        client_service = main_service.replace(
+            'const PORT = process.env.PORT || 3001;',
+            f'const PORT = {port};'
+        ).replace(
+            'const FASTAPI_URL = process.env.FASTAPI_URL || \'http://localhost:8001\';',
+            f'const FASTAPI_URL = \'http://localhost:8001\';'
+        ).replace(
+            '/api/whatsapp/process-message',
+            f'/api/client/{client.id}/process-message'
+        )
+        
+        return client_service
+    
+    async def _copy_dependencies(self, service_dir: str):
+        """Copy necessary dependencies to service directory"""
+        try:
+            # Copy package.json
+            original_package = "/app/whatsapp-service/package.json"
+            target_package = f"{service_dir}/package.json"
+            
+            if os.path.exists(original_package):
+                shutil.copy2(original_package, target_package)
+                
+                # Install dependencies
+                process = await asyncio.create_subprocess_exec(
+                    'yarn', 'install',
+                    cwd=service_dir,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE
+                )
+                await process.wait()
+                
+        except Exception as e:
+            print(f"Error copying dependencies: {str(e)}")
 
 # Global service manager instance
 service_manager = WhatsAppServiceManager()
