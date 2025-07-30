@@ -85,6 +85,43 @@ async def get_all_clients(db = Depends(get_database)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.put("/clients/{client_id}/disconnect")
+async def disconnect_client_whatsapp(client_id: str, db = Depends(get_database)):
+    """Disconnect WhatsApp for specific client"""
+    try:
+        clients_collection = db.clients
+        client_data = await clients_collection.find_one({"id": client_id})
+        
+        if not client_data:
+            raise HTTPException(status_code=404, detail="Client not found")
+        
+        client = Client(**{k:v for k,v in client_data.items() if k != '_id'})
+        
+        # Disconnect WhatsApp for this specific client
+        disconnect_result = await service_manager.disconnect_client_whatsapp(client_id)
+        
+        if disconnect_result.get("success"):
+            # Clear connected phone from database
+            await clients_collection.update_one(
+                {"id": client_id},
+                {"$unset": {"connected_phone": ""}}
+            )
+            
+            return {
+                "success": True,
+                "message": f"WhatsApp disconnected for client {client.name}",
+                "client_id": client_id
+            }
+        else:
+            return {
+                "success": False,
+                "message": f"Failed to disconnect WhatsApp for client {client.name}",
+                "error": disconnect_result.get("error")
+            }
+            
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.put("/clients/{client_id}/toggle")
 async def toggle_client_service(
     client_id: str, 
