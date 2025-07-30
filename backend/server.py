@@ -69,7 +69,7 @@ app.include_router(api_router)
 app.include_router(whatsapp_router)      # Legacy WhatsApp routes
 app.include_router(admin_router)         # Admin panel routes
 app.include_router(client_router)        # Client landing routes
-app.include_router(consolidated_router)  # New consolidated routes
+
 
 # CORS middleware
 app.add_middleware(
