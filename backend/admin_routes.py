@@ -19,7 +19,7 @@ async def create_client(
     """Create new client and send invitation email"""
     try:
         # Get next available port
-        port = service_manager.get_next_available_port()
+        port = await service_manager.get_next_available_port(db)
         
         # Create client object
         client = Client(
