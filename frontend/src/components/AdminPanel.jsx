@@ -55,7 +55,7 @@ const AdminPanel = () => {
       alert('✅ Cliente creado exitosamente! Email enviado.');
     } catch (error) {
       console.error('Error creating client:', error);
-      alert('❌ Error creando cliente: ' + error.response?.data?.detail);
+      alert('❌ Error creando cliente: ' + (error.response?.data?.detail || error.message || 'Error desconocido'));
     } finally {
       setLoading(false);
     }
