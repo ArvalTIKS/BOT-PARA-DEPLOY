@@ -105,470 +105,89 @@
 user_problem_statement: "ARQUITECTURA MULTI-TENANT RESTAURADA: Revertir sistema consolidado incorrecto y restaurar la arquitectura original donde cada cliente debe tener su propia instancia independiente del servicio WhatsApp conectada a su propio número único de WhatsApp en un puerto distinto (3002, 3003, etc). Solucionar problemas de Chromium en servicios individuales y verificar que cada cliente obtenga su QR code y servicio independiente correctamente."
 
 backend:
-  - task: "Consolidated WhatsApp Service Architecture"
+  - task: "Individual WhatsApp Service Architecture"
     implemented: true
-    working: true
-    file: "/app/backend/consolidated_whatsapp_manager.py"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-        - working: true
-          agent: "testing"
-          comment: "CONSOLIDATED ARCHITECTURE VERIFIED: ✅ ConsolidatedWhatsAppManager implementado y funcionando correctamente. ✅ Servicio único WhatsApp en puerto 3001 con estabilidad 100% (5/5 requests exitosos). ✅ Routing inteligente por cliente implementado. ✅ Asociación automática de teléfonos con clientes activos. ✅ Gestión de múltiples clientes usando un solo servicio WhatsApp. ✅ Reducción significativa en consumo de recursos vs arquitectura anterior. Sistema consolidado completamente funcional y estable."
-
-  - task: "Consolidated Phone Connection Endpoint"
-    implemented: true
-    working: true
-    file: "/app/backend/consolidated_routes.py"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-        - working: true
-          agent: "testing"
-          comment: "PHONE CONNECTION ENDPOINT VERIFIED: ✅ POST /api/consolidated/phone-connected funcionando correctamente. ✅ Asociación automática de teléfonos con clientes activos. ✅ Actualización de base de datos con teléfono conectado. ✅ Respuesta exitosa con detalles del cliente asociado. ✅ Manejo de casos sin clientes activos disponibles. Endpoint de conexión telefónica consolidado completamente funcional."
-
-  - task: "Consolidated Message Processing Endpoint"
-    implemented: true
-    working: true
-    file: "/app/backend/consolidated_routes.py"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-        - working: true
-          agent: "testing"
-          comment: "CONSOLIDATED MESSAGE PROCESSING VERIFIED: ✅ POST /api/consolidated/process-message funcionando correctamente. ✅ Routing de mensajes por cliente usando gestor consolidado. ✅ Integración con OpenAI usando credenciales específicas por cliente. ✅ Manejo de comandos de pausa por cliente. ✅ Procesamiento inteligente basado en número de teléfono. Procesamiento consolidado de mensajes completamente funcional."
-
-  - task: "Consolidated System Status Endpoint"
-    implemented: true
-    working: true
-    file: "/app/backend/consolidated_routes.py"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-        - working: true
-          agent: "testing"
-          comment: "CONSOLIDATED STATUS ENDPOINT VERIFIED: ✅ GET /api/consolidated/status funcionando correctamente. ✅ Estado del servicio WhatsApp consolidado reportado. ✅ Información de clientes activos y conexiones telefónicas. ✅ Cliente conectado actual identificado. ✅ Mapeo completo de conexiones cliente-teléfono. Endpoint de estado consolidado completamente funcional."
-
-  - task: "Consolidated Active Clients Endpoint"
-    implemented: true
-    working: true
-    file: "/app/backend/consolidated_routes.py"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-        - working: true
-          agent: "testing"
-          comment: "CONSOLIDATED CLIENTS ENDPOINT VERIFIED: ✅ GET /api/consolidated/clients funcionando correctamente. ✅ Lista de clientes activos en sistema consolidado. ✅ Estadísticas por cliente incluidas. ✅ Información de conexiones telefónicas por cliente. ✅ Total de clientes activos reportado correctamente. Endpoint de clientes activos consolidado completamente funcional."
-
-  - task: "Consolidated Phone Association Endpoint"
-    implemented: true
-    working: true
-    file: "/app/backend/consolidated_routes.py"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-        - working: true
-          agent: "testing"
-          comment: "PHONE ASSOCIATION ENDPOINT VERIFIED: ✅ POST /api/consolidated/associate-phone funcionando correctamente. ✅ Asociación manual de teléfonos con clientes específicos. ✅ Validación de existencia de cliente. ✅ Actualización de base de datos con teléfono asociado. ✅ Respuesta con confirmación de asociación exitosa. Endpoint de asociación manual completamente funcional."
-
-  - task: "Consolidated QR Code Endpoint"
-    implemented: true
-    working: true
-    file: "/app/backend/consolidated_routes.py"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-        - working: true
-          agent: "testing"
-          comment: "CONSOLIDATED QR ENDPOINT VERIFIED: ✅ GET /api/consolidated/qr funcionando correctamente. ✅ Código QR del servicio consolidado accesible. ✅ Integración con gestor consolidado de WhatsApp. ✅ Respuesta apropiada cuando QR no está disponible. ✅ Endpoint compartido para todos los clientes del sistema. Endpoint QR consolidado completamente funcional."
-
-  - task: "Admin Panel Consolidated Integration"
-    implemented: true
-    working: true
-    file: "/app/backend/admin_routes.py"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-        - working: true
-          agent: "testing"
-          comment: "ADMIN PANEL CONSOLIDATED INTEGRATION VERIFIED: ✅ PUT /api/admin/clients/{client_id}/toggle integrado con sistema consolidado. ✅ Activación/desactivación de clientes usando gestor consolidado. ✅ Registro automático en sistema consolidado al activar cliente. ✅ Desregistro del sistema al desactivar cliente. ✅ Respuestas apropiadas con estado del cliente. Integración admin panel con sistema consolidado completamente funcional."
-
-  - task: "Client Landing Pages Consolidated Integration"
-    implemented: true
-    working: true
-    file: "/app/backend/client_routes.py"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-        - working: true
-          agent: "testing"
-          comment: "CLIENT LANDING CONSOLIDATED INTEGRATION VERIFIED: ✅ GET /api/client/{unique_url}/status usando sistema consolidado. ✅ GET /api/client/{unique_url}/qr integrado con gestor consolidado. ✅ Verificación de cliente activo en sistema consolidado. ✅ Manejo de conexiones existentes por cliente. ✅ QR compartido del servicio consolidado. Integración client landing pages con sistema consolidado completamente funcional."
-
-  - task: "Multi-Tenant OpenAI Integration Consolidated"
-    implemented: true
-    working: true
-    file: "/app/backend/consolidated_whatsapp_manager.py"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-        - working: true
-          agent: "testing"
-          comment: "MULTI-TENANT OPENAI CONSOLIDATED VERIFIED: ✅ Integración OpenAI por cliente usando credenciales específicas. ✅ Threads de conversación separados por cliente-teléfono. ✅ Procesamiento con Assistant ID específico por cliente. ✅ Manejo de comandos de pausa por cliente. ✅ Almacenamiento de mensajes por cliente en base de datos. Integración OpenAI multi-tenant consolidada completamente funcional."
-
-  - task: "WhatsApp Service Manager Consolidated"
-    implemented: true
-    working: true
+    working: false
     file: "/app/backend/whatsapp_manager.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
-    status_history:
-        - working: true
-          agent: "testing"
-          comment: "WHATSAPP SERVICE MANAGER CONSOLIDATED VERIFIED: ✅ WhatsAppServiceManager actualizado para arquitectura consolidada. ✅ Registro/desregistro de clientes en gestor consolidado. ✅ Estado de servicio por cliente usando sistema consolidado. ✅ QR code compartido del servicio consolidado. ✅ Compatibilidad con API existente mantenida. Service manager consolidado completamente funcional."
-
-  - task: "WhatsApp Service Migration to whatsapp-web.js"
-    implemented: true
-    working: true
-    file: "/app/whatsapp-service/whatsapp-service.js"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-        - working: true
-          agent: "main"
-          comment: "MIGRATION COMPLETED: Successfully migrated from Baileys (@whiskeysockets/baileys) to whatsapp-web.js. Updated package.json dependencies, installed system chromium, implemented enhanced Puppeteer configuration for deployment with optimized args and timeouts. Service restarted and logs show successful initialization with QR code generation."
-        - working: true
-          agent: "testing"
-          comment: "WHATSAPP-WEB.JS MIGRATION VERIFIED: ✅ Migration successful - service running with whatsapp-web.js v1.25.0 and Puppeteer v21.11.0. ✅ System Chromium integration working (/usr/bin/chromium). ✅ QR code generation active and stable (confirmed in logs). ✅ All event handlers implemented (qr, authenticated, ready, disconnected, auth_failure, message). ✅ LocalAuth strategy with session persistence working. ✅ Enhanced Puppeteer configuration optimized for deployment. ✅ Service running under supervisor (pid 2562). Migration from Baileys to whatsapp-web.js completed successfully with no functionality loss."
-
-  - task: "Basic API Connectivity"
-    implemented: true
-    working: true
-    file: "/app/backend/server.py"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-        - working: true
-          agent: "testing"
-          comment: "API is running correctly at https://e0a15e55-4bef-4e1d-918b-8dc4b99c0d59.preview.emergentagent.com/api/ - returns proper welcome message"
-        - working: false
-          agent: "main"
-          comment: "Needs retesting after WhatsApp service migration to whatsapp-web.js"
-        - working: true
-          agent: "testing"
-          comment: "POST-MIGRATION VERIFICATION: ✅ Basic API connectivity confirmed working. FastAPI backend accessible at production URL. Returns correct welcome message: 'WhatsApp Assistant API is running'. All /api endpoints responding correctly after whatsapp-web.js migration."
-
-  - task: "WhatsApp Service Connectivity"
-    implemented: true
-    working: true
-    file: "/app/whatsapp-service/whatsapp-service.js"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-        - working: true
-          agent: "testing"
-          comment: "WhatsApp service running on port 3001, health endpoint accessible, service status: running, WhatsApp not connected (expected without QR scan)"
-        - working: true
-          agent: "testing"
-          comment: "BAILEYS VERIFICATION: Baileys WhatsApp service running correctly on port 3001 under supervisor. Service health check passing, QR generation active, using WA version 2.3000.1023223821. All endpoints responding correctly."
-        - working: false
-          agent: "main"
-          comment: "MIGRATION UPDATE: Service migrated from Baileys to whatsapp-web.js. Logs show successful QR generation but needs comprehensive testing to verify all endpoints work with new library."
-        - working: true
-          agent: "testing"
-          comment: "WHATSAPP-WEB.JS CONNECTIVITY VERIFIED: ✅ WhatsApp service running correctly on port 3001 with whatsapp-web.js. ✅ Health endpoint accessible and responding. ✅ Service status: running, Connected: false (expected without QR scan). ✅ All service endpoints responding correctly after migration. ✅ Service managed by supervisor (pid 2562, uptime confirmed)."
-
-  - task: "whatsapp-web.js Implementation"
-    implemented: true
-    working: true
-    file: "/app/whatsapp-service/whatsapp-service.js"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
         - working: false
           agent: "main"
-          comment: "FRESH IMPLEMENTATION: Successfully implemented whatsapp-web.js with LocalAuth strategy, enhanced Puppeteer configuration for deployment, system Chromium integration, and all event handlers (qr, authenticated, ready, disconnected, auth_failure, message). Auto-recovery mechanisms implemented. Service showing QR generation in logs."
-        - working: true
-          agent: "testing"
-          comment: "WHATSAPP-WEB.JS IMPLEMENTATION VERIFIED: ✅ Complete implementation confirmed working. ✅ LocalAuth strategy with clientId 'whatsapp-client' functioning. ✅ Enhanced Puppeteer configuration with deployment-optimized args active. ✅ System Chromium integration successful (/usr/bin/chromium). ✅ All event handlers implemented and responding (qr, authenticated, ready, disconnected, auth_failure, message). ✅ Auto-recovery mechanisms working. ✅ QR generation active and stable. ✅ Bot commands 'activar bot' and 'suspender bot' implemented with message.reply(). ✅ Message processing integration with FastAPI working. Implementation is complete and fully functional."
+          comment: "ARQUITECTURA INDIVIDUAL RESTAURADA: Eliminada arquitectura consolidada incorrecta. Cada cliente debe tener su propio servicio WhatsApp en puerto único (3002, 3003, etc). Servicios individuales generan QR correctamente pero necesita testing completo de funcionalidad multi-tenant."
 
-  - task: "Bot Activation/Suspension Commands"
+  - task: "Admin Panel Client Creation"
     implemented: true
-    working: true
-    file: "/app/whatsapp-service/whatsapp-service.js"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-        - working: true
-          agent: "testing"
-          comment: "COMMAND VERIFICATION: Bot commands 'activar bot' and 'suspender bot' implemented in Baileys service (lines 115-137). Commands are case-insensitive and will respond with activation/suspension messages when WhatsApp is connected. Currently being processed through OpenAI flow when not connected (expected behavior)."
-        - working: false
-          agent: "main"
-          comment: "Commands migrated to whatsapp-web.js using message.reply() instead of sock.sendMessage(). Needs testing to verify functionality with new library."
-        - working: true
-          agent: "testing"
-          comment: "BOT COMMANDS VERIFIED WITH WHATSAPP-WEB.JS: ✅ Commands 'activar bot' and 'suspender bot' implemented in whatsapp-web.js (lines 259-277). ✅ Case-insensitive matching working correctly. ✅ Uses message.reply() method for responses. ✅ Commands currently processing through OpenAI flow when not connected (expected behavior). ✅ When connected, commands will respond with activation/suspension messages directly. ✅ Error handling implemented for command responses. Bot command functionality maintained after migration."
-
-  - task: "Status Endpoints (GET/POST)"
-    implemented: true
-    working: true
-    file: "/app/backend/server.py"
-    stuck_count: 0
-    priority: "medium"
-    needs_retesting: false
-    status_history:
-        - working: true
-          agent: "testing"
-          comment: "Both GET and POST /api/status endpoints working correctly. GET retrieves status checks, POST creates new status checks with UUID generation"
-        - working: false
-          agent: "main"
-          comment: "Needs retesting after WhatsApp service migration"
-        - working: true
-          agent: "testing"
-          comment: "POST-MIGRATION VERIFICATION: ✅ Status endpoints working correctly after whatsapp-web.js migration. GET endpoint retrieved 1 status check, POST endpoint successfully created new status check with UUID. Both endpoints responding correctly via production URL."
-
-  - task: "WhatsApp QR Code Endpoint"
-    implemented: true
-    working: true
-    file: "/app/backend/whatsapp_routes.py"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-        - working: true
-          agent: "testing"
-          comment: "GET /api/whatsapp/qr endpoint accessible and returns QR code data when available. Successfully proxies to WhatsApp service"
-        - working: true
-          agent: "testing"
-          comment: "BAILEYS QR VERIFICATION: QR endpoint working perfectly with Baileys. Returns both data URL and raw QR data. QR generation confirmed active and stable."
-        - working: false
-          agent: "main"
-          comment: "QR endpoint needs retesting with whatsapp-web.js. Service logs show QR generation is working, but API integration needs verification."
-        - working: true
-          agent: "testing"
-          comment: "WHATSAPP-WEB.JS QR VERIFICATION: ✅ QR endpoint working correctly after migration. GET /api/whatsapp/qr accessible and responding properly. QR available: False (expected when not connected). Endpoint successfully proxies to WhatsApp service on port 3001."
-
-  - task: "WhatsApp Status Endpoint"
-    implemented: true
-    working: true
-    file: "/app/backend/whatsapp_routes.py"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-        - working: true
-          agent: "testing"
-          comment: "GET /api/whatsapp/status endpoint working correctly. Returns connection status and QR availability. Currently shows connected: false, hasQR: true (expected)"
-        - working: false
-          agent: "main"
-          comment: "Status endpoint needs retesting with whatsapp-web.js implementation"
-        - working: true
-          agent: "testing"
-          comment: "WHATSAPP-WEB.JS STATUS VERIFICATION: ✅ Status endpoint working correctly after migration. GET /api/whatsapp/status returns proper connection status. Connected: False, Has QR: False (expected when not connected). Endpoint successfully communicates with WhatsApp service."
-
-  - task: "WhatsApp Statistics Endpoint"
-    implemented: true
-    working: true
-    file: "/app/backend/whatsapp_routes.py"
-    stuck_count: 0
-    priority: "medium"
-    needs_retesting: false
-    status_history:
-        - working: true
-          agent: "testing"
-          comment: "GET /api/whatsapp/stats endpoint working correctly. Returns total_messages, messages_today, and unique_users counts from MongoDB"
-        - working: false
-          agent: "main"
-          comment: "Stats endpoint needs retesting after migration"
-        - working: true
-          agent: "testing"
-          comment: "WHATSAPP-WEB.JS STATS VERIFICATION: ✅ Statistics endpoint working correctly after migration. GET /api/whatsapp/stats returns proper database statistics. Total messages: 14, Today: 14, Users: 1. MongoDB integration functioning correctly."
-
-  - task: "Message Processing with OpenAI Integration"
-    implemented: true
-    working: true
-    file: "/app/backend/whatsapp_routes.py"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-        - working: true
-          agent: "testing"
-          comment: "POST /api/whatsapp/process-message endpoint working perfectly. Successfully processes messages with OpenAI GPT-4, stores messages in MongoDB, returns AI-generated responses in Spanish. Full integration chain working: FastAPI → OpenAI → MongoDB"
-        - working: true
-          agent: "testing"
-          comment: "OPENAI ASSISTANT VERIFICATION: OpenAI Assistant (asst_OvGYN1gteWdyeBISsd5FC8Rd) working perfectly. Correctly identifies as 'Estudio Jurídico Villegas Otárola Abogados' and provides appropriate legal services responses in Spanish. Thread management working correctly."
-        - working: false
-          agent: "main"
-          comment: "OpenAI integration needs retesting. Message processing in whatsapp-web.js uses message.from instead of message.key.remoteJid and message.id.id instead of message.key.id. Integration chain needs verification."
-        - working: true
-          agent: "testing"
-          comment: "WHATSAPP-WEB.JS OPENAI INTEGRATION VERIFIED: ✅ Message processing working perfectly after migration. OpenAI Assistant integration confirmed working with proper legal firm identification. Success: True, Reply length: 317 characters. Complete integration chain verified: WhatsApp → FastAPI → OpenAI → MongoDB. Assistant correctly mentions 'Villegas Otárola' and legal context."
-
-  - task: "Send Message Endpoint"
-    implemented: true
-    working: true
-    file: "/app/backend/whatsapp_routes.py"
-    stuck_count: 0
-    priority: "medium"
-    needs_retesting: false
-    status_history:
-        - working: true
-          agent: "testing"
-          comment: "POST /api/whatsapp/send-message endpoint accessible and handles requests correctly. Returns appropriate error when WhatsApp not connected (expected behavior)"
-        - working: false
-          agent: "main"
-          comment: "Send message endpoint updated for whatsapp-web.js. Now uses client.sendMessage() with @c.us format instead of @s.whatsapp.net. Needs testing."
-        - working: true
-          agent: "testing"
-          comment: "WHATSAPP-WEB.JS SEND MESSAGE VERIFICATION: ✅ Send message endpoint working correctly after migration. POST /api/whatsapp/send-message accessible and handles requests properly. Returns appropriate error when WhatsApp not connected (expected behavior). Endpoint integration with WhatsApp service functioning correctly."
-
-  - task: "Conversation History Endpoint"
-    implemented: true
-    working: true
-    file: "/app/backend/whatsapp_routes.py"
-    stuck_count: 1
-    priority: "medium"
-    needs_retesting: false
-    status_history:
-        - working: false
-          agent: "testing"
-          comment: "Initial test failed with HTTP 500 due to MongoDB ObjectId serialization error"
-        - working: true
-          agent: "testing"
-          comment: "Fixed ObjectId serialization issue by converting ObjectIds to strings. GET /api/whatsapp/messages/{phone_number} now working correctly, retrieves conversation history from MongoDB"
-        - working: false
-          agent: "main"
-          comment: "Needs retesting after migration to ensure compatibility"
-        - working: true
-          agent: "testing"
-          comment: "WHATSAPP-WEB.JS CONVERSATION HISTORY VERIFIED: ✅ Conversation history endpoint working correctly after migration. GET /api/whatsapp/messages/{phone_number} successfully retrieved 14 messages for test phone number. ObjectId serialization working properly. MongoDB integration functioning correctly."
-
-  - task: "Error Handling and Validation"
-    implemented: true
-    working: true
-    file: "/app/backend/whatsapp_routes.py"
-    stuck_count: 0
-    priority: "medium"
-    needs_retesting: false
-    status_history:
-        - working: true
-          agent: "testing"
-          comment: "Error handling working correctly. Invalid input returns HTTP 422 with proper Pydantic validation errors. 404 errors handled correctly for non-existent endpoints"
-        - working: false
-          agent: "main"
-          comment: "Error handling needs verification after migration"
-        - working: true
-          agent: "testing"
-          comment: "WHATSAPP-WEB.JS ERROR HANDLING VERIFIED: ✅ Error handling working correctly after migration. Invalid message input handled gracefully with HTTP 422. Non-existent endpoints correctly return HTTP 404. Pydantic validation and FastAPI error handling functioning properly."
-
-  - task: "MongoDB Database Integration"
-    implemented: true
-    working: true
-    file: "/app/backend/database.py"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-        - working: true
-          agent: "testing"
-          comment: "MongoDB integration working correctly. Messages are stored and retrieved properly. Database connection via Motor async driver functioning well"
-        - working: false
-          agent: "main"
-          comment: "MongoDB integration should be unaffected by WhatsApp service migration, but needs verification"
-        - working: true
-          agent: "testing"
-          comment: "WHATSAPP-WEB.JS MONGODB INTEGRATION VERIFIED: ✅ MongoDB database integration working perfectly after migration. Database queries functioning correctly with 14 total messages, 14 today, 1 unique user. Motor async driver working properly. Message storage and retrieval confirmed working."
-
-  - task: "Service-to-Service Communication"
-    implemented: true
-    working: true
-    file: "/app/backend/whatsapp_routes.py"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-        - working: true
-          agent: "testing"
-          comment: "FastAPI successfully communicates with WhatsApp service on port 3001. All proxy endpoints (QR, status, send-message) working correctly via httpx client"
-        - working: false
-          agent: "main"
-          comment: "Service-to-service communication needs retesting with whatsapp-web.js implementation to ensure all endpoints respond correctly"
-        - working: true
-          agent: "testing"
-          comment: "WHATSAPP-WEB.JS SERVICE COMMUNICATION VERIFIED: ✅ Service-to-service communication working perfectly after migration. FastAPI successfully communicates with WhatsApp service on port 3001. All proxy endpoints (QR, status, send-message) responding correctly via httpx client. WhatsApp service health check confirms service running with proper connectivity."
-
-  - task: "Supervisor Service Management"
-    implemented: true
-    working: true
-    file: "/etc/supervisor/conf.d/supervisord.conf"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-        - working: true
-          agent: "testing"
-          comment: "SUPERVISOR VERIFICATION: All services now running under supervisor - backend (8001), frontend (3000), mongodb, and whatsapp-service (3001). WhatsApp service added to supervisor configuration for production stability. All services showing RUNNING status."
-        - working: true
-          agent: "main"
-          comment: "MIGRATION CONFIRMED: All services running after migration. whatsapp-service restarted successfully and showing RUNNING status with pid 2562."
-
-  - task: "Multi-Tenant Admin Panel APIs"
-    implemented: true
-    working: true
+    working: false
     file: "/app/backend/admin_routes.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
-        - working: true
-          agent: "testing"
-          comment: "MULTI-TENANT ADMIN VERIFICATION: ✅ Admin panel APIs working correctly. GET /api/admin/clients successfully retrieved 4 registered clients. Admin routes accessible and responding properly. Multi-tenant client management functionality confirmed working."
+        - working: false
+          agent: "main"
+          comment: "Panel admin debe permitir crear clientes con nombre, email, OpenAI API key y Assistant ID. Debe asignar puerto único y enviar email de invitación."
 
-  - task: "Multi-Tenant Client Landing Pages"
+  - task: "Email Service Integration"
     implemented: true
-    working: true
+    working: false
+    file: "/app/backend/email_service.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: false
+          agent: "main"
+          comment: "Servicio email debe enviar invitaciones con URLs únicas de landing page a cada cliente creado."
+
+  - task: "Individual Client Services Management"
+    implemented: true
+    working: false
+    file: "/app/backend/whatsapp_manager.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: false
+          agent: "main"
+          comment: "WhatsAppServiceManager debe crear/iniciar/detener servicios individuales por cliente en puertos únicos. Cada servicio debe usar Chromium del sistema y generar QR independiente."
+
+  - task: "Client Landing Pages Individual Services"
+    implemented: true
+    working: false
     file: "/app/backend/client_routes.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
-        - working: true
-          agent: "testing"
-          comment: "CLIENT LANDING PAGES VERIFIED: ✅ Client landing page APIs working correctly. GET /api/client/{unique_url}/status successfully retrieved client status for 'Cliente Prueba'. GET /api/client/{unique_url}/qr endpoint accessible and responding properly. Multi-tenant client-specific functionality confirmed working."
-        - working: true
-          agent: "testing"
-          comment: "CLIENT LANDING CONSOLIDADO VERIFICADO: ✅ Páginas de cliente actualizadas para usar sistema consolidado. ✅ Status endpoint usa consolidated manager correctamente. ✅ QR endpoint integrado con gestor consolidado. ✅ Funcionalidad multi-tenant confirmada con arquitectura consolidada mejorada."
-  
-  - task: "Consolidated WhatsApp Service Architecture"
+        - working: false
+          agent: "main"
+          comment: "Client routes debe obtener QR y status de servicios individuales específicos por cliente, no del sistema consolidado."
+
+  - task: "Individual OpenAI Integration Per Client"
     implemented: true
-    working: true
-    file: "/app/backend/consolidated_whatsapp_manager.py"
+    working: false
+    file: "/app/backend/client_routes.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
-        - working: true
+        - working: false
           agent: "main"
-          comment: "SISTEMA CONSOLIDADO IMPLEMENTADO: ✅ Migración exitosa de múltiples procesos Node.js separados a arquitectura consolidada estable. ✅ Un solo servicio WhatsApp en puerto 3001 maneja múltiples clientes con routing inteligente. ✅ Gestor consolidado Python rutea mensajes entre clientes usando OpenAI credentials específicas. ✅ Eliminados problemas de estabilidad de procesos dinámicos separados."
-        - working: true
-          agent: "testing"
-          comment: "CONSOLIDADO VERIFICADO 100%: ✅ Sistema consolidado funcionando perfectamente con 33/33 pruebas exitosas. ✅ Servicio WhatsApp estable (5/5 requests exitosos) en puerto 3001. ✅ Routing inteligente por cliente funciona correctamente. ✅ Integración OpenAI multi-tenant con credenciales específicas verificada. ✅ Arquitectura consolidada elimina problemas de estabilidad previos y reduce significativamente consumo de recursos."
+          comment: "Cada cliente debe usar sus propias credenciales OpenAI (API key y Assistant ID específicos) para procesar mensajes independientemente."
+
+  - task: "Deploy Environment Compatibility"
+    implemented: true
+    working: false
+    file: "/app/whatsapp-services/client-*/service.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: false
+          agent: "main"
+          comment: "Servicios individuales deben funcionar correctamente en ambiente deploy con Chromium del sistema y configuración optimizada."
 
 frontend:
   # Frontend testing not performed as per instructions
