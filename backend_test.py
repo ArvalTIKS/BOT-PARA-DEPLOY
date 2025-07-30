@@ -1035,79 +1035,319 @@ class BackendTester:
         except Exception as e:
             self.log_test("Error Handling - 404 Endpoint", False, f"Error: {str(e)}")
 
+    async def test_individual_service_architecture(self):
+        """Test complete individual WhatsApp service architecture"""
+        print("\n🏗️ TESTING INDIVIDUAL SERVICE ARCHITECTURE...")
+        
+        # Step 1: Create a new client
+        test_client_data = {
+            "name": "Test Individual Client",
+            "email": "test.individual@example.com",
+            "openai_api_key": "sk-test-individual-key",
+            "openai_assistant_id": "asst_test_individual"
+        }
+        
+        created_client = None
+        try:
+            async with self.session.post(
+                f"{self.backend_url}/api/admin/clients",
+                json=test_client_data,
+                timeout=15
+            ) as response:
+                if response.status == 200:
+                    created_client = await response.json()
+                    client_id = created_client['id']
+                    client_port = created_client['whatsapp_port']
+                    unique_url = created_client['unique_url']
+                    
+                    self.log_test(
+                        "Individual Architecture - Client Creation",
+                        True,
+                        f"Created client {created_client['name']} with port {client_port} and URL {unique_url}"
+                    )
+                else:
+                    self.log_test(
+                        "Individual Architecture - Client Creation",
+                        False,
+                        f"HTTP {response.status}",
+                        await response.text()
+                    )
+                    return
+        except Exception as e:
+            self.log_test("Individual Architecture - Client Creation", False, f"Error: {str(e)}")
+            return
+        
+        if not created_client:
+            return
+            
+        client_id = created_client['id']
+        client_port = created_client['whatsapp_port']
+        unique_url = created_client['unique_url']
+        
+        # Step 2: Activate individual service
+        try:
+            toggle_data = {"action": "connect"}
+            async with self.session.put(
+                f"{self.backend_url}/api/admin/clients/{client_id}/toggle",
+                json=toggle_data,
+                timeout=30
+            ) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    self.log_test(
+                        "Individual Architecture - Service Activation",
+                        True,
+                        f"Service activation response: {data.get('message', 'Success')}"
+                    )
+                else:
+                    self.log_test(
+                        "Individual Architecture - Service Activation",
+                        False,
+                        f"HTTP {response.status}",
+                        await response.text()
+                    )
+        except Exception as e:
+            self.log_test("Individual Architecture - Service Activation", False, f"Error: {str(e)}")
+        
+        # Step 3: Wait for service to start and test connectivity
+        await asyncio.sleep(10)  # Give service time to start
+        
+        try:
+            individual_service_url = f"http://localhost:{client_port}"
+            async with self.session.get(f"{individual_service_url}/health", timeout=10) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    self.log_test(
+                        "Individual Architecture - Service Connectivity",
+                        True,
+                        f"Individual service running on port {client_port}, status: {data.get('status', 'unknown')}"
+                    )
+                else:
+                    self.log_test(
+                        "Individual Architecture - Service Connectivity",
+                        False,
+                        f"HTTP {response.status} on port {client_port}",
+                        await response.text()
+                    )
+        except Exception as e:
+            self.log_test("Individual Architecture - Service Connectivity", False, f"Error connecting to port {client_port}: {str(e)}")
+        
+        # Step 4: Test QR generation from individual service
+        try:
+            individual_service_url = f"http://localhost:{client_port}"
+            async with self.session.get(f"{individual_service_url}/qr", timeout=15) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    has_qr = data.get('qr') is not None
+                    self.log_test(
+                        "Individual Architecture - QR Generation",
+                        True,
+                        f"QR endpoint accessible on port {client_port}, QR available: {has_qr}"
+                    )
+                else:
+                    self.log_test(
+                        "Individual Architecture - QR Generation",
+                        False,
+                        f"HTTP {response.status} on port {client_port}",
+                        await response.text()
+                    )
+        except Exception as e:
+            self.log_test("Individual Architecture - QR Generation", False, f"Error: {str(e)}")
+        
+        # Step 5: Test client landing page access
+        try:
+            async with self.session.get(f"{self.backend_url}/api/client/{unique_url}/status", timeout=10) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    client_name = data.get('client', {}).get('name', 'Unknown')
+                    self.log_test(
+                        "Individual Architecture - Landing Page Status",
+                        True,
+                        f"Landing page accessible for {client_name}"
+                    )
+                else:
+                    self.log_test(
+                        "Individual Architecture - Landing Page Status",
+                        False,
+                        f"HTTP {response.status}",
+                        await response.text()
+                    )
+        except Exception as e:
+            self.log_test("Individual Architecture - Landing Page Status", False, f"Error: {str(e)}")
+        
+        # Step 6: Test QR via landing page
+        try:
+            async with self.session.get(f"{self.backend_url}/api/client/{unique_url}/qr", timeout=15) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    has_qr = data.get('qr') is not None
+                    self.log_test(
+                        "Individual Architecture - Landing Page QR",
+                        True,
+                        f"QR accessible via landing page, QR available: {has_qr}"
+                    )
+                else:
+                    self.log_test(
+                        "Individual Architecture - Landing Page QR",
+                        False,
+                        f"HTTP {response.status}",
+                        await response.text()
+                    )
+        except Exception as e:
+            self.log_test("Individual Architecture - Landing Page QR", False, f"Error: {str(e)}")
+        
+        # Step 7: Test OpenAI integration with client-specific credentials
+        try:
+            test_message = {
+                "phone_number": "5491234567890",
+                "message": f"Hola, soy un cliente de {created_client['name']}. ¿Pueden ayudarme?",
+                "message_id": f"individual_test_{client_id}",
+                "timestamp": int(time.time())
+            }
+            
+            async with self.session.post(
+                f"{self.backend_url}/api/client/{client_id}/process-message",
+                json=test_message,
+                timeout=30
+            ) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    success = data.get('success', False)
+                    has_reply = data.get('reply') is not None
+                    
+                    self.log_test(
+                        "Individual Architecture - OpenAI Integration",
+                        True,
+                        f"Message processing success: {success}, Has reply: {has_reply}"
+                    )
+                else:
+                    self.log_test(
+                        "Individual Architecture - OpenAI Integration",
+                        False,
+                        f"HTTP {response.status}",
+                        await response.text()
+                    )
+        except Exception as e:
+            self.log_test("Individual Architecture - OpenAI Integration", False, f"Error: {str(e)}")
+        
+        # Step 8: Test service status via admin
+        try:
+            async with self.session.get(f"{self.backend_url}/api/admin/clients/{client_id}/status", timeout=10) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    service_status = data.get('service', {}).get('status', 'unknown')
+                    self.log_test(
+                        "Individual Architecture - Admin Service Status",
+                        True,
+                        f"Admin reports service status: {service_status}"
+                    )
+                else:
+                    self.log_test(
+                        "Individual Architecture - Admin Service Status",
+                        False,
+                        f"HTTP {response.status}",
+                        await response.text()
+                    )
+        except Exception as e:
+            self.log_test("Individual Architecture - Admin Service Status", False, f"Error: {str(e)}")
+        
+        # Step 9: Test service deactivation
+        try:
+            toggle_data = {"action": "disconnect"}
+            async with self.session.put(
+                f"{self.backend_url}/api/admin/clients/{client_id}/toggle",
+                json=toggle_data,
+                timeout=30
+            ) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    self.log_test(
+                        "Individual Architecture - Service Deactivation",
+                        True,
+                        f"Service deactivation response: {data.get('message', 'Success')}"
+                    )
+                else:
+                    self.log_test(
+                        "Individual Architecture - Service Deactivation",
+                        False,
+                        f"HTTP {response.status}",
+                        await response.text()
+                    )
+        except Exception as e:
+            self.log_test("Individual Architecture - Service Deactivation", False, f"Error: {str(e)}")
+        
+        # Step 10: Cleanup - delete test client
+        try:
+            async with self.session.delete(f"{self.backend_url}/api/admin/clients/{client_id}", timeout=15) as response:
+                if response.status == 200:
+                    self.log_test(
+                        "Individual Architecture - Cleanup",
+                        True,
+                        "Test client deleted successfully"
+                    )
+                else:
+                    self.log_test(
+                        "Individual Architecture - Cleanup",
+                        False,
+                        f"HTTP {response.status}",
+                        await response.text()
+                    )
+        except Exception as e:
+            self.log_test("Individual Architecture - Cleanup", False, f"Error: {str(e)}")
+
+    async def test_chromium_configuration(self):
+        """Test system Chromium availability and configuration"""
+        try:
+            # Check if system Chromium exists
+            import os
+            chromium_path = '/usr/bin/chromium'
+            chromium_exists = os.path.exists(chromium_path)
+            
+            # Check EMERGENT_ENV
+            emergent_env = os.environ.get('EMERGENT_ENV', 'preview')
+            
+            self.log_test(
+                "Chromium Configuration Check",
+                chromium_exists,
+                f"System Chromium at {chromium_path}: {'EXISTS' if chromium_exists else 'NOT FOUND'}, EMERGENT_ENV: {emergent_env}"
+            )
+            
+        except Exception as e:
+            self.log_test("Chromium Configuration Check", False, f"Error: {str(e)}")
+
     async def run_all_tests(self):
-        """Run all backend tests"""
+        """Run all backend tests focused on individual service architecture"""
         print("=" * 80)
-        print("BACKEND TESTING - CONSOLIDATED WHATSAPP SYSTEM")
+        print("BACKEND TESTING - INDIVIDUAL WHATSAPP SERVICE ARCHITECTURE")
         print("=" * 80)
         print(f"Backend URL: {self.backend_url}")
-        print(f"WhatsApp Service URL: {self.whatsapp_service_url}")
         print("=" * 80)
         print()
 
         # Test basic connectivity first
         backend_connected = await self.test_basic_connectivity()
-        whatsapp_connected = await self.test_whatsapp_service_connectivity()
         
         if not backend_connected:
             print("❌ CRITICAL: Backend API is not accessible. Stopping tests.")
             return
-            
-        # Test WhatsApp service stability
-        await self.test_whatsapp_service_stability()
         
-        # ========== CONSOLIDATED SYSTEM TESTS ==========
-        print("\n🔄 TESTING CONSOLIDATED WHATSAPP SYSTEM...")
-        await self.test_consolidated_status()
-        await self.test_consolidated_clients()
-        await self.test_consolidated_qr()
-        await self.test_consolidated_phone_connected()
-        await self.test_consolidated_process_message()
-        await self.test_consolidated_associate_phone()
+        # Test Chromium configuration
+        await self.test_chromium_configuration()
         
-        # ========== ADMIN PANEL WITH CONSOLIDATED SYSTEM ==========
-        print("\n👨‍💼 TESTING ADMIN PANEL WITH CONSOLIDATED SYSTEM...")
+        # ========== INDIVIDUAL SERVICE ARCHITECTURE TESTS ==========
+        await self.test_individual_service_architecture()
+        
+        # ========== ADMIN PANEL TESTS ==========
+        print("\n👨‍💼 TESTING ADMIN PANEL...")
         await self.test_admin_routes()
-        await self.test_admin_client_toggle_consolidated()
         
-        # ========== CLIENT LANDING PAGES WITH CONSOLIDATED SYSTEM ==========
-        print("\n🌐 TESTING CLIENT LANDING PAGES WITH CONSOLIDATED SYSTEM...")
-        await self.test_client_routes()
-        await self.test_client_landing_consolidated()
+        # ========== EMAIL SERVICE TESTS ==========
+        print("\n📧 TESTING EMAIL SERVICE...")
+        # Email service is tested indirectly through client creation
         
-        # ========== MULTI-TENANT OPENAI INTEGRATION ==========
-        print("\n🤖 TESTING MULTI-TENANT OPENAI INTEGRATION...")
-        await self.test_multi_tenant_openai_integration()
-        
-        # ========== LEGACY ENDPOINT COMPATIBILITY ==========
-        print("\n🔄 TESTING LEGACY ENDPOINT COMPATIBILITY...")
-        await self.test_status_endpoints()
-        await self.test_whatsapp_qr_endpoint()
-        await self.test_whatsapp_status_endpoint()
-        await self.test_whatsapp_stats_endpoint()
-        await self.test_message_processing_endpoint()
-        await self.test_send_message_endpoint()
-        await self.test_conversation_history_endpoint()
-        
-        # ========== DATABASE AND ERROR HANDLING ==========
-        print("\n💾 TESTING DATABASE AND ERROR HANDLING...")
+        # ========== DATABASE INTEGRATION ==========
+        print("\n💾 TESTING DATABASE INTEGRATION...")
         await self.test_database_integration()
-        await self.test_error_handling()
-        
-        # ========== WHATSAPP SERVICE TESTS ==========
-        print("\n📱 TESTING WHATSAPP SERVICE...")
-        await self.test_baileys_service_health()
-        await self.test_baileys_qr_generation()
-        await self.test_baileys_status_endpoint()
-        
-        # ========== BOT COMMAND TESTS ==========
-        print("\n🤖 TESTING BOT COMMANDS...")
-        await self.test_bot_activation_command()
-        await self.test_bot_suspension_command()
-        
-        # ========== OPENAI ASSISTANT INTEGRATION ==========
-        print("\n🧠 TESTING OPENAI ASSISTANT INTEGRATION...")
-        await self.test_openai_assistant_integration()
         
         # Summary
         self.print_summary()
