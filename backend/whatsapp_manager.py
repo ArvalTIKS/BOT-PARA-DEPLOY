@@ -265,6 +265,20 @@ module.exports = {{
             
             if os.path.exists(original_package):
                 shutil.copy2(original_package, target_package)
+            
+            # Copy deploy-config.js
+            original_deploy_config = "/app/whatsapp-service/deploy-config.js"
+            target_deploy_config = f"{service_dir}/deploy-config.js"
+            
+            if os.path.exists(original_deploy_config):
+                shutil.copy2(original_deploy_config, target_deploy_config)
+            
+            # Copy .env.deploy
+            original_env_deploy = "/app/whatsapp-service/.env.deploy"
+            target_env_deploy = f"{service_dir}/.env.deploy"
+            
+            if os.path.exists(original_env_deploy):
+                shutil.copy2(original_env_deploy, target_env_deploy)
                 
                 # Install dependencies
                 process = await asyncio.create_subprocess_exec(
