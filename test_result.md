@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Migración completa de Baileys a whatsapp-web.js para mayor estabilidad y compatibilidad con deployment. El sistema debe mantener toda la funcionalidad: WhatsApp service (Node.js) en puerto 3001, Backend FastAPI en puerto 8001 con endpoints, integración OpenAI configurada. Funcionalidades requeridas: conectividad entre servicios, endpoints principales del API, manejo de errores, respuestas correctas del sistema, verificar que la integración WhatsApp service → FastAPI → OpenAI funcione completamente."
+user_problem_statement: "ARQUITECTURA MULTI-TENANT RESTAURADA: Revertir sistema consolidado incorrecto y restaurar la arquitectura original donde cada cliente debe tener su propia instancia independiente del servicio WhatsApp conectada a su propio número único de WhatsApp en un puerto distinto (3002, 3003, etc). Solucionar problemas de Chromium en servicios individuales y verificar que cada cliente obtenga su QR code y servicio independiente correctamente."
 
 backend:
   - task: "Consolidated WhatsApp Service Architecture"
