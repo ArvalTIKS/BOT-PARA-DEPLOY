@@ -347,7 +347,7 @@ async function initializeWhatsApp() {
                     
                     // Process pause commands immediately - do NOT send to OpenAI
                     try {
-                        const response = await axios.post(`${FASTAPI_URL}/api/client/ccabe071-33ac-4cdd-a9b5-9ea2440d6145/process-message`, {
+                        const response = await axios.post(`${FASTAPI_URL}/api/client/${process.env.CLIENT_ID}/process-message`, {
                             phone_number: message.from.split('@')[0],
                             message: messageText,
                             message_id: message.id.id,
