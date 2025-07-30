@@ -226,12 +226,7 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus:
-    - "Individual WhatsApp Service Architecture"
-    - "Admin Panel Client Creation"
-    - "Email Service Integration"
-    - "Individual Client Services Management"
-    - "Deploy Environment Compatibility"
+  current_focus: []
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
