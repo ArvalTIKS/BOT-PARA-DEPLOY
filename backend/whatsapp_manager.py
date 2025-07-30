@@ -239,22 +239,49 @@ module.exports = {{
     
     def _generate_client_service(self, client: Client, port: int) -> str:
         """Generate client-specific WhatsApp service based on main service"""
-        with open('/app/whatsapp-service/whatsapp-service.js', 'r') as f:
-            main_service = f.read()
-        
-        # Customize for client
-        client_service = main_service.replace(
-            'const PORT = process.env.PORT || 3001;',
-            f'const PORT = {port};'
-        ).replace(
-            'const FASTAPI_URL = process.env.FASTAPI_URL || \'http://localhost:8001\';',
-            f'const FASTAPI_URL = \'http://localhost:8001\';'
-        ).replace(
-            '/api/whatsapp/process-message',
-            f'/api/client/{client.id}/process-message'
-        )
-        
-        return client_service
+        try:
+            with open('/app/whatsapp-service/whatsapp-service.js', 'r') as f:
+                main_service = f.read()
+            
+            # Customize for client with proper port replacement
+            client_service = main_service.replace(
+                'const PORT = process.env.PORT || 3001;',
+                f'const PORT = process.env.CLIENT_PORT || {port};'
+            ).replace(
+                'FASTAPI_URL = process.env.FASTAPI_URL || \'http://localhost:8001\';',
+                f'FASTAPI_URL = \'http://localhost:8001\';'
+            ).replace(
+                '/api/whatsapp/process-message',
+                f'/api/client/{client.id}/process-message'
+            )
+            
+            return client_service
+            
+        except Exception as e:
+            print(f"Error generating client service: {str(e)}")
+            # Fallback simple service
+            return f"""
+const express = require('express');
+const cors = require('cors');
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+const PORT = {port};
+
+app.get('/status', (req, res) => {{
+    res.json({{ connected: false, user: null, hasQR: false }});
+}});
+
+app.get('/qr', (req, res) => {{
+    res.json({{ qr: null }});
+}});
+
+app.listen(PORT, '0.0.0.0', () => {{
+    console.log(`Basic service for {client.name} running on port ${{PORT}}`);
+}});
+"""
     
     async def _copy_dependencies(self, service_dir: str):
         """Copy necessary dependencies to service directory"""
