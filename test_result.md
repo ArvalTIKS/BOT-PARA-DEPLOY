@@ -262,7 +262,7 @@ backend:
     status_history:
         - working: true
           agent: "testing"
-          comment: "API is running correctly at https://fc1c2dc2-42f8-4a37-8285-42e88abf980c.preview.emergentagent.com/api/ - returns proper welcome message"
+          comment: "API is running correctly at https://e0a15e55-4bef-4e1d-918b-8dc4b99c0d59.preview.emergentagent.com/api/ - returns proper welcome message"
         - working: false
           agent: "main"
           comment: "Needs retesting after WhatsApp service migration to whatsapp-web.js"
