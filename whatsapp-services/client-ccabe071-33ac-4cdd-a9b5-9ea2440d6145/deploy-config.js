@@ -31,7 +31,7 @@ module.exports = {
     // Server settings for deploy
     server: {
         host: '0.0.0.0',
-        port: process.env.PORT || 3001,
+        port: process.env.CLIENT_PORT || 3002,
         gracefulShutdownTimeoutMs: 30000, // 30 seconds for graceful shutdown
     },
     
