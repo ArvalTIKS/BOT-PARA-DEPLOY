@@ -86,9 +86,15 @@ const getPuppeteerConfig = () => {
         baseConfig.timeout = 60000;
     }
     
-    // Force Puppeteer to download and use its own Chromium for individual services
-    console.log('Using Puppeteer bundled Chromium (automatic download)');
-    // Don't set executablePath, let Puppeteer handle Chromium automatically
+    // Use system Chromium for ARM64 compatibility
+    const systemChromiumPath = '/usr/bin/chromium';
+    
+    if (fs.existsSync(systemChromiumPath)) {
+        baseConfig.executablePath = systemChromiumPath;
+        console.log('Using system Chromium:', systemChromiumPath);
+    } else {
+        console.log('System Chromium not found, using Puppeteer bundled Chromium');
+    }
     
     return baseConfig;
 };
