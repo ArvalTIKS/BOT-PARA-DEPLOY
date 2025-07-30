@@ -139,7 +139,7 @@ async def toggle_client_service(
         client = Client(**client_data)
         
         if toggle_request.action == "connect":
-            # Start WhatsApp service for client
+            # Start individual WhatsApp service for client
             success = await service_manager.create_service_for_client(client)
             
             if success:
@@ -153,10 +153,10 @@ async def toggle_client_service(
                 )
                 return {"message": f"Client {client.name} service started successfully", "status": "active"}
             else:
-                return {"message": f"Failed to start service for {client.name}", "status": "error"}
+                return {"message": f"Failed to start WhatsApp service for {client.name}", "status": "error"}
                 
         elif toggle_request.action == "disconnect":
-            # Stop WhatsApp service for client
+            # Stop individual WhatsApp service for client
             success = await service_manager.stop_service_for_client(client_id)
             
             if success:
@@ -171,7 +171,7 @@ async def toggle_client_service(
                 )
                 return {"message": f"Client {client.name} service stopped successfully", "status": "inactive"}
             else:
-                return {"message": f"Failed to stop service for {client.name}", "status": "error"}
+                return {"message": f"Failed to stop WhatsApp service for {client.name}", "status": "error"}
         
         else:
             raise HTTPException(status_code=400, detail="Invalid action. Use 'connect' or 'disconnect'")
