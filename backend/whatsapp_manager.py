@@ -16,10 +16,20 @@ class WhatsAppServiceManager:
         self.services: Dict[str, dict] = {}  # client_id -> service info
         self.base_port = 3002  # Start from 3002 (3001 is reserved for legacy)
         
-    def get_next_available_port(self) -> int:
-        """Get next available port starting from base_port"""
+    async def get_next_available_port(self, db) -> int:
+        """Get next available port starting from base_port, checking database"""
         port = self.base_port
-        while port in [service['port'] for service in self.services.values()]:
+        
+        # Get all ports currently assigned in database
+        clients_collection = db.clients
+        existing_clients = await clients_collection.find().to_list(length=None)
+        used_ports = [client.get('whatsapp_port') for client in existing_clients if client.get('whatsapp_port')]
+        
+        # Also check ports from running services
+        service_ports = [service['port'] for service in self.services.values()]
+        all_used_ports = set(used_ports + service_ports)
+        
+        while port in all_used_ports:
             port += 1
         return port
     
