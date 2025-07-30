@@ -12,7 +12,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const PORT = deployConfig.server.port;
+const PORT = process.env.CLIENT_PORT || 3002;
 const FASTAPI_URL = 'http://localhost:8001';
 
 // Deploy-aware environment detection
