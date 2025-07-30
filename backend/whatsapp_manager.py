@@ -4,7 +4,6 @@ import psutil
 import signal
 import os
 import shutil
-import fs
 from typing import Dict, List
 from models import Client, ClientStatus
 
