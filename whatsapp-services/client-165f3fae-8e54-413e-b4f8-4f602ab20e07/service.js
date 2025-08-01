@@ -154,41 +154,61 @@ async function initializeWhatsApp() {
             }
         });
 
-        // Disconnection handling
+        // Disconnection handling - ROBUST RECOVERY
         client.on('disconnected', async (reason) => {
-            console.log(`WhatsApp disconnected for Gonzalo:`, reason);
+            console.log(`🔄 WhatsApp disconnected for Gonzalo:`, reason);
             isConnected = false;
             connectedUser = null;
             qrCodeData = null;
+            isInitializing = false;
             
-            if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
-                reconnectAttempts++;
-                console.log(`Reconnection attempt ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS} for Gonzalo`);
-                
-                const delay = Math.min(5000 * reconnectAttempts, 30000);
-                setTimeout(() => {
-                    initializeWhatsApp();
-                }, delay);
-            }
+            // Immediate reconnection with exponential backoff
+            const reconnectDelay = Math.min(5000 * Math.pow(2, reconnectAttempts), 60000);
+            console.log(`🔄 Auto-reconnecting Gonzalo in ${reconnectDelay/1000}s (attempt ${reconnectAttempts + 1})`);
+            
+            setTimeout(async () => {
+                try {
+                    await initializeWhatsApp();
+                } catch (error) {
+                    console.error(`❌ Reconnection failed for Gonzalo:`, error);
+                    if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+                        setTimeout(() => initializeWhatsApp(), 15000);
+                    }
+                }
+            }, reconnectDelay);
         });
 
-        // Authentication failure
+        // Authentication failure - IMMEDIATE RECOVERY
         client.on('auth_failure', async (msg) => {
-            console.error(`Authentication failure for Gonzalo:`, msg);
+            console.log(`❌ Auth failed for Gonzalo:`, msg);
+            qrCodeData = null;
+            isConnected = false;
+            connectedUser = null;
+            isInitializing = false;
             
-            if (fs.existsSync(sessionDir)) {
-                console.log(`Removing corrupted auth data for Gonzalo`);
-                try {
-                    fs.rmSync(sessionDir, { recursive: true, force: true });
-                } catch (rmError) {
-                    console.log('Error removing session dir (safe to ignore):', rmError.message);
+            // Clear corrupted session immediately
+            try {
+                if (fs.existsSync(sessionDir)) {
+                    const sessionFiles = fs.readdirSync(sessionDir);
+                    sessionFiles.forEach(file => {
+                        const filePath = path.join(sessionDir, file);
+                        if (fs.statSync(filePath).isDirectory()) {
+                            fs.rmSync(filePath, { recursive: true, force: true });
+                        } else {
+                            fs.unlinkSync(filePath);
+                        }
+                    });
+                    console.log(`🧹 Cleared session for Gonzalo`);
                 }
+            } catch (cleanError) {
+                console.log('Error clearing session (safe to ignore):', cleanError.message);
             }
             
+            // Force restart with clean session
+            console.log(`🔄 Force restarting Gonzalo with clean session`);
             setTimeout(() => {
-                console.log(`Reinitializing after auth failure for Gonzalo`);
                 initializeWhatsApp();
-            }, 10000);
+            }, 5000);
         });
 
         // Message received event
