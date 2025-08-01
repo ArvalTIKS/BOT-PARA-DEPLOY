@@ -77,7 +77,7 @@ async function initializeWhatsApp() {
         }
         
         isInitializing = true;
-        console.log(`Initializing WhatsApp for client Estudio Jurídico Villegas...`);
+        console.log(`🚀 FAST INIT: Starting WhatsApp for client Estudio Jurídico Villegas...`);
         
         if (client) {
             console.log('Destroying existing client...');
@@ -93,6 +93,10 @@ async function initializeWhatsApp() {
         if (!fs.existsSync(sessionDir)) {
             fs.mkdirSync(sessionDir, { recursive: true });
         }
+
+        // Clear any existing QR to show loading state
+        qrCodeData = null;
+        console.log('🔄 QR cleared - initializing...');
 
         // Create client with system Chromium configuration
         const puppeteerConfig = getPuppeteerConfig();
