@@ -431,23 +431,37 @@ async function initializeWhatsApp() {{
             }}, reconnectDelay);
         }});
 
-        // Authentication failure
+        // Authentication failure - IMMEDIATE RECOVERY
         client.on('auth_failure', async (msg) => {{
-            console.error(`Authentication failure for {client.name}:`, msg);
+            console.log(`❌ Auth failed for {client.name}:`, msg);
+            qrCodeData = null;
+            isConnected = false;
+            connectedUser = null;
+            isInitializing = false;
             
-            if (fs.existsSync(sessionDir)) {{
-                console.log(`Removing corrupted auth data for {client.name}`);
-                try {{
-                    fs.rmSync(sessionDir, {{ recursive: true, force: true }});
-                }} catch (rmError) {{
-                    console.log('Error removing session dir (safe to ignore):', rmError.message);
+            // Clear corrupted session immediately
+            try {{
+                if (fs.existsSync(sessionDir)) {{
+                    const sessionFiles = fs.readdirSync(sessionDir);
+                    sessionFiles.forEach(file => {{
+                        const filePath = path.join(sessionDir, file);
+                        if (fs.statSync(filePath).isDirectory()) {{
+                            fs.rmSync(filePath, {{ recursive: true, force: true }});
+                        }} else {{
+                            fs.unlinkSync(filePath);
+                        }}
+                    }});
+                    console.log(`🧹 Cleared session for {client.name}`);
                 }}
+            }} catch (cleanError) {{
+                console.log('Error clearing session (safe to ignore):', cleanError.message);
             }}
             
+            // Force restart with clean session
+            console.log(`🔄 Force restarting {client.name} with clean session`);
             setTimeout(() => {{
-                console.log(`Reinitializing after auth failure for {client.name}`);
                 initializeWhatsApp();
-            }}, 10000);
+            }}, 5000);
         }});
 
         // Message received event
