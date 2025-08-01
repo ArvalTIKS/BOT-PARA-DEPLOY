@@ -280,7 +280,17 @@ const ClientLanding = () => {
               ) : (
                 <div className="text-center py-8">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                  <p className="text-gray-600">Generando código QR...</p>
+                  <p className="text-gray-600 mb-2">Iniciando tu asistente WhatsApp...</p>
+                  <p className="text-sm text-gray-500">Esto puede tomar 1-2 minutos la primera vez.</p>
+                  <div className="mt-4">
+                    <button
+                      onClick={handleRefresh}
+                      className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm"
+                    >
+                      <RefreshCw className="w-3 h-3 mr-1" />
+                      Actualizar
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
