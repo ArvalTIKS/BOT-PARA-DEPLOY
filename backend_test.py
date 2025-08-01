@@ -1393,6 +1393,149 @@ class BackendTester:
         except Exception as e:
             self.log_test("Mobile Landing - Database Check", False, f"Error: {str(e)}")
 
+    async def test_specific_client_qr_verification(self):
+        """Test QR generation for specific clients mentioned by user"""
+        print("\n🔍 TESTING SPECIFIC CLIENT QR VERIFICATION...")
+        
+        # User mentioned these specific clients to test
+        test_clients = [
+            {"unique_url": "f6f7ce4e", "name": "Estudio Jurídico Villegas", "port": 3002},
+            {"unique_url": "bba9207c", "name": "Consultorio Dr. Martinez", "port": 3003},
+            {"unique_url": "3d5e0794", "name": "Cliente Prueba QR", "port": 3004}
+        ]
+        
+        # First, check what clients actually exist in the database
+        try:
+            async with self.session.get(f"{self.backend_url}/api/admin/clients", timeout=10) as response:
+                if response.status == 200:
+                    existing_clients = await response.json()
+                    self.log_test(
+                        "QR Verification - Database Check",
+                        True,
+                        f"Found {len(existing_clients)} clients in database"
+                    )
+                    
+                    # Log existing clients for comparison
+                    for client in existing_clients:
+                        print(f"  - {client.get('name', 'Unknown')} (URL: {client.get('unique_url', 'N/A')}, Port: {client.get('whatsapp_port', 'N/A')})")
+                    
+                else:
+                    self.log_test(
+                        "QR Verification - Database Check",
+                        False,
+                        f"Cannot access clients: HTTP {response.status}",
+                        await response.text()
+                    )
+                    return
+        except Exception as e:
+            self.log_test("QR Verification - Database Check", False, f"Error: {str(e)}")
+            return
+        
+        # Test each specific client mentioned by user
+        for test_client in test_clients:
+            unique_url = test_client["unique_url"]
+            expected_name = test_client["name"]
+            expected_port = test_client["port"]
+            
+            # Test 1: Client landing page status
+            try:
+                async with self.session.get(f"{self.backend_url}/api/client/{unique_url}/status", timeout=10) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        client_name = data.get('client', {}).get('name', 'Unknown')
+                        connected = data.get('client', {}).get('connected', False)
+                        
+                        self.log_test(
+                            f"QR Verification - Status ({expected_name})",
+                            True,
+                            f"Client found: {client_name}, Connected: {connected}"
+                        )
+                    else:
+                        self.log_test(
+                            f"QR Verification - Status ({expected_name})",
+                            False,
+                            f"HTTP {response.status} for URL {unique_url}",
+                            await response.text()
+                        )
+                        continue
+            except Exception as e:
+                self.log_test(f"QR Verification - Status ({expected_name})", False, f"Error: {str(e)}")
+                continue
+            
+            # Test 2: Client QR endpoint
+            try:
+                async with self.session.get(f"{self.backend_url}/api/client/{unique_url}/qr", timeout=15) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        has_qr = data.get('qr') is not None
+                        error = data.get('error')
+                        
+                        if has_qr:
+                            self.log_test(
+                                f"QR Verification - QR Generation ({expected_name})",
+                                True,
+                                f"QR code generated successfully for {expected_name}"
+                            )
+                        else:
+                            self.log_test(
+                                f"QR Verification - QR Generation ({expected_name})",
+                                False,
+                                f"No QR available. Error: {error or 'Service not running'}"
+                            )
+                    else:
+                        self.log_test(
+                            f"QR Verification - QR Generation ({expected_name})",
+                            False,
+                            f"HTTP {response.status} for QR endpoint",
+                            await response.text()
+                        )
+            except Exception as e:
+                self.log_test(f"QR Verification - QR Generation ({expected_name})", False, f"Error: {str(e)}")
+            
+            # Test 3: Direct service connectivity (if service is running)
+            try:
+                service_url = f"http://localhost:{expected_port}"
+                async with self.session.get(f"{service_url}/health", timeout=5) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        service_status = data.get('status', 'unknown')
+                        service_connected = data.get('connected', False)
+                        
+                        self.log_test(
+                            f"QR Verification - Direct Service ({expected_name})",
+                            True,
+                            f"Service running on port {expected_port}, Status: {service_status}, Connected: {service_connected}"
+                        )
+                        
+                        # Test 4: Direct QR from service
+                        try:
+                            async with self.session.get(f"{service_url}/qr", timeout=10) as qr_response:
+                                if qr_response.status == 200:
+                                    qr_data = await qr_response.json()
+                                    has_direct_qr = qr_data.get('qr') is not None
+                                    
+                                    self.log_test(
+                                        f"QR Verification - Direct QR ({expected_name})",
+                                        True,
+                                        f"Direct QR from service: {'Available' if has_direct_qr else 'Not available'}"
+                                    )
+                                else:
+                                    self.log_test(
+                                        f"QR Verification - Direct QR ({expected_name})",
+                                        False,
+                                        f"HTTP {qr_response.status} from direct service QR"
+                                    )
+                        except Exception as qr_e:
+                            self.log_test(f"QR Verification - Direct QR ({expected_name})", False, f"QR Error: {str(qr_e)}")
+                    else:
+                        self.log_test(
+                            f"QR Verification - Direct Service ({expected_name})",
+                            False,
+                            f"Service not responding on port {expected_port}: HTTP {response.status}"
+                        )
+            except Exception as e:
+                self.log_test(f"QR Verification - Direct Service ({expected_name})", False, f"Service not running on port {expected_port}: {str(e)}")
+
     async def test_individual_services_status(self):
         """Test if individual WhatsApp services are running"""
         print("\n🔧 TESTING INDIVIDUAL WHATSAPP SERVICES...")
