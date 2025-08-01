@@ -1315,10 +1315,205 @@ class BackendTester:
         except Exception as e:
             self.log_test("Chromium Configuration Check", False, f"Error: {str(e)}")
 
+    async def test_mobile_landing_page_access(self):
+        """Test mobile access to client landing pages - specific to user's issue"""
+        print("\n📱 TESTING MOBILE LANDING PAGE ACCESS...")
+        
+        # First, let's check if there are any clients in the database
+        try:
+            async with self.session.get(f"{self.backend_url}/api/admin/clients", timeout=10) as response:
+                if response.status == 200:
+                    clients = await response.json()
+                    if not clients:
+                        self.log_test(
+                            "Mobile Landing - Database Check",
+                            False,
+                            "No clients found in database. This explains why users get 'Error conectando con el servidor'"
+                        )
+                        return
+                    else:
+                        self.log_test(
+                            "Mobile Landing - Database Check",
+                            True,
+                            f"Found {len(clients)} clients in database"
+                        )
+                        
+                        # Test each client's landing page endpoints
+                        for client in clients:
+                            unique_url = client.get('unique_url')
+                            client_name = client.get('name', 'Unknown')
+                            
+                            # Test status endpoint
+                            try:
+                                async with self.session.get(f"{self.backend_url}/api/client/{unique_url}/status", timeout=10) as status_response:
+                                    if status_response.status == 200:
+                                        status_data = await status_response.json()
+                                        self.log_test(
+                                            f"Mobile Landing - Status ({client_name})",
+                                            True,
+                                            f"Status endpoint accessible for {client_name}"
+                                        )
+                                    else:
+                                        self.log_test(
+                                            f"Mobile Landing - Status ({client_name})",
+                                            False,
+                                            f"HTTP {status_response.status} - This could cause 'Error conectando con el servidor'",
+                                            await status_response.text()
+                                        )
+                            except Exception as e:
+                                self.log_test(f"Mobile Landing - Status ({client_name})", False, f"Connection error: {str(e)}")
+                            
+                            # Test QR endpoint
+                            try:
+                                async with self.session.get(f"{self.backend_url}/api/client/{unique_url}/qr", timeout=15) as qr_response:
+                                    if qr_response.status == 200:
+                                        qr_data = await qr_response.json()
+                                        has_qr = qr_data.get('qr') is not None
+                                        self.log_test(
+                                            f"Mobile Landing - QR ({client_name})",
+                                            True,
+                                            f"QR endpoint accessible, QR available: {has_qr}"
+                                        )
+                                    else:
+                                        self.log_test(
+                                            f"Mobile Landing - QR ({client_name})",
+                                            False,
+                                            f"HTTP {qr_response.status} - This could cause QR loading issues",
+                                            await qr_response.text()
+                                        )
+                            except Exception as e:
+                                self.log_test(f"Mobile Landing - QR ({client_name})", False, f"Connection error: {str(e)}")
+                else:
+                    self.log_test(
+                        "Mobile Landing - Database Check",
+                        False,
+                        f"Cannot access admin clients endpoint: HTTP {response.status}",
+                        await response.text()
+                    )
+        except Exception as e:
+            self.log_test("Mobile Landing - Database Check", False, f"Error: {str(e)}")
+
+    async def test_individual_services_status(self):
+        """Test if individual WhatsApp services are running"""
+        print("\n🔧 TESTING INDIVIDUAL WHATSAPP SERVICES...")
+        
+        # Check for service directories
+        import os
+        services_dir = "/app/whatsapp-services"
+        
+        if os.path.exists(services_dir):
+            service_dirs = [d for d in os.listdir(services_dir) if d.startswith('client-')]
+            self.log_test(
+                "Individual Services - Directory Check",
+                len(service_dirs) > 0,
+                f"Found {len(service_dirs)} service directories: {service_dirs}"
+            )
+            
+            # Test connectivity to each service
+            for service_dir in service_dirs:
+                # Extract port from service directory or try common ports
+                for port in range(3002, 3010):  # Common port range for individual services
+                    try:
+                        service_url = f"http://localhost:{port}"
+                        async with self.session.get(f"{service_url}/health", timeout=5) as response:
+                            if response.status == 200:
+                                data = await response.json()
+                                self.log_test(
+                                    f"Individual Service - Port {port}",
+                                    True,
+                                    f"Service running on port {port}, status: {data.get('status', 'unknown')}"
+                                )
+                                break
+                    except:
+                        continue
+                else:
+                    self.log_test(
+                        f"Individual Service - {service_dir}",
+                        False,
+                        f"No service found running for {service_dir} on ports 3002-3009"
+                    )
+        else:
+            self.log_test(
+                "Individual Services - Directory Check",
+                False,
+                "No whatsapp-services directory found"
+            )
+
+    async def test_email_landing_urls(self):
+        """Test the URLs that would be sent in emails"""
+        print("\n📧 TESTING EMAIL LANDING URLS...")
+        
+        # Get base URL from environment
+        import os
+        from dotenv import load_dotenv
+        load_dotenv('/app/backend/.env')
+        base_url = os.environ.get('BASE_URL', 'Unknown')
+        
+        self.log_test(
+            "Email URLs - Base URL Check",
+            base_url != 'Unknown',
+            f"Base URL configured as: {base_url}"
+        )
+        
+        # Test if the base URL is accessible (this is what users click in emails)
+        try:
+            async with self.session.get(f"{base_url}/api/", timeout=10) as response:
+                if response.status == 200:
+                    self.log_test(
+                        "Email URLs - Base URL Accessibility",
+                        True,
+                        f"Base URL {base_url} is accessible"
+                    )
+                else:
+                    self.log_test(
+                        "Email URLs - Base URL Accessibility",
+                        False,
+                        f"Base URL {base_url} returns HTTP {response.status} - This could cause 'Error conectando con el servidor'",
+                        await response.text()
+                    )
+        except Exception as e:
+            self.log_test("Email URLs - Base URL Accessibility", False, f"Cannot access base URL {base_url}: {str(e)}")
+
+    async def test_cors_and_mobile_headers(self):
+        """Test CORS and mobile-specific headers"""
+        print("\n📱 TESTING CORS AND MOBILE COMPATIBILITY...")
+        
+        # Test with mobile user agent
+        mobile_headers = {
+            'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_7_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1.2 Mobile/15E148 Safari/604.1',
+            'Accept': 'application/json, text/plain, */*',
+            'Origin': 'https://ca293a37-7cae-4151-9d86-a6f264284fab.preview.emergentagent.com'
+        }
+        
+        try:
+            async with self.session.get(f"{self.backend_url}/api/", headers=mobile_headers, timeout=10) as response:
+                if response.status == 200:
+                    # Check CORS headers
+                    cors_headers = {
+                        'Access-Control-Allow-Origin': response.headers.get('Access-Control-Allow-Origin'),
+                        'Access-Control-Allow-Methods': response.headers.get('Access-Control-Allow-Methods'),
+                        'Access-Control-Allow-Headers': response.headers.get('Access-Control-Allow-Headers')
+                    }
+                    
+                    self.log_test(
+                        "Mobile Compatibility - CORS Headers",
+                        True,
+                        f"Mobile request successful with CORS headers: {cors_headers}"
+                    )
+                else:
+                    self.log_test(
+                        "Mobile Compatibility - CORS Headers",
+                        False,
+                        f"Mobile request failed with HTTP {response.status}",
+                        await response.text()
+                    )
+        except Exception as e:
+            self.log_test("Mobile Compatibility - CORS Headers", False, f"Mobile request error: {str(e)}")
+
     async def run_all_tests(self):
-        """Run all backend tests focused on individual service architecture"""
+        """Run all backend tests focused on diagnosing mobile landing page issues"""
         print("=" * 80)
-        print("BACKEND TESTING - INDIVIDUAL WHATSAPP SERVICE ARCHITECTURE")
+        print("BACKEND TESTING - MOBILE LANDING PAGE DIAGNOSTICS")
         print("=" * 80)
         print(f"Backend URL: {self.backend_url}")
         print("=" * 80)
@@ -1328,22 +1523,18 @@ class BackendTester:
         backend_connected = await self.test_basic_connectivity()
         
         if not backend_connected:
-            print("❌ CRITICAL: Backend API is not accessible. Stopping tests.")
+            print("❌ CRITICAL: Backend API is not accessible. This explains 'Error conectando con el servidor'")
             return
         
-        # Test Chromium configuration
-        await self.test_chromium_configuration()
-        
-        # ========== INDIVIDUAL SERVICE ARCHITECTURE TESTS ==========
-        await self.test_individual_service_architecture()
+        # ========== SPECIFIC MOBILE LANDING PAGE TESTS ==========
+        await self.test_mobile_landing_page_access()
+        await self.test_individual_services_status()
+        await self.test_email_landing_urls()
+        await self.test_cors_and_mobile_headers()
         
         # ========== ADMIN PANEL TESTS ==========
         print("\n👨‍💼 TESTING ADMIN PANEL...")
         await self.test_admin_routes()
-        
-        # ========== EMAIL SERVICE TESTS ==========
-        print("\n📧 TESTING EMAIL SERVICE...")
-        # Email service is tested indirectly through client creation
         
         # ========== DATABASE INTEGRATION ==========
         print("\n💾 TESTING DATABASE INTEGRATION...")
