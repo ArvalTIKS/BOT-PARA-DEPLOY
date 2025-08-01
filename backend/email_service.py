@@ -147,9 +147,15 @@ class EmailService:
                             <h3>📋 Instrucciones de activación:</h3>
                             <ol>
                                 <li>Haz clic en el botón de arriba para acceder a tu panel personal</li>
-                                <li>Escanea el código QR con tu WhatsApp</li>
+                                <li><strong>Espera 1-2 minutos</strong> mientras se genera tu código QR personalizado</li>
+                                <li>Abre WhatsApp en tu teléfono → Menú → Dispositivos vinculados</li>
+                                <li>Toca "Vincular un dispositivo" y escanea el código QR</li>
                                 <li>¡Tu asistente comenzará a responder automáticamente!</li>
                             </ol>
+                        </div>
+                        
+                        <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px; padding: 15px; margin: 20px 0;">
+                            <strong>⏱️ Importante:</strong> El código QR puede tardar 1-2 minutos en aparecer la primera vez. Si no aparece inmediatamente, simplemente espera un momento y actualiza la página.
                         </div>
                         
                         <div style="background: #e8f5e8; padding: 15px; border-radius: 5px; margin: 20px 0;">
