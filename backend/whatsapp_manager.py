@@ -407,22 +407,28 @@ async function initializeWhatsApp() {{
             }}
         }});
 
-        // Disconnection handling
+        // Disconnection handling - ROBUST RECOVERY
         client.on('disconnected', async (reason) => {{
-            console.log(`WhatsApp disconnected for {client.name}:`, reason);
+            console.log(`🔄 WhatsApp disconnected for {client.name}:`, reason);
             isConnected = false;
             connectedUser = null;
             qrCodeData = null;
+            isInitializing = false;
             
-            if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {{
-                reconnectAttempts++;
-                console.log(`Reconnection attempt ${{reconnectAttempts}}/${{MAX_RECONNECT_ATTEMPTS}} for {client.name}`);
-                
-                const delay = Math.min(5000 * reconnectAttempts, 30000);
-                setTimeout(() => {{
-                    initializeWhatsApp();
-                }}, delay);
-            }}
+            // Immediate reconnection with exponential backoff
+            const reconnectDelay = Math.min(5000 * Math.pow(2, reconnectAttempts), 60000);
+            console.log(`🔄 Auto-reconnecting {client.name} in ${{reconnectDelay/1000}}s (attempt ${{reconnectAttempts + 1}})`);
+            
+            setTimeout(async () => {{
+                try {{
+                    await initializeWhatsApp();
+                }} catch (error) {{
+                    console.error(`❌ Reconnection failed for {client.name}:`, error);
+                    if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {{
+                        setTimeout(() => initializeWhatsApp(), 15000);
+                    }}
+                }}
+            }}, reconnectDelay);
         }});
 
         // Authentication failure
