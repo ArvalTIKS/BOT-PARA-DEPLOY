@@ -342,6 +342,42 @@ app.get('/logout', (req, res) => {
     }, 1000);
 });
 
+// Force restart endpoint - EMERGENCY RECOVERY
+        app.get('/force-restart', async (req, res) => {
+            console.log(`🚨 FORCE RESTART requested for Gonzalo`);
+            
+            try {
+                // Destroy existing client
+                if (client) {
+                    await client.destroy().catch(e => console.log('Destroy error (safe):', e.message));
+                    client = null;
+                }
+                
+                // Reset all states
+                isConnected = false;
+                connectedUser = null;
+                qrCodeData = null;
+                isInitializing = false;
+                reconnectAttempts = 0;
+                
+                // Clear session
+                if (fs.existsSync(sessionDir)) {
+                    fs.rmSync(sessionDir, { recursive: true, force: true });
+                }
+                
+                // Immediate restart
+                console.log(`🔄 IMMEDIATE restart Gonzalo...`);
+                setTimeout(() => {
+                    initializeWhatsApp();
+                }, 2000);
+                
+                res.json({ success: true, message: `Force restart initiated for Gonzalo` });
+            } catch (error) {
+                console.error('Force restart error:', error);
+                res.json({ success: false, error: error.message });
+            }
+        });
+
 // Start server
 const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`Individual WhatsApp service for Gonzalo running on port ${PORT}`);
