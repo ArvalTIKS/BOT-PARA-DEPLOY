@@ -1393,6 +1393,175 @@ class BackendTester:
         except Exception as e:
             self.log_test("Mobile Landing - Database Check", False, f"Error: {str(e)}")
 
+    async def test_gonzalo_specific_qr_issue(self):
+        """URGENT: Test Gonzalo's specific QR generation issue"""
+        print("\n🚨 URGENT: TESTING GONZALO'S QR GENERATION ISSUE...")
+        
+        # Gonzalo's specific details from user request
+        gonzalo_client = {
+            "id": "165f3fae-8e54-413e-b4f8-4f602ab20e07",
+            "unique_url": "ccc7bffd", 
+            "name": "Gonzalo",
+            "port": 3005
+        }
+        
+        print(f"Testing client: {gonzalo_client['name']} (ID: {gonzalo_client['id']}, Port: {gonzalo_client['port']})")
+        
+        # Step 1: Check if Gonzalo's service is actually running
+        try:
+            individual_service_url = f"http://localhost:{gonzalo_client['port']}"
+            async with self.session.get(f"{individual_service_url}/health", timeout=10) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    self.log_test(
+                        f"Gonzalo Service - Process Running",
+                        True,
+                        f"Service responds on port {gonzalo_client['port']}, status: {data.get('status', 'unknown')}"
+                    )
+                else:
+                    self.log_test(
+                        f"Gonzalo Service - Process Running",
+                        False,
+                        f"HTTP {response.status} on port {gonzalo_client['port']} - SERVICE NOT RUNNING",
+                        await response.text()
+                    )
+                    return  # Can't continue if service isn't running
+        except Exception as e:
+            self.log_test(f"Gonzalo Service - Process Running", False, f"Connection error to port {gonzalo_client['port']}: {str(e)}")
+            return
+        
+        # Step 2: Test direct QR generation from individual service
+        try:
+            async with self.session.get(f"{individual_service_url}/qr", timeout=15) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    has_qr = data.get('qr') is not None
+                    has_raw = data.get('raw') is not None
+                    
+                    self.log_test(
+                        f"Gonzalo Service - Direct QR Generation",
+                        has_qr,
+                        f"QR available: {has_qr}, Raw QR data: {has_raw}. {'✅ QR WORKING' if has_qr else '❌ NO QR - This is the problem!'}"
+                    )
+                else:
+                    self.log_test(
+                        f"Gonzalo Service - Direct QR Generation",
+                        False,
+                        f"HTTP {response.status} - QR endpoint failed",
+                        await response.text()
+                    )
+        except Exception as e:
+            self.log_test(f"Gonzalo Service - Direct QR Generation", False, f"Error: {str(e)}")
+        
+        # Step 3: Test WhatsApp status from individual service
+        try:
+            async with self.session.get(f"{individual_service_url}/status", timeout=10) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    connected = data.get('connected', False)
+                    has_qr = data.get('hasQR', False)
+                    user = data.get('user')
+                    
+                    self.log_test(
+                        f"Gonzalo Service - WhatsApp Status",
+                        True,
+                        f"Connected: {connected}, Has QR: {has_qr}, User: {user}. {'⚠️ Should have QR if not connected' if not connected and not has_qr else '✅ Status OK'}"
+                    )
+                else:
+                    self.log_test(
+                        f"Gonzalo Service - WhatsApp Status",
+                        False,
+                        f"HTTP {response.status}",
+                        await response.text()
+                    )
+        except Exception as e:
+            self.log_test(f"Gonzalo Service - WhatsApp Status", False, f"Error: {str(e)}")
+        
+        # Step 4: Test QR via backend API (client landing page route)
+        try:
+            async with self.session.get(f"{self.backend_url}/api/client/{gonzalo_client['unique_url']}/qr", timeout=15) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    has_qr = data.get('qr') is not None
+                    error = data.get('error')
+                    
+                    self.log_test(
+                        f"Gonzalo Backend - Landing Page QR",
+                        has_qr,
+                        f"QR via backend: {has_qr}, Error: {error}. {'✅ Backend QR OK' if has_qr else '❌ Backend QR failed'}"
+                    )
+                else:
+                    self.log_test(
+                        f"Gonzalo Backend - Landing Page QR",
+                        False,
+                        f"HTTP {response.status}",
+                        await response.text()
+                    )
+        except Exception as e:
+            self.log_test(f"Gonzalo Backend - Landing Page QR", False, f"Error: {str(e)}")
+        
+        # Step 5: Test client status via backend
+        try:
+            async with self.session.get(f"{self.backend_url}/api/client/{gonzalo_client['unique_url']}/status", timeout=10) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    client_status = data.get('client', {})
+                    whatsapp_status = data.get('whatsapp', {})
+                    
+                    self.log_test(
+                        f"Gonzalo Backend - Client Status",
+                        True,
+                        f"Client connected: {client_status.get('connected', False)}, WhatsApp connected: {whatsapp_status.get('connected', False)}"
+                    )
+                else:
+                    self.log_test(
+                        f"Gonzalo Backend - Client Status",
+                        False,
+                        f"HTTP {response.status}",
+                        await response.text()
+                    )
+        except Exception as e:
+            self.log_test(f"Gonzalo Backend - Client Status", False, f"Error: {str(e)}")
+        
+        # Step 6: Check if Chromium is available (this was mentioned as a potential issue)
+        try:
+            import os
+            chromium_path = '/usr/bin/chromium'
+            chromium_exists = os.path.exists(chromium_path)
+            
+            self.log_test(
+                f"Gonzalo Environment - Chromium Check",
+                chromium_exists,
+                f"System Chromium at {chromium_path}: {'EXISTS ✅' if chromium_exists else 'NOT FOUND ❌'}"
+            )
+        except Exception as e:
+            self.log_test(f"Gonzalo Environment - Chromium Check", False, f"Error: {str(e)}")
+        
+        # Step 7: Check service logs if possible (check if service directory exists)
+        try:
+            service_dir = f"/app/whatsapp-services/client-{gonzalo_client['id']}"
+            service_exists = os.path.exists(service_dir)
+            
+            self.log_test(
+                f"Gonzalo Service - Directory Check",
+                service_exists,
+                f"Service directory at {service_dir}: {'EXISTS ✅' if service_exists else 'NOT FOUND ❌'}"
+            )
+            
+            if service_exists:
+                # Check if service.js exists
+                service_js = f"{service_dir}/service.js"
+                service_js_exists = os.path.exists(service_js)
+                
+                self.log_test(
+                    f"Gonzalo Service - Service File Check",
+                    service_js_exists,
+                    f"Service.js file: {'EXISTS ✅' if service_js_exists else 'NOT FOUND ❌'}"
+                )
+                
+        except Exception as e:
+            self.log_test(f"Gonzalo Service - Directory Check", False, f"Error: {str(e)}")
+
     async def test_specific_client_qr_verification(self):
         """Test QR generation for specific clients mentioned by user"""
         print("\n🔍 TESTING SPECIFIC CLIENT QR VERIFICATION...")
