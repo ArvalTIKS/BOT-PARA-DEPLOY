@@ -1,2 +1,3 @@
-2025/08/01-22:28:55.566 16ba Creating DB /app/whatsapp-services/client-917c1f5c-e194-430d-93c0-d9223b248a28/whatsapp_session/session-whatsapp-client-917c1f5c-e194-430d-93c0-d9223b248a28/Default/Service Worker/Database since it was missing.
-2025/08/01-22:28:55.571 16ba Reusing MANIFEST /app/whatsapp-services/client-917c1f5c-e194-430d-93c0-d9223b248a28/whatsapp_session/session-whatsapp-client-917c1f5c-e194-430d-93c0-d9223b248a28/Default/Service Worker/Database/MANIFEST-000001
+2025/08/01-22:32:55.060 1d3d Reusing MANIFEST /app/whatsapp-services/client-917c1f5c-e194-430d-93c0-d9223b248a28/whatsapp_session/session-whatsapp-client-917c1f5c-e194-430d-93c0-d9223b248a28/Default/Service Worker/Database/MANIFEST-000001
+2025/08/01-22:32:55.061 1d3d Recovering log #3
+2025/08/01-22:32:55.062 1d3d Reusing old log /app/whatsapp-services/client-917c1f5c-e194-430d-93c0-d9223b248a28/whatsapp_session/session-whatsapp-client-917c1f5c-e194-430d-93c0-d9223b248a28/Default/Service Worker/Database/000003.log 
