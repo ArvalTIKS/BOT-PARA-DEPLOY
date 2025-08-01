@@ -1838,6 +1838,9 @@ class BackendTester:
             print("❌ CRITICAL: Backend API is not accessible. This explains 'Error conectando con el servidor'")
             return
         
+        # ========== URGENT: GONZALO'S QR ISSUE ==========
+        await self.test_gonzalo_specific_qr_issue()
+        
         # ========== SPECIFIC MOBILE LANDING PAGE TESTS ==========
         await self.test_mobile_landing_page_access()
         await self.test_individual_services_status()
