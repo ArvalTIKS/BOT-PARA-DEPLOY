@@ -1,0 +1,2 @@
+2025/08/01-22:27:58.564 1500 Creating DB /app/whatsapp-services/client-441fc6e5-a564-4ba4-a302-64d388659170/whatsapp_session/session-whatsapp-client-441fc6e5-a564-4ba4-a302-64d388659170/Default/Sync Data/LevelDB since it was missing.
+2025/08/01-22:27:58.571 1500 Reusing MANIFEST /app/whatsapp-services/client-441fc6e5-a564-4ba4-a302-64d388659170/whatsapp_session/session-whatsapp-client-441fc6e5-a564-4ba4-a302-64d388659170/Default/Sync Data/LevelDB/MANIFEST-000001
