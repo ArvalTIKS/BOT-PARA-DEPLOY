@@ -1,2 +1,3 @@
-2025/08/01-22:53:40.121 fd9 Creating DB /app/whatsapp-services/client-165f3fae-8e54-413e-b4f8-4f602ab20e07/whatsapp_session/session-whatsapp-client-165f3fae-8e54-413e-b4f8-4f602ab20e07/Default/Extension State since it was missing.
-2025/08/01-22:53:40.127 fd9 Reusing MANIFEST /app/whatsapp-services/client-165f3fae-8e54-413e-b4f8-4f602ab20e07/whatsapp_session/session-whatsapp-client-165f3fae-8e54-413e-b4f8-4f602ab20e07/Default/Extension State/MANIFEST-000001
+2025/08/01-22:57:04.901 1147 Reusing MANIFEST /app/whatsapp-services/client-165f3fae-8e54-413e-b4f8-4f602ab20e07/whatsapp_session/session-whatsapp-client-165f3fae-8e54-413e-b4f8-4f602ab20e07/Default/Extension State/MANIFEST-000001
+2025/08/01-22:57:04.901 1147 Recovering log #3
+2025/08/01-22:57:04.902 1147 Reusing old log /app/whatsapp-services/client-165f3fae-8e54-413e-b4f8-4f602ab20e07/whatsapp_session/session-whatsapp-client-165f3fae-8e54-413e-b4f8-4f602ab20e07/Default/Extension State/000003.log 

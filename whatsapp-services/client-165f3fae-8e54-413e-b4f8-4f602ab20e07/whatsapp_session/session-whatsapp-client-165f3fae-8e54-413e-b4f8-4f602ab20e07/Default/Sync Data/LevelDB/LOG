@@ -1,2 +1,3 @@
-2025/08/01-22:53:39.532 fd9 Creating DB /app/whatsapp-services/client-165f3fae-8e54-413e-b4f8-4f602ab20e07/whatsapp_session/session-whatsapp-client-165f3fae-8e54-413e-b4f8-4f602ab20e07/Default/Sync Data/LevelDB since it was missing.
-2025/08/01-22:53:39.540 fd9 Reusing MANIFEST /app/whatsapp-services/client-165f3fae-8e54-413e-b4f8-4f602ab20e07/whatsapp_session/session-whatsapp-client-165f3fae-8e54-413e-b4f8-4f602ab20e07/Default/Sync Data/LevelDB/MANIFEST-000001
+2025/08/01-22:57:04.317 1147 Reusing MANIFEST /app/whatsapp-services/client-165f3fae-8e54-413e-b4f8-4f602ab20e07/whatsapp_session/session-whatsapp-client-165f3fae-8e54-413e-b4f8-4f602ab20e07/Default/Sync Data/LevelDB/MANIFEST-000001
+2025/08/01-22:57:04.318 1147 Recovering log #3
+2025/08/01-22:57:04.319 1147 Reusing old log /app/whatsapp-services/client-165f3fae-8e54-413e-b4f8-4f602ab20e07/whatsapp_session/session-whatsapp-client-165f3fae-8e54-413e-b4f8-4f602ab20e07/Default/Sync Data/LevelDB/000003.log 
