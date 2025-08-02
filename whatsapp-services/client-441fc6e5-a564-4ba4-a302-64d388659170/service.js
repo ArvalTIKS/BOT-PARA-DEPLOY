@@ -154,41 +154,61 @@ async function initializeWhatsApp() {
             }
         });
 
-        // Disconnection handling
+        // Disconnection handling - ROBUST RECOVERY
         client.on('disconnected', async (reason) => {
-            console.log(`WhatsApp disconnected for Estudio Jurídico Villegas:`, reason);
+            console.log(`🔄 WhatsApp disconnected for Estudio Jurídico Villegas:`, reason);
             isConnected = false;
             connectedUser = null;
             qrCodeData = null;
+            isInitializing = false;
             
-            if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
-                reconnectAttempts++;
-                console.log(`Reconnection attempt ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS} for Estudio Jurídico Villegas`);
-                
-                const delay = Math.min(5000 * reconnectAttempts, 30000);
-                setTimeout(() => {
-                    initializeWhatsApp();
-                }, delay);
-            }
+            // Immediate reconnection with exponential backoff
+            const reconnectDelay = Math.min(5000 * Math.pow(2, reconnectAttempts), 60000);
+            console.log(`🔄 Auto-reconnecting Estudio Jurídico Villegas in ${reconnectDelay/1000}s (attempt ${reconnectAttempts + 1})`);
+            
+            setTimeout(async () => {
+                try {
+                    await initializeWhatsApp();
+                } catch (error) {
+                    console.error(`❌ Reconnection failed for Estudio Jurídico Villegas:`, error);
+                    if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+                        setTimeout(() => initializeWhatsApp(), 15000);
+                    }
+                }
+            }, reconnectDelay);
         });
 
-        // Authentication failure
+        // Authentication failure - IMMEDIATE RECOVERY
         client.on('auth_failure', async (msg) => {
-            console.error(`Authentication failure for Estudio Jurídico Villegas:`, msg);
+            console.log(`❌ Auth failed for Estudio Jurídico Villegas:`, msg);
+            qrCodeData = null;
+            isConnected = false;
+            connectedUser = null;
+            isInitializing = false;
             
-            if (fs.existsSync(sessionDir)) {
-                console.log(`Removing corrupted auth data for Estudio Jurídico Villegas`);
-                try {
-                    fs.rmSync(sessionDir, { recursive: true, force: true });
-                } catch (rmError) {
-                    console.log('Error removing session dir (safe to ignore):', rmError.message);
+            // Clear corrupted session immediately
+            try {
+                if (fs.existsSync(sessionDir)) {
+                    const sessionFiles = fs.readdirSync(sessionDir);
+                    sessionFiles.forEach(file => {
+                        const filePath = path.join(sessionDir, file);
+                        if (fs.statSync(filePath).isDirectory()) {
+                            fs.rmSync(filePath, { recursive: true, force: true });
+                        } else {
+                            fs.unlinkSync(filePath);
+                        }
+                    });
+                    console.log(`🧹 Cleared session for Estudio Jurídico Villegas`);
                 }
+            } catch (cleanError) {
+                console.log('Error clearing session (safe to ignore):', cleanError.message);
             }
             
+            // Force restart with clean session
+            console.log(`🔄 Force restarting Estudio Jurídico Villegas with clean session`);
             setTimeout(() => {
-                console.log(`Reinitializing after auth failure for Estudio Jurídico Villegas`);
                 initializeWhatsApp();
-            }, 10000);
+            }, 5000);
         });
 
         // Message received event
@@ -321,6 +341,42 @@ app.get('/logout', (req, res) => {
         }
     }, 1000);
 });
+
+// Force restart endpoint - EMERGENCY RECOVERY
+        app.get('/force-restart', async (req, res) => {
+            console.log(`🚨 FORCE RESTART requested for Estudio Jurídico Villegas`);
+            
+            try {
+                // Destroy existing client
+                if (client) {
+                    await client.destroy().catch(e => console.log('Destroy error (safe):', e.message));
+                    client = null;
+                }
+                
+                // Reset all states
+                isConnected = false;
+                connectedUser = null;
+                qrCodeData = null;
+                isInitializing = false;
+                reconnectAttempts = 0;
+                
+                // Clear session
+                if (fs.existsSync(sessionDir)) {
+                    fs.rmSync(sessionDir, { recursive: true, force: true });
+                }
+                
+                // Immediate restart
+                console.log(`🔄 IMMEDIATE restart Estudio Jurídico Villegas...`);
+                setTimeout(() => {
+                    initializeWhatsApp();
+                }, 2000);
+                
+                res.json({ success: true, message: `Force restart initiated for Estudio Jurídico Villegas` });
+            } catch (error) {
+                console.error('Force restart error:', error);
+                res.json({ success: false, error: error.message });
+            }
+        });
 
 // Start server
 const server = app.listen(PORT, '0.0.0.0', () => {
