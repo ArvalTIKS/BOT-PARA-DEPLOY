@@ -120,7 +120,7 @@ const ClientLanding = () => {
     );
   }
 
-  const isConnected = clientData?.client?.connected;
+  const isConnected = clientData?.client?.connected || clientData?.whatsapp?.connected;
   const isActive = clientData?.client?.status === 'active';
 
   return (
