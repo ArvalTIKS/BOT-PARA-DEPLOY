@@ -204,8 +204,12 @@ async def generate_ai_response_for_client(message: str, phone_number: str, clien
             return "Lo siento, la respuesta está tomando más tiempo del esperado. ¿Puedes intentar de nuevo?"
         
     except Exception as e:
-        print(f"Error with client OpenAI Assistant ({client.name}): {str(e)}")
-        return "¡Hola! Gracias por tu mensaje. En este momento estoy procesando tu consulta. ¿En qué puedo ayudarte?"
+        print(f"❌ ERROR OpenAI para {client.name}: {str(e)}")
+        print(f"API Key: {client.openai_api_key[:20]}...")
+        print(f"Assistant ID: {client.openai_assistant_id}")
+        import traceback
+        traceback.print_exc()
+        return "Lo siento, hubo un error temporal. Por favor intenta nuevamente."
 
 async def get_or_create_client_thread(db, client_id: str, phone_number: str, api_key: str) -> str:
     """Get or create OpenAI thread for client-phone combination"""
