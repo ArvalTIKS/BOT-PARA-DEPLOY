@@ -21,11 +21,18 @@ class EmailService:
             print(f"✅ Email service configured for {self.sender_email} via {self.smtp_server}:{self.smtp_port}")
         
     async def send_client_invitation(self, client_email: str, client_name: str, landing_url: str) -> bool:
-        """Send invitation email to client with their landing page URL"""
+        """Send invitation email to client with their landing page URL using robust URL detection"""
         
         if not self.sender_password:
             print(f"❌ Cannot send email - EMAIL_PASSWORD not configured")
             return False
+            
+        # Get environment info for debugging
+        from url_detection import get_environment_info
+        env_info = get_environment_info()
+        print(f"📧 EMAIL: Environment detected as {env_info['environment']}")
+        print(f"📧 EMAIL: Frontend URL: {env_info['frontend_url']}")
+        print(f"📧 EMAIL: Using landing URL: {landing_url}")
             
         try:
             msg = MIMEMultipart()
