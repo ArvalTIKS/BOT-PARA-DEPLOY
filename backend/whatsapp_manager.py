@@ -68,7 +68,7 @@ class WhatsAppServiceManager:
                 'CLIENT_NAME': client.name,
                 'OPENAI_API_KEY': client.openai_api_key,
                 'OPENAI_ASSISTANT_ID': client.openai_assistant_id,
-                'FASTAPI_URL': 'http://localhost:8001',
+                'FASTAPI_URL': os.environ.get('FASTAPI_URL'),
                 'EMERGENT_ENV': os.environ.get('EMERGENT_ENV', 'preview')
             })
             
