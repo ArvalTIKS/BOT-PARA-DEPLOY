@@ -8,24 +8,46 @@ import ConnectionStatus from './ConnectionStatus';
 import AssistantInfo from './AssistantInfo';
 import axios from 'axios';
 
-// Auto-detect environment and use appropriate backend URL
+// Robust backend URL detection with multiple fallbacks
 const getBackendUrl = () => {
-  // If explicitly set, use it
+  // Priority 1: Environment variable (set by Emergent)
   if (process.env.REACT_APP_BACKEND_URL) {
+    console.log('Using REACT_APP_BACKEND_URL:', process.env.REACT_APP_BACKEND_URL);
     return process.env.REACT_APP_BACKEND_URL;
   }
   
-  // Auto-detect based on current URL
+  // Priority 2: Auto-detect based on current URL
   const currentHost = window.location.hostname;
   const currentProtocol = window.location.protocol;
+  const currentPort = window.location.port;
   
-  // If on emergent.host domain (deployed), use same domain
-  if (currentHost.includes('emergent.host')) {
-    return `${currentProtocol}//${currentHost}`;
+  console.log('Auto-detecting from:', { currentHost, currentProtocol, currentPort });
+  
+  // Check for preview environment
+  if (currentHost.includes('.preview.emergentagent.com')) {
+    const backendUrl = `${currentProtocol}//${currentHost}`;
+    console.log('Detected PREVIEW environment:', backendUrl);
+    return backendUrl;
   }
   
-  // Default to localhost for development
-  return 'http://localhost:8001';
+  // Check for deployment environment  
+  if (currentHost.includes('.emergent.host')) {
+    const backendUrl = `${currentProtocol}//${currentHost}`;
+    console.log('Detected DEPLOYMENT environment:', backendUrl);
+    return backendUrl;
+  }
+  
+  // Check for any emergent domain
+  if (currentHost.includes('emergent')) {
+    const backendUrl = `${currentProtocol}//${currentHost}`;
+    console.log('Detected EMERGENT domain:', backendUrl);
+    return backendUrl;
+  }
+  
+  // Priority 3: Development fallback
+  const devUrl = 'http://localhost:8001';
+  console.log('Using DEVELOPMENT fallback:', devUrl);
+  return devUrl;
 };
 
 const API_BASE = getBackendUrl();
