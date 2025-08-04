@@ -2,6 +2,7 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import os
+from url_detection import get_frontend_base_url, get_environment_info
 from typing import Optional
 
 class EmailService:
