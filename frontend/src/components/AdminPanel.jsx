@@ -450,18 +450,20 @@ const AdminPanel = () => {
                           {client.status === 'active' ? (
                             <button
                               onClick={() => toggleClient(client.id, 'disconnect')}
-                              className="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-red-700 bg-red-100 hover:bg-red-200"
+                              disabled={loading}
+                              className="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-red-700 bg-red-100 hover:bg-red-200 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               <PowerOff className="w-3 h-3 mr-1" />
-                              Desconectar
+                              {loading ? 'Procesando...' : 'Desconectar'}
                             </button>
                           ) : (
                             <button
                               onClick={() => toggleClient(client.id, 'connect')}
-                              className="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-green-700 bg-green-100 hover:bg-green-200"
+                              disabled={loading}
+                              className="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-green-700 bg-green-100 hover:bg-green-200 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               <Power className="w-3 h-3 mr-1" />
-                              Conectar
+                              {loading ? 'Procesando...' : 'Conectar'}
                             </button>
                           )}
                           
