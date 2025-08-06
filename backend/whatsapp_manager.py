@@ -356,6 +356,13 @@ async function ensurePuppeteerReady() {{
 // Initialize WhatsApp with whatsapp-web.js
 async function initializeWhatsApp() {{
     try {{
+        // ROBUST CHROMIUM: Ensure Puppeteer is ready before starting
+        const puppeteerReady = await ensurePuppeteerReady();
+        if (!puppeteerReady) {{
+            console.error(`❌ ROBUST CHROMIUM: Cannot start WhatsApp service for {client.name} - Puppeteer not ready`);
+            return;
+        }}
+        
         if (isInitializing) {{
             console.log('WhatsApp is already initializing, skipping...');
             return;
