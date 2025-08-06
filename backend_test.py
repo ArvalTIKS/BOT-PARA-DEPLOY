@@ -1393,6 +1393,161 @@ class BackendTester:
         except Exception as e:
             self.log_test("Mobile Landing - Database Check", False, f"Error: {str(e)}")
 
+    async def test_url_configuration_fix(self):
+        """Test the critical URL configuration fix for production deployment"""
+        print("\n🚨 TESTING CRITICAL URL CONFIGURATION FIX...")
+        
+        # Test 1: Verify url_detection module is working
+        try:
+            # Import and test url_detection module
+            import sys
+            sys.path.append('/app/backend')
+            from url_detection import get_backend_base_url, get_environment_info
+            
+            backend_url = get_backend_base_url()
+            env_info = get_environment_info()
+            
+            # Check if we're getting production URL instead of localhost
+            is_production_url = 'localhost' not in backend_url and 'emergent' in backend_url
+            
+            self.log_test(
+                "URL Detection - Backend URL",
+                is_production_url,
+                f"Backend URL: {backend_url}, Environment: {env_info['environment']}, Fallback used: {env_info['fallback_used']}"
+            )
+            
+        except Exception as e:
+            self.log_test("URL Detection - Backend URL", False, f"Error importing url_detection: {str(e)}")
+        
+        # Test 2: Test /api/admin/regenerate-services endpoint
+        try:
+            async with self.session.post(f"{self.backend_url}/api/admin/regenerate-services", timeout=30) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    regenerated = data.get('regenerated', 0)
+                    failed = data.get('failed', 0)
+                    
+                    self.log_test(
+                        "Admin - Regenerate Services Endpoint",
+                        True,
+                        f"Regenerated: {regenerated}, Failed: {failed}, Details: {len(data.get('details', []))}"
+                    )
+                else:
+                    self.log_test(
+                        "Admin - Regenerate Services Endpoint",
+                        False,
+                        f"HTTP {response.status}",
+                        await response.text()
+                    )
+        except Exception as e:
+            self.log_test("Admin - Regenerate Services Endpoint", False, f"Error: {str(e)}")
+        
+        # Test 3: Verify WhatsApp services are using dynamic URLs
+        try:
+            # Get all clients first
+            async with self.session.get(f"{self.backend_url}/api/admin/clients", timeout=10) as response:
+                if response.status == 200:
+                    clients = await response.json()
+                    if clients:
+                        # Test first client's service for URL configuration
+                        client = clients[0]
+                        client_id = client['id']
+                        client_port = client.get('whatsapp_port', 3002)
+                        
+                        # Check if service directory exists and contains correct URL
+                        service_dir = f"/app/whatsapp-services/client-{client_id}"
+                        service_file = f"{service_dir}/service.js"
+                        
+                        try:
+                            with open(service_file, 'r') as f:
+                                service_content = f.read()
+                                
+                            # Check if service uses process.env.FASTAPI_URL instead of hardcoded localhost
+                            uses_env_var = 'process.env.FASTAPI_URL' in service_content
+                            no_hardcoded_localhost = 'http://localhost:8001' not in service_content
+                            
+                            self.log_test(
+                                "Service Generation - Dynamic URLs",
+                                uses_env_var and no_hardcoded_localhost,
+                                f"Uses env var: {uses_env_var}, No hardcoded localhost: {no_hardcoded_localhost}"
+                            )
+                            
+                        except FileNotFoundError:
+                            self.log_test(
+                                "Service Generation - Dynamic URLs",
+                                False,
+                                f"Service file not found: {service_file}"
+                            )
+                        except Exception as e:
+                            self.log_test(
+                                "Service Generation - Dynamic URLs",
+                                False,
+                                f"Error reading service file: {str(e)}"
+                            )
+                    else:
+                        self.log_test(
+                            "Service Generation - Dynamic URLs",
+                            False,
+                            "No clients found to test service generation"
+                        )
+                else:
+                    self.log_test(
+                        "Service Generation - Dynamic URLs",
+                        False,
+                        f"Could not get clients: HTTP {response.status}"
+                    )
+        except Exception as e:
+            self.log_test("Service Generation - Dynamic URLs", False, f"Error: {str(e)}")
+        
+        # Test 4: Test client status and QR endpoints with production URLs
+        try:
+            async with self.session.get(f"{self.backend_url}/api/admin/clients", timeout=10) as response:
+                if response.status == 200:
+                    clients = await response.json()
+                    if clients:
+                        client = clients[0]
+                        unique_url = client['unique_url']
+                        
+                        # Test client status endpoint
+                        async with self.session.get(f"{self.backend_url}/api/client/{unique_url}/status", timeout=10) as status_response:
+                            if status_response.status == 200:
+                                self.log_test(
+                                    "Client Endpoints - Status",
+                                    True,
+                                    f"Status endpoint accessible for client {unique_url}"
+                                )
+                            else:
+                                self.log_test(
+                                    "Client Endpoints - Status",
+                                    False,
+                                    f"HTTP {status_response.status}",
+                                    await status_response.text()
+                                )
+                        
+                        # Test client QR endpoint
+                        async with self.session.get(f"{self.backend_url}/api/client/{unique_url}/qr", timeout=15) as qr_response:
+                            if qr_response.status == 200:
+                                qr_data = await qr_response.json()
+                                has_qr = qr_data.get('qr') is not None
+                                self.log_test(
+                                    "Client Endpoints - QR",
+                                    True,
+                                    f"QR endpoint accessible, QR available: {has_qr}"
+                                )
+                            else:
+                                self.log_test(
+                                    "Client Endpoints - QR",
+                                    False,
+                                    f"HTTP {qr_response.status}",
+                                    await qr_response.text()
+                                )
+                    else:
+                        self.log_test("Client Endpoints - Status", False, "No clients found")
+                        self.log_test("Client Endpoints - QR", False, "No clients found")
+        except Exception as e:
+            self.log_test("Client Endpoints - Status", False, f"Error: {str(e)}")
+            self.log_test("Client Endpoints - QR", False, f"Error: {str(e)}")
+
     async def test_gonzalo_specific_qr_issue(self):
         """URGENT: Test Gonzalo's specific QR generation issue"""
         print("\n🚨 URGENT: TESTING GONZALO'S QR GENERATION ISSUE...")
