@@ -18,11 +18,7 @@ const AdminPanel = () => {
 
   const backendUrl = process.env.REACT_APP_BACKEND_URL || import.meta.env.REACT_APP_BACKEND_URL;
 
-  useEffect(() => {
-    fetchClients();
-  }, []);
-
-  const fetchClients = async () => {
+  const fetchClients = useCallback(async () => {
     try {
       const response = await axios.get(`${backendUrl}/api/admin/clients`);
       setClients(response.data);
@@ -31,7 +27,11 @@ const AdminPanel = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [backendUrl]);
+
+  useEffect(() => {
+    fetchClients();
+  }, [fetchClients]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
