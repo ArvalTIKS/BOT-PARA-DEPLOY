@@ -135,3 +135,29 @@
 2025/08/06-20:26:28.673 15ec compacted to: files[ 0 0 1 0 0 0 0 ]
 2025/08/06-20:26:28.674 15ec Delete type=2 #37
 2025/08/06-20:26:28.674 15ec Manual compaction at level-1 from '\x00\x10\x00\x00\x05' @ 1834 : 0 .. '\x00\x11\x00\x00\x00' @ 0 : 0; will stop at (end)
+2025/08/06-20:27:07.905 15ed Level-0 table #40: started
+2025/08/06-20:27:08.009 15ed Level-0 table #40: 1161604 bytes OK
+2025/08/06-20:27:08.012 15ed Delete type=0 #36
+2025/08/06-20:27:08.012 15ed Delete type=2 #35
+2025/08/06-20:27:08.398 15ed Compacting 1@1 + 1@2 files
+2025/08/06-20:27:08.422 15ed Generated table #41@1: 12451 keys, 642746 bytes
+2025/08/06-20:27:08.422 15ed Compacted 1@1 + 1@2 files => 642746 bytes
+2025/08/06-20:27:08.424 15ed compacted to: files[ 0 0 1 0 0 0 0 ]
+2025/08/06-20:27:08.425 15ed Delete type=2 #38
+2025/08/06-20:27:08.425 15ed Delete type=2 #40
+2025/08/06-20:27:10.810 15ed Level-0 table #43: started
+2025/08/06-20:27:10.901 15ed Level-0 table #43: 1085841 bytes OK
+2025/08/06-20:27:10.904 15ed Delete type=0 #39
+2025/08/06-20:27:10.906 15ed Compacting 1@1 + 1@2 files
+2025/08/06-20:27:11.019 15ed Generated table #44@1: 29089 keys, 1318097 bytes
+2025/08/06-20:27:11.019 15ed Compacted 1@1 + 1@2 files => 1318097 bytes
+2025/08/06-20:27:11.021 15ed compacted to: files[ 0 0 1 0 0 0 0 ]
+2025/08/06-20:27:11.022 15ed Delete type=2 #43
+2025/08/06-20:27:11.022 15ed Delete type=2 #41
+2025/08/06-20:27:11.399 15ed Level-0 table #46: started
+2025/08/06-20:27:11.424 15ed Level-0 table #46: 924515 bytes OK
+2025/08/06-20:27:11.426 15ed Delete type=0 #42
+2025/08/06-20:27:11.467 15ed Compacting 1@1 + 1@2 files
+2025/08/06-20:27:11.571 15ed Generated table #47@1: 38114 keys, 1830649 bytes
+2025/08/06-20:27:11.571 15ed Compacted 1@1 + 1@2 files => 1830649 bytes
+2025/08/06-20:27:11.573 15ed compacted to: files[ 0 0 1 0 0 0 0 ]
