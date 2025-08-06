@@ -11,12 +11,13 @@ app.use(cors());
 app.use(express.json());
 
 const PORT = process.env.CLIENT_PORT || 3004;
-const FASTAPI_URL = 'http://localhost:8001';
+const FASTAPI_URL = process.env.FASTAPI_URL || 'http://localhost:8001';
 const CLIENT_ID = process.env.CLIENT_ID || '04e9b091-fa65-441f-bdab-84ff99f4ace5';
 
 // Deploy-aware environment detection
 const isDeployEnv = process.env.EMERGENT_ENV === 'deploy';
 console.log(`Individual service for Gonzalo running in ${isDeployEnv ? 'DEPLOY' : 'PREVIEW'} environment`);
+console.log(`Backend URL: ${FASTAPI_URL}`);  // Show which backend URL is being used
 
 let client = null;
 let qrCodeData = null;
