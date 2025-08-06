@@ -746,5 +746,52 @@ app.listen(PORT, '0.0.0.0', () => {{
         except Exception as e:
             print(f"Error copying dependencies: {str(e)}")
 
+    async def regenerate_all_services(self, db) -> dict:
+        """Regenerate all existing client services with updated URLs"""
+        try:
+            clients_collection = db.clients
+            all_clients = await clients_collection.find({"active": True}).to_list(length=None)
+            
+            results = {
+                "regenerated": 0,
+                "failed": 0,
+                "skipped": 0,
+                "details": []
+            }
+            
+            for client_data in all_clients:
+                try:
+                    client = Client(**client_data)
+                    service_dir = f"/app/whatsapp-services/client-{client.id}"
+                    
+                    # Stop existing service if running
+                    if client.id in self.services:
+                        await self.stop_service_for_client(client.id)
+                    
+                    # Remove old service directory
+                    if os.path.exists(service_dir):
+                        shutil.rmtree(service_dir)
+                    
+                    # Create new service with updated URLs
+                    success = await self.create_service_for_client(client)
+                    
+                    if success:
+                        results["regenerated"] += 1
+                        results["details"].append(f"✅ Regenerated service for {client.name} (port {client.whatsapp_port})")
+                    else:
+                        results["failed"] += 1
+                        results["details"].append(f"❌ Failed to regenerate service for {client.name}")
+                        
+                except Exception as e:
+                    results["failed"] += 1
+                    results["details"].append(f"❌ Error regenerating service for client: {str(e)}")
+            
+            print(f"🔄 Service regeneration complete: {results['regenerated']} success, {results['failed']} failed")
+            return results
+            
+        except Exception as e:
+            print(f"❌ Error during bulk service regeneration: {str(e)}")
+            return {"error": str(e), "regenerated": 0, "failed": 0, "details": []}
+
 # Global service manager instance
 service_manager = WhatsAppServiceManager()
