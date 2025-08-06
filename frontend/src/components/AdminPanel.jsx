@@ -63,17 +63,34 @@ const AdminPanel = () => {
 
   const toggleClient = async (clientId, action) => {
     try {
+      setLoading(true); // Prevent multiple simultaneous calls
+      
       await axios.put(`${backendUrl}/api/admin/clients/${clientId}/toggle`, {
         action: action
       });
       
-      // Refresh clients list
-      await fetchClients();
+      // Update the specific client in the current state instead of refetching all
+      setClients(prevClients => 
+        prevClients.map(client => 
+          client.id === clientId 
+            ? { ...client, status: action === 'connect' ? 'active' : 'inactive' }
+            : client
+        )
+      );
+      
+      // Refresh clients list after a brief delay to ensure backend consistency
+      setTimeout(async () => {
+        await fetchClients();
+      }, 1000);
       
       alert(`✅ Cliente ${action === 'connect' ? 'conectado' : 'desconectado'} exitosamente!`);
     } catch (error) {
       console.error(`Error ${action}ing client:`, error);
       alert(`❌ Error ${action === 'connect' ? 'conectando' : 'desconectando'} cliente`);
+      // Revert the optimistic update on error
+      await fetchClients();
+    } finally {
+      setLoading(false);
     }
   };
 
