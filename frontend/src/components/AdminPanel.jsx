@@ -97,12 +97,25 @@ const AdminPanel = () => {
   const deleteClient = async (clientId, clientName) => {
     if (window.confirm(`¿Estás seguro de eliminar al cliente "${clientName}"? Esta acción no se puede deshacer.`)) {
       try {
+        setLoading(true);
         await axios.delete(`${backendUrl}/api/admin/clients/${clientId}`);
-        await fetchClients();
+        
+        // Remove client from state immediately for better UX
+        setClients(prevClients => prevClients.filter(client => client.id !== clientId));
+        
+        // Refresh clients list to ensure consistency
+        setTimeout(async () => {
+          await fetchClients();
+        }, 1000);
+        
         alert('✅ Cliente eliminado exitosamente!');
       } catch (error) {
         console.error('Error deleting client:', error);
         alert('❌ Error eliminando cliente');
+        // Revert by refreshing the list
+        await fetchClients();
+      } finally {
+        setLoading(false);
       }
     }
   };
