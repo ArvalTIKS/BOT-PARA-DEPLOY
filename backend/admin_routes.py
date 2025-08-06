@@ -36,7 +36,7 @@ async def create_client(
         await clients_collection.insert_one(client.dict())
         
         # Generate landing URL
-        base_url = os.environ.get('BASE_URL', 'https://your-domain.com')
+        base_url = os.environ.get('BASE_URL', 'https://mail-qr-debug.emergent.host')
         landing_url = f"{base_url}/client/{client.unique_url}"
         
         # Send email in background
