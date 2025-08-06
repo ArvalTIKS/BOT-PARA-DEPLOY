@@ -710,14 +710,30 @@ app.listen(PORT, '0.0.0.0', () => {{
 """
     
     async def _copy_dependencies(self, service_dir: str):
-        """Copy necessary dependencies to service directory"""
+        """Copy necessary dependencies to service directory and ensure Puppeteer bundled Chromium"""
         try:
-            # Copy package.json
-            original_package = "/app/whatsapp-service/package.json"
-            target_package = f"{service_dir}/package.json"
+            # Copy package.json with updated Puppeteer config
+            package_json_content = {
+                "name": "whatsapp-client-service",
+                "version": "1.0.0",
+                "main": "service.js",
+                "scripts": {
+                    "start": "node service.js"
+                },
+                "dependencies": {
+                    "whatsapp-web.js": "^1.25.0",
+                    "puppeteer": "^21.11.0",
+                    "axios": "^1.6.0",
+                    "cors": "^2.8.5",
+                    "express": "^4.18.2",
+                    "qrcode": "^1.5.3"
+                }
+            }
             
-            if os.path.exists(original_package):
-                shutil.copy2(original_package, target_package)
+            import json
+            target_package = f"{service_dir}/package.json"
+            with open(target_package, 'w') as f:
+                json.dump(package_json_content, f, indent=2)
             
             # Copy deploy-config.js
             original_deploy_config = "/app/whatsapp-service/deploy-config.js"
@@ -733,12 +749,26 @@ app.listen(PORT, '0.0.0.0', () => {{
             if os.path.exists(original_env_deploy):
                 shutil.copy2(original_env_deploy, target_env_deploy)
                 
-                # Install dependencies
+            # Install dependencies with Puppeteer bundled Chromium
+            print(f"Installing dependencies with bundled Chromium for service in {service_dir}")
+            process = await asyncio.create_subprocess_exec(
+                'yarn', 'install', '--production',
+                cwd=service_dir,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+                env={**os.environ, 'PUPPETEER_SKIP_CHROMIUM_DOWNLOAD': 'false'}  # Ensure Chromium is downloaded
+            )
+            stdout, stderr = await process.wait()
+            
+            if process.returncode != 0:
+                print(f"Warning: yarn install failed, trying npm install")
+                # Fallback to npm if yarn fails
                 process = await asyncio.create_subprocess_exec(
-                    'yarn', 'install',
+                    'npm', 'install', '--production',
                     cwd=service_dir,
                     stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE
+                    stderr=asyncio.subprocess.PIPE,
+                    env={**os.environ, 'PUPPETEER_SKIP_CHROMIUM_DOWNLOAD': 'false'}
                 )
                 await process.wait()
                 
