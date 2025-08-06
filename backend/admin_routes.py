@@ -53,6 +53,8 @@ async def create_client(
             id=client.id,
             name=client.name,
             email=client.email,
+            openai_api_key=client.openai_api_key,
+            openai_assistant_id=client.openai_assistant_id,
             status=client.status,
             connected_phone=client.connected_phone,
             whatsapp_port=client.whatsapp_port,
