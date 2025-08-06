@@ -411,8 +411,8 @@ const AdminPanel = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {clients.map((client) => (
-                    <tr key={client.id} className="hover:bg-gray-50">
+                  {clients.map((client, index) => (
+                    <tr key={`${client.id}-${client.status}-${index}`} className="hover:bg-gray-50">{/* Unique key with status to force re-render */}
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div>
                           <div className="text-sm font-medium text-gray-900">{client.name}</div>
