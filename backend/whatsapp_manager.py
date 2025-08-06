@@ -62,6 +62,9 @@ class WhatsAppServiceManager:
                 f"{service_dir}/service.js"
             ]
             
+            # Get correct backend URL for production/preview environment
+            backend_url = get_backend_base_url()
+            
             env = os.environ.copy()
             env.update({
                 'CLIENT_ID': client.id,
@@ -69,7 +72,7 @@ class WhatsAppServiceManager:
                 'CLIENT_NAME': client.name,
                 'OPENAI_API_KEY': client.openai_api_key,
                 'OPENAI_ASSISTANT_ID': client.openai_assistant_id,
-                'FASTAPI_URL': os.environ.get('FASTAPI_URL'),
+                'FASTAPI_URL': backend_url,  # Use dynamic URL instead of hardcoded localhost
                 'EMERGENT_ENV': os.environ.get('EMERGENT_ENV', 'preview')
             })
             
