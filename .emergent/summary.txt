@@ -1,198 +1,154 @@
 <analysis>
-The AI engineer's work trajectory began by expanding a single-tenant WhatsApp-to-OpenAI application into a multi-tenant platform. A critical misinterpretation occurred: instead of maintaining individual WhatsApp services per client (as initially intended by the user and partially supported by the backend model), the AI engineer implemented a *consolidated* WhatsApp service, routing all client traffic through a single instance. This led to persistent issues with independent client functionality, QR generation stability, and command execution. Repeated user feedback highlighted this architectural drift. The engineer has since been attempting to revert to the correct multi-tenant architecture with truly independent WhatsApp services per client, currently debugging issues related to the creation and stability of these individual client services, specifically with Chromium initialization and port conflicts in the newly generated client-specific Node.js instances.
+The previous AI engineer initiated work to fix a WhatsApp bot application where QR codes weren't opening from emails. The trajectory reveals a complex debugging process primarily hindered by a fundamental disconnect between the AI's development environment and the user's production environment, causing fixes to not persist or apply correctly.
+
+The AI initially diagnosed missing Chromium and implemented robust self-recovery mechanisms, including a new . A significant bug was identified and fixed where OpenAI Assistant API keys and IDs were not being correctly saved to the database, leading to generic bot responses.
+
+Despite these code-level fixes, the user consistently reported issues in their deployed environment, leading to a frustrating loop of re-diagnosing similar problems (e.g., QR not appearing, bot not activating). The core issues revolved around  dependencies and Chromium executability not persisting in production, and a design flaw where new clients require manual Connect actions post-creation. The latest critical information from technical support reveals that the WhatsApp services are still hardcoded to  URLs, preventing them from functioning correctly in the deployed environment. This confirms the next critical fix.
 </analysis>
 
 <product_requirements>
-The initial requirement was a web platform connecting a single WhatsApp account to an OpenAI assistant via QR code, focusing on automatic connection and real-time status. The user then mandated a **multi-tenant platform** featuring:
-1.  A central **admin panel** for client management (add, list, activate/deactivate bots, email configuration).
-2.  Automated email delivery of unique landing page links to each client.
-3.  Dedicated **client-specific landing pages** displaying individual QR codes and bot status.
-4.  Crucially, **each client must have an isolated WhatsApp service instance** connected to *their own unique WhatsApp number* on a distinct port (e.g., 3001, 3002). This was repeatedly emphasized by the user to avoid a shared number.
-5.  Automatic conversation cleanup every 24 hours.
-6.  Admin ability to connect/disconnect client bots.
-7.  A feature to **pause/reactivate specific conversations** via WhatsApp commands (, , , , ), executable by both the bot owner and individual conversation participants (for specific conversations), with global commands (, ) implicitly for owner/admin knowledge.
-8.  The bot should **not respond in WhatsApp groups**.
-9.  The bot's response time needs to be optimized for speed.
+The user requires a robust and scalable multi-tenant WhatsApp bot application. Each client should have an independent WhatsApp service and an OpenAI Assistant integration. The core functionality involves:
+1.  **Client Creation:** Ability to create new clients via an admin panel, associating them with unique OpenAI API keys and Assistant IDs.
+2.  **Email Invitation:** Clients receive an email with a unique link to their dedicated landing page.
+3.  **QR Code Connection:** Upon visiting the landing page, a QR code should appear, allowing the client to scan it with their WhatsApp to connect their bot.
+4.  **Automated Messaging:** Once connected, the bot should automatically process and respond to WhatsApp messages using the configured OpenAI Assistant.
+5.  **Service Stability:** Services must be stable, auto-recovering from disconnections, and scalable to support multiple clients concurrently (up to 5 clients initially).
+The user specifically highlighted issues where the QR code wasn't opening/appearing, the bot wasn't responding correctly (giving generic replies), and services were not activating or maintaining connection, especially in the production deployment environment. A critical design flaw identified is that the active status in the database doesn't automatically mean the WhatsApp service is running; manual connection from the admin panel is required.
 </product_requirements>
 
 <key_technical_concepts>
--   **React:** Frontend development.
--   **FastAPI:** Backend API development.
--   **MongoDB:** Database for client, message, and paused conversation persistence.
--   **Baileys/whatsapp-web.js:** Node.js libraries for WhatsApp Web integration.
--   **OpenAI Assistants API:** For AI conversational logic.
--   **Puppeteer/Chromium:** Headless browser for WhatsApp Web.
--   **Supervisorctl:** Process management for backend and WhatsApp services.
--   **SMTP:** For email sending (Gmail SMTP specifically).
+-   **Full-stack Architecture:** React frontend, FastAPI backend, MongoDB database.
+-   **Multi-tenancy:** Isolated services for each client using .
+-   **Chromium:** Headless browser dependency for .
+-   **OpenAI Assistant API:** For AI-powered bot responses.
+-   **URL Management:** Dynamic URL detection for preview/deployment environments.
+-   **Process Management:** Supervisor for main services, custom .
 </key_technical_concepts>
 
 <code_architecture>
+The application follows a standard full-stack structure:
 
 
--   ****: Main React component, handles routing.
-    -   **Changes**: Routes adjusted for , , and .
--   ****: Legacy single-QR page.
-    -   **Changes**: Updated  and generalized text.
--   ****: Renders QR codes.
-    -   **Changes**: Created to display QR images.
--   ****: Displays OpenAI assistant details.
-    -   **Changes**: Integrated with real backend data.
--   ****: Shows WhatsApp connection status.
-    -   **Changes**: Initial implementation.
--   ****: Admin dashboard.
-    -   **Changes**: Created for client CRUD, bot activation/deactivation, email management. **Recently updated to include an individual Desconectar button per client.**
--   ****: Individual client landing pages.
-    -   **Changes**: Created for client-specific QR and bot status. **Recently updated to include a Desvincular WhatsApp button for complete logout.**
--   ****: FastAPI entry point.
-    -   **Changes**: Configured , integrated , , . (Earlier, temporarily integrated  which has now been removed).
--   ****: API for WhatsApp/OpenAI.
-    -   **Changes**: Modified for dynamic . Implemented robust OpenAI Assistant API interaction. **Crucially, modified to correctly process WhatsApp pause/reactivation commands *before* sending to OpenAI.** This file was the primary target for fixing command processing.
--   ****: Admin API routes.
-    -   **Changes**: Created for client management, integrated with , , . **Recently updated to support individual client service control (connect/disconnect) by interacting with  for specific ports.**
--   ****: API for client landing pages.
-    -   **Changes**: Created to fetch client status/QR. Integrated . **This file was recently completely rewritten to remove consolidated logic and align with individual client services.** It fetches client-specific QR codes and status.
--   ****: Pydantic models for DB.
-    -   **Changes**: Created , , .  model includes .
--   ****: Handles email sending.
-    -   **Changes**: Switched from Bluehosting to Gmail SMTP () and supports templating. **Recently,  was explicitly ensured to be used from .**
--   ****: Manages WhatsApp service instances.
-    -   **Changes**: Initially created to start/stop dynamic processes per client. Later, its  method was *incorrectly modified to force port 3001 for all clients*, leading to the consolidated problem. **This file has been recently replaced to correctly implement individual client service management, assigning unique ports and managing their lifecycle.**
--   ****: Cleans old conversations.
-    -   **Changes**: Created to remove MongoDB conversations older than 24 hours.
--   ****: Manages conversation pause/reactivation.
-    -   **Changes**: Created to persist pause states in MongoDB.
--   ****: Backend environment variables.
-    -   **Changes**: Updated , , , , , , . ** was corrected from deploy to preview URL.**
--   ****: Node.js WhatsApp Web service.
-    -   **Changes**: Migrated from  to  and then back to . Extensively modified for QR generation, session management, and auto-recovery. **Crucially, updated to filter out group messages and process pause/reactivate commands internally before passing to OpenAI. Also,  message handling was adjusted so bot owner commands are processed. It was heavily modified for consolidated system and then reverted to work individually, managing its own Chromium.**. It now copies a  file template to client-specific directories within .
--   ****: Node.js dependencies for WhatsApp service.
-    -   **Changes**: Manages  and  dependencies.
--   ****: Deployment config for WhatsApp service.
-    -   **Changes**: Increased timeouts and reconnect attempts.
--   ****: Env vars for deploy.
-    -   **Changes**: .
--   ****: Supervisor config.
-    -   **Changes**: Added  and .
 
+-   :
+    *   **Summary:** Manages client creation and administration.
+    *   **Changes:** Modified to ensure  and  are correctly included in the client creation response and persisted.
+-   :
+    *   **Summary:** Handles client-specific API calls, including WhatsApp message processing and status retrieval.
+    *   **Changes:** Adjusted error handling for OpenAI API calls to prevent generic replies and allow accurate debugging.
+-   :
+    *   **Summary:** Sends client invitation emails.
+    *   **Changes:** Updated to use the new robust URL detection for generating landing page links.
+-   :
+    *   **Summary:** Pydantic models for data structures.
+    *   **Changes:** Modified  to correctly handle  and  as optional strings to prevent validation errors.
+-   :
+    *   **Summary:** (NEW FILE) A new FastAPI service that periodically checks and restarts WhatsApp client services if they stop running, ensuring continuous operation.
+    *   **Changes:** Newly created to enhance system robustness.
+-   :
+    *   **Summary:** (NEW FILE) Centralized logic for determining application URLs based on environment, with multiple fallbacks for production, preview, and development.
+    *   **Changes:** Newly created and integrated across frontend and backend for consistent URL generation.
+-   :
+    *   **Summary:** Manages the lifecycle of individual WhatsApp client instances.
+    *   **Changes:** Optimized client service generation and ensured boolean values (, ) are returned correctly.
+-   :
+    *   **Summary:** Client-facing landing page to display QR and service status.
+    *   **Changes:** Refined logic to correctly interpret service status (e.g., converting string booleans from API to actual booleans) and display appropriate messages during WhatsApp initialization.
+-   :
+    *   **Summary:** Node.js service for each WhatsApp client.
+    *   **Changes:** Implemented robust reconnect logic, improved authentication failure handling, and added a  endpoint. The current core issue is that this service is likely hardcoding  URLs when deployed.
 </code_architecture>
 
 <pending_tasks>
--   **Core Architecture Reversion:** The primary task is to fully restore the multi-tenant architecture where each client has a truly independent WhatsApp service running on its own unique port, rather than sharing a single consolidated service. This is currently in progress.
--   **Individual Service Stability:** Ensure newly generated client-specific WhatsApp services (e.g., on port 3002, 3003) launch stably, generate QRs, and process messages/commands correctly.
--   **Chromium Installation in Client Instances:** Resolve persistent  or related issues within the dynamically generated client WhatsApp service instances.
+-   User needs to confirm if current fixes (especially OpenAI credential saving) work in *their* production environment after the latest deploy.
+-   Address the fundamental design issue: new clients marked active in the database still require manual Connect action from the admin panel to start their WhatsApp service.
 </pending_tasks>
 
 <current_work>
-The immediate work is focused on rectifying the architectural deviation and establishing truly independent WhatsApp service instances for each client. The AI engineer previously (incorrectly) implemented a consolidated system, causing all clients to share a single WhatsApp connection (port 3001) despite the backend models assigning unique ports.
+The AI engineer's most recent work involves debugging a critical discrepancy between the development environment (where fixes are applied) and the user's production deployment. Despite numerous code-level fixes, the user's deployed application consistently exhibits issues where QR codes don't appear and bots don't activate or respond correctly with their configured OpenAI Assistants.
 
-The current efforts involve:
-1.  **Reverting :** The consolidated  and  (which forced all clients to use port 3001) have been removed, and  has been replaced with a version intended to create and manage individual Node.js processes for each client on their assigned unique ports (e.g., 3002, 3003).
-2.  **Rewriting :** This file was completely rewritten to align with the individual client service architecture, fetching client-specific data.
-3.  **Updating :** Changes were made to allow the admin panel to correctly interact with and control these new individual client services.
-4.  **Debugging Individual Service Launch:** The AI is currently facing challenges in getting these *newly generated* client-specific WhatsApp service instances to launch and run successfully.
-    *   Initial attempts revealed missing files () within the dynamically created client service directories.
-    *   There were issues with the generated  still hardcoding port 3001.
-    *   The latest problem identified is  within these new individual service environments, indicating  isn't correctly setting up its browser dependencies or  isn't accessible.
-5.  **Attempting to Install Chromium per Service:** The very last action was yarn add v1.22.22
-[1/4] Resolving packages...
-[2/4] Fetching packages...
-[3/4] Linking dependencies...
-[4/4] Building fresh packages...
-success Saved lockfile.
-success Saved 85 new dependencies.
-info Direct dependencies
-└─ puppeteer@24.15.0
-info All dependencies
-├─ @babel/code-frame@7.27.1
-├─ @babel/helper-validator-identifier@7.27.1
-├─ @tootallnate/quickjs-emscripten@0.23.0
-├─ @types/node@24.1.0
-├─ @types/yauzl@2.10.3
-├─ ansi-regex@5.0.1
-├─ ansi-styles@4.3.0
-├─ argparse@2.0.1
-├─ ast-types@0.13.4
-├─ bare-events@2.6.0
-├─ bare-fs@4.1.6
-├─ bare-os@3.6.1
-├─ bare-stream@2.6.5
-├─ basic-ftp@5.0.5
-├─ buffer-crc32@0.2.13
-├─ callsites@3.1.0
-├─ cliui@8.0.1
-├─ color-convert@2.0.1
-├─ color-name@1.1.4
-├─ cosmiconfig@9.0.0
-├─ data-uri-to-buffer@6.0.2
-├─ degenerator@5.0.1
-├─ emoji-regex@8.0.0
-├─ end-of-stream@1.4.5
-├─ env-paths@2.2.1
-├─ error-ex@1.3.2
-├─ escalade@3.2.0
-├─ escodegen@2.1.0
-├─ estraverse@5.3.0
-├─ esutils@2.0.3
-├─ extract-zip@2.0.1
-├─ fast-fifo@1.3.2
-├─ fd-slicer@1.1.0
-├─ get-caller-file@2.0.5
-├─ get-stream@5.2.0
-├─ get-uri@6.0.5
-├─ http-proxy-agent@7.0.2
-├─ import-fresh@3.3.1
-├─ ip-address@9.0.5
-├─ is-arrayish@0.2.1
-├─ is-fullwidth-code-point@3.0.0
-├─ js-tokens@4.0.0
-├─ js-yaml@4.1.0
-├─ jsbn@1.1.0
-├─ json-parse-even-better-errors@2.3.1
-├─ lines-and-columns@1.2.4
-├─ lru-cache@7.18.3
-├─ mitt@3.0.1
-├─ ms@2.1.3
-├─ netmask@2.0.2
-├─ once@1.4.0
-├─ pac-proxy-agent@7.2.0
-├─ pac-resolver@7.0.1
-├─ parent-module@1.0.1
-├─ parse-json@5.2.0
-├─ pend@1.2.0
-├─ picocolors@1.1.1
-├─ progress@2.0.3
-├─ proxy-agent@6.5.0
-├─ proxy-from-env@1.1.0
-├─ puppeteer-core@24.15.0
-├─ puppeteer@24.15.0
-├─ require-directory@2.1.1
-├─ resolve-from@4.0.0
-├─ semver@7.7.2
-├─ smart-buffer@4.2.0
-├─ socks@2.8.6
-├─ source-map@0.6.1
-├─ sprintf-js@1.1.3
-├─ streamx@2.22.1
-├─ string-width@4.2.3
-├─ strip-ansi@6.0.1
-├─ tar-fs@3.1.0
-├─ tar-stream@3.1.7
-├─ text-decoder@1.2.3
-├─ tslib@2.8.1
-├─ undici-types@7.8.0
-├─ wrap-ansi@7.0.0
-├─ wrappy@1.0.2
-├─ ws@8.18.3
-├─ y18n@5.0.8
-├─ yargs-parser@21.1.1
-├─ yargs@17.7.2
-├─ yauzl@2.10.0
-└─ zod@3.25.76
-Done in 36.23s. within a specific client's service directory (). This implies an attempt to make each client's WhatsApp service self-sufficient in terms of its Chromium dependency.
+The key fixes implemented include:
+1.  **OpenAI Credential Handling:** Fixed a bug in  and  to ensure  and  are correctly saved and retrieved for new clients, preventing generic bot responses.
+2.  **Robust URL System:** Introduced a new module  and updated , , , and  to dynamically determine application URLs for different environments (preview, production) with fallbacks.
+3.  **Chromium/Dependency Installation:** Repeatedly installed Chromium and  dependencies (e.g., Reading package lists...
+Building dependency tree...
+Reading state information...
+The following additional packages will be installed:
+  avahi-daemon avahi-utils chromium-common chromium-sandbox cups-pk-helper
+  gir1.2-atk-1.0 gir1.2-freedesktop gir1.2-gdkpixbuf-2.0 gir1.2-gtk-3.0
+  gir1.2-handy-1 gir1.2-harfbuzz-0.0 gir1.2-notify-0.7 gir1.2-pango-1.0
+  gir1.2-polkit-1.0 gir1.2-secret-1 libauthen-sasl-perl libavahi-core7
+  libclone-perl libdaemon0 libdata-dump-perl libdouble-conversion3
+  libencode-locale-perl libfile-basedir-perl libfile-desktopentry-perl
+  libfile-listing-perl libfile-mimeinfo-perl libfont-afm-perl libhandy-1-0
+  libharfbuzz-subset0 libhtml-form-perl libhtml-format-perl
+  libhtml-parser-perl libhtml-tagset-perl libhtml-tree-perl
+  libhttp-cookies-perl libhttp-daemon-perl libhttp-date-perl
+  libhttp-message-perl libhttp-negotiate-perl libio-html-perl
+  libio-socket-ssl-perl libio-stringy-perl libipc-system-simple-perl libldb2
+  liblmdb0 liblwp-mediatypes-perl liblwp-protocol-https-perl libmailtools-perl
+  libminizip1 libnet-dbus-perl libnet-http-perl libnet-smtp-ssl-perl
+  libnet-ssleay-perl libnss-mdns libpangoxft-1.0-0 libregexp-ipv6-perl
+  libsmbclient libtalloc2 libtdb1 libtevent0 libtie-ixhash-perl
+  libtimedate-perl libtry-tiny-perl libupower-glib3 liburi-perl libwbclient0
+  libwww-perl libwww-robotrules-perl libx11-protocol-perl libxcb-shape0
+  libxft2 libxml-parser-perl libxml-twig-perl libxml-xpathengine-perl libxmuu1
+  libxnvctrl0 libxv1 libxxf86dga1 notification-daemon perl-openssl-defaults
+  python3-cairo python3-cups python3-cupshelpers python3-smbc samba-libs
+  system-config-printer system-config-printer-common
+  system-config-printer-udev udev upower x11-utils x11-xserver-utils xdg-utils
+  zutty
+Suggested packages:
+  avahi-autoipd chromium-l10n chromium-shell chromium-driver
+  libdigest-hmac-perl libgssapi-perl libcrypt-ssleay-perl avahi-autoipd
+  | zeroconf libsub-name-perl libbusiness-isbn-perl libauthen-ntlm-perl
+  libunicode-map8-perl libunicode-string-perl xml-twig-tools debhelper
+  gnome-software mesa-utils nickle cairo-5c xorg-docs-core
+The following NEW packages will be installed:
+  avahi-daemon avahi-utils chromium chromium-common chromium-sandbox
+  cups-pk-helper gir1.2-atk-1.0 gir1.2-freedesktop gir1.2-gdkpixbuf-2.0
+  gir1.2-gtk-3.0 gir1.2-handy-1 gir1.2-harfbuzz-0.0 gir1.2-notify-0.7
+  gir1.2-pango-1.0 gir1.2-polkit-1.0 gir1.2-secret-1 libauthen-sasl-perl
+  libavahi-core7 libclone-perl libdaemon0 libdata-dump-perl
+  libdouble-conversion3 libencode-locale-perl libfile-basedir-perl
+  libfile-desktopentry-perl libfile-listing-perl libfile-mimeinfo-perl
+  libfont-afm-perl libhandy-1-0 libharfbuzz-subset0 libhtml-form-perl
+  libhtml-format-perl libhtml-parser-perl libhtml-tagset-perl
+  libhtml-tree-perl libhttp-cookies-perl libhttp-daemon-perl libhttp-date-perl
+  libhttp-message-perl libhttp-negotiate-perl libio-html-perl
+  libio-socket-ssl-perl libio-stringy-perl libipc-system-simple-perl libldb2
+  liblmdb0 liblwp-mediatypes-perl liblwp-protocol-https-perl libmailtools-perl
+  libminizip1 libnet-dbus-perl libnet-http-perl libnet-smtp-ssl-perl
+  libnet-ssleay-perl libnss-mdns libpangoxft-1.0-0 libregexp-ipv6-perl
+  libsmbclient libtalloc2 libtdb1 libtevent0 libtie-ixhash-perl
+  libtimedate-perl libtry-tiny-perl libupower-glib3 liburi-perl libwbclient0
+  libwww-perl libwww-robotrules-perl libx11-protocol-perl libxcb-shape0
+  libxft2 libxml-parser-perl libxml-twig-perl libxml-xpathengine-perl libxmuu1
+  libxnvctrl0 libxv1 libxxf86dga1 notification-daemon perl-openssl-defaults
+  python3-cairo python3-cups python3-cupshelpers python3-smbc samba-libs
+  system-config-printer system-config-printer-common
+  system-config-printer-udev udev upower x11-utils x11-xserver-utils xdg-utils
+  zutty
+0 upgraded, 95 newly installed, 0 to remove and 0 not upgraded.
+Need to get 105 MB of archives.
+After this operation, 394 MB of additional disk space will be used.
+Do you want to continue? [Y/n] Abort., 
+up to date, audited 771 packages in 6s
 
-The system is in a transitional state from a shared WhatsApp service back to the originally intended individual services, with ongoing debugging for the stability of these separate instances.
+132 packages are looking for funding
+  run `npm fund` for details
+
+9 vulnerabilities (2 moderate, 7 high)
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.) within the development environment to ensure the WhatsApp services can function.
+4.  **Service Recovery:** Created  to automatically monitor and restart crashed WhatsApp client services.
+
+However, the user's Roberto client, created directly in their production deploy, still showed Service not running and the AI's diagnostic queries for that client resulted in 404: Client not found, strongly indicating **separate databases/environments**. The latest communication from Emergent Team (Chat 661) confirms a new, critical issue: the WhatsApp services are currently hardcoded to  and need to be implemented for the deployed website's actual URLs. This is the immediate problem preventing the application from working in production.
 </current_work>
 
 <optional_next_step>
-The next step is to diagnose why Chromium is not being found or correctly utilized by the newly installed puppeteer within the individual client WhatsApp service directory, and ensure the service launches and generates QR codes.
+Implement the fix to dynamically configure the WhatsApp service URLs, as they are currently hardcoded to  in the deployed environment.
 </optional_next_step>
