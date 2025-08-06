@@ -379,6 +379,25 @@ async def update_client_email(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.post("/regenerate-services")
+async def regenerate_all_services(db = Depends(get_database)):
+    """Regenerate all WhatsApp services with updated production URLs"""
+    try:
+        # Execute regeneration
+        result = await service_manager.regenerate_all_services(db)
+        
+        return {
+            "message": f"Service regeneration completed",
+            "success": True,
+            "regenerated": result.get("regenerated", 0),
+            "failed": result.get("failed", 0),
+            "skipped": result.get("skipped", 0),
+            "details": result.get("details", [])
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.post("/clients/{client_id}/resend-email")
 async def resend_client_email(
     client_id: str,
