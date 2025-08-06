@@ -6,6 +6,7 @@ import os
 import shutil
 from typing import Dict, List
 from models import Client, ClientStatus
+from url_detection import get_backend_base_url
 
 class WhatsAppServiceManager:
     """
