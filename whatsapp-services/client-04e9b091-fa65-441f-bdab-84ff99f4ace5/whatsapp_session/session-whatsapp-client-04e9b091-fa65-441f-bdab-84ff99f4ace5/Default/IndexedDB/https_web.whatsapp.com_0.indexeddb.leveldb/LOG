@@ -307,3 +307,31 @@
 2025/08/06-16:57:09.685 1299 Delete type=2 #98
 2025/08/06-16:57:09.685 1299 Delete type=2 #97
 2025/08/06-16:57:09.685 1299 Delete type=2 #101
+2025/08/06-16:59:39.646 129a Level-0 table #106: started
+2025/08/06-16:59:39.709 129a Level-0 table #106: 1070688 bytes OK
+2025/08/06-16:59:39.711 129a Delete type=0 #100
+2025/08/06-16:59:39.712 1298 Manual compaction at level-0 from '\x00\x18\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x19\x00\x00\x00' @ 0 : 0; will stop at (end)
+2025/08/06-16:59:39.716 1298 Level-0 table #108: started
+2025/08/06-16:59:39.718 1298 Level-0 table #108: 2437 bytes OK
+2025/08/06-16:59:39.721 1298 Delete type=0 #105
+2025/08/06-16:59:39.721 1298 Manual compaction at level-0 from '\x00\x19\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x1a\x00\x00\x00' @ 0 : 0; will stop at '\x00\x19\x00\x00\x05' @ 724990 : 0
+2025/08/06-16:59:39.721 1298 Compacting 1@0 + 1@1 files
+2025/08/06-16:59:39.764 1298 Generated table #109@0: 22060 keys, 524547 bytes
+2025/08/06-16:59:39.764 1298 Compacted 1@0 + 1@1 files => 524547 bytes
+2025/08/06-16:59:39.767 1298 compacted to: files[ 0 1 5 0 0 0 0 ]
+2025/08/06-16:59:39.768 1298 Delete type=2 #108
+2025/08/06-16:59:39.768 1298 Manual compaction at level-0 from '\x00\x19\x00\x00\x05' @ 724990 : 0 .. '\x00\x1a\x00\x00\x00' @ 0 : 0; will stop at (end)
+2025/08/06-16:59:40.784 129a Compacting 1@1 + 5@2 files
+2025/08/06-16:59:40.853 129a Generated table #110@1: 44869 keys, 2216409 bytes
+2025/08/06-16:59:40.883 129a Generated table #111@1: 11216 keys, 2165497 bytes
+2025/08/06-16:59:40.925 129a Generated table #112@1: 54965 keys, 2195182 bytes
+2025/08/06-16:59:40.955 129a Generated table #113@1: 43975 keys, 962434 bytes
+2025/08/06-16:59:40.955 129a Compacted 1@1 + 5@2 files => 7539522 bytes
+2025/08/06-16:59:40.957 129a compacted to: files[ 0 0 4 0 0 0 0 ]
+2025/08/06-16:59:40.958 129a Delete type=2 #102
+2025/08/06-16:59:40.958 129a Delete type=2 #109
+2025/08/06-16:59:40.958 129a Delete type=2 #104
+2025/08/06-16:59:40.958 129a Delete type=2 #106
+2025/08/06-16:59:40.958 129a Delete type=2 #93
+2025/08/06-16:59:40.958 129a Delete type=2 #94
+2025/08/06-16:59:40.958 129a Delete type=2 #103
