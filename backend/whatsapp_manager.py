@@ -285,7 +285,7 @@ let isInitializing = false;
 let reconnectAttempts = 0;
 const MAX_RECONNECT_ATTEMPTS = 5;
 
-// Enhanced Puppeteer configuration for individual services
+// Enhanced Puppeteer configuration for individual services - BUNDLED CHROMIUM SOLUTION
 const getPuppeteerConfig = () => {{
     const uniqueProfileDir = `/tmp/whatsapp-chrome-${{Date.now()}}-${{Math.random().toString(36).substr(2, 9)}}`;
     
@@ -314,14 +314,13 @@ const getPuppeteerConfig = () => {{
         ]
     }};
     
-    // FORCE system Chromium for individual services (ARM64 compatibility)
-    const systemChromiumPath = '/usr/bin/chromium';
-    if (fs.existsSync(systemChromiumPath)) {{
-        baseConfig.executablePath = systemChromiumPath;
-        console.log(`Individual service using system Chromium: ${{systemChromiumPath}}`);
-    }} else {{
-        console.log('WARNING: System Chromium not found, using Puppeteer bundled (may fail on ARM64)');
-    }}
+    // ROBUST SOLUTION: Use bundled Chromium from Puppeteer instead of system Chromium
+    // This eliminates dependency on system installation completely
+    const puppeteer = require('puppeteer');
+    const bundledChromiumPath = puppeteer.executablePath();
+    
+    console.log(`Individual service using bundled Chromium: ${{bundledChromiumPath}}`);
+    baseConfig.executablePath = bundledChromiumPath;
     
     return baseConfig;
 }};
