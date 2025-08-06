@@ -203,11 +203,11 @@ backend:
 
   - task: "Deploy Environment Compatibility"
     implemented: true
-    working: true
+    working: false
     file: "/app/whatsapp-services/client-*/service.js"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
+    stuck_count: 1
+    priority: "critical"
+    needs_retesting: true
     status_history:
         - working: false
           agent: "main"
@@ -215,6 +215,9 @@ backend:
         - working: true
           agent: "testing"
           comment: "✅ WORKING: Deploy environment is properly configured. EMERGENT_ENV=deploy detected. System Chromium is available at /usr/bin/chromium. Deploy-config.js files are copied to individual service directories. The issue is in the service generation code not using system Chromium path."
+        - working: false
+          agent: "main"
+          comment: "🚨 CRITICAL FIX APPLIED: Fixed hardcoded localhost URLs in WhatsApp services. Updated whatsapp_manager.py to use dynamic backend URLs from url_detection.py module. Now services use process.env.FASTAPI_URL with production URLs instead of hardcoded 'http://localhost:8001'. This addresses the core issue preventing services from working in deployed environment."
 
 frontend:
   - task: "Admin Panel Multi-Tenant Interface"
