@@ -325,6 +325,34 @@ const getPuppeteerConfig = () => {{
     return baseConfig;
 }};
 
+// ROBUST CHROMIUM SOLUTION: Auto-install Puppeteer if needed
+async function ensurePuppeteerReady() {{
+    try {{
+        const puppeteer = require('puppeteer');
+        const chromiumPath = puppeteer.executablePath();
+        const fs = require('fs');
+        
+        if (!fs.existsSync(chromiumPath)) {{
+            console.log('🔧 ROBUST CHROMIUM: Installing Puppeteer with bundled Chromium...');
+            
+            // Use child_process to install Puppeteer
+            const {{ execSync }} = require('child_process');
+            execSync('npm install puppeteer@21.11.0', {{ 
+                stdio: 'inherit',
+                env: {{ ...process.env, PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: 'false' }}
+            }});
+            
+            console.log('✅ ROBUST CHROMIUM: Installation completed');
+        }}
+        
+        console.log(`✅ ROBUST CHROMIUM: Ready at ${{chromiumPath}}`);
+        return true;
+    }} catch (error) {{
+        console.error('❌ ROBUST CHROMIUM: Failed to ensure Puppeteer:', error.message);
+        return false;
+    }}
+}}
+
 // Initialize WhatsApp with whatsapp-web.js
 async function initializeWhatsApp() {{
     try {{
